@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_card_border"
+        android:orientation="vertical"
+        android:padding="@dimen/_14sdp">
+
+        <!-- Inline segmented toggle: Light / Dark / System -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_theme_track"
+            android:orientation="horizontal"
+            android:padding="@dimen/_4sdp">
+
+            <ImageView
+                android:id="@+id/segLight"
+                android:layout_width="@dimen/_30sdp"
+                android:layout_height="@dimen/_30sdp"
+                android:clickable="true"
+                android:contentDescription="@string/theme_light"
+                android:focusable="true"
+                android:padding="@dimen/_9sdp"
+                android:src="@drawable/ic_light_mode" />
+
+            <ImageView
+                android:id="@+id/segDark"
+                android:layout_width="@dimen/_30sdp"
+                android:layout_height="@dimen/_30sdp"
+                android:layout_marginStart="@dimen/_4sdp"
+                android:clickable="true"
+                android:contentDescription="@string/theme_dark"
+                android:focusable="true"
+                android:padding="@dimen/_9sdp"
+                android:src="@drawable/ic_dark_mode" />
+
+            <ImageView
+                android:id="@+id/segSystem"
+                android:layout_width="@dimen/_30sdp"
+                android:layout_height="@dimen/_30sdp"
+                android:layout_marginStart="@dimen/_4sdp"
+                android:clickable="true"
+                android:contentDescription="@string/theme_system"
+                android:focusable="true"
+                android:padding="@dimen/_9sdp"
+                android:src="@drawable/ic_theme_system" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_12sdp"
+            android:text="@string/settings_theme"
+            android:textColor="@color/on_surface"
+            android:textSize="@dimen/_13ssp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_2sdp"
+            android:text="@string/settings_theme_sub"
+            android:textColor="@color/on_surface_variant"
+            android:textSize="@dimen/_9ssp"
+            tools:ignore="SmallSp" />
+    </LinearLayout>
+</layout>

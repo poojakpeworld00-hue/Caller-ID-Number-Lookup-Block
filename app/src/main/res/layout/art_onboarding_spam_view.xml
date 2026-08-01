@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Onboarding step 2 — "Block spam & fraud".
+    A floating phone (obCard) auto-blocks a spam call, inside a red halo with two
+    expanding rings (obRing1/obRing2 · obPulse). The shield breathes (obShield),
+    the block badge pops (obChip · obPop), and "AUTO-BLOCKED" stamps in (obStamp).
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <ImageView
+        android:layout_width="@dimen/_165sdp"
+        android:layout_height="@dimen/_165sdp"
+        android:layout_gravity="center"
+        android:contentDescription="@null"
+        android:src="@drawable/bg_onb_halo_red" />
+
+    <View
+        android:id="@+id/obRing1"
+        android:layout_width="@dimen/_142sdp"
+        android:layout_height="@dimen/_142sdp"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_onb_ring_blocked" />
+
+    <View
+        android:id="@+id/obRing2"
+        android:layout_width="@dimen/_142sdp"
+        android:layout_height="@dimen/_142sdp"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_onb_ring_blocked" />
+
+    <LinearLayout
+        android:id="@+id/obCard"
+        android:layout_width="@dimen/_115sdp"
+        android:layout_height="@dimen/_184sdp"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_onb_phone_red"
+        android:clipChildren="false"
+        android:elevation="@dimen/_6sdp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:outlineAmbientShadowColor="@color/card_shadow"
+        android:outlineSpotShadowColor="@color/card_shadow"
+        android:paddingHorizontal="@dimen/_8sdp"
+        android:paddingTop="@dimen/_12sdp"
+        android:paddingBottom="@dimen/_9sdp">
+
+        <View
+            android:layout_width="@dimen/_30sdp"
+            android:layout_height="@dimen/_4sdp"
+            android:layout_marginBottom="@dimen/_9sdp"
+            android:background="@drawable/bg_onb_notch_red" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.1"
+            android:text="BLOCKED CALL"
+            android:textColor="@color/spam_on"
+            android:textSize="@dimen/_6ssp"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText" />
+
+        <FrameLayout
+            android:layout_width="@dimen/_48sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:clipChildren="false">
+
+            <FrameLayout
+                android:id="@+id/obShield"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_onb_circle_spam">
+
+                <ImageView
+                    android:layout_width="@dimen/_28sdp"
+                    android:layout_height="@dimen/_28sdp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_ob_shield_spam" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/obChip"
+                android:layout_width="@dimen/_18sdp"
+                android:layout_height="@dimen/_18sdp"
+                android:layout_gravity="bottom|end"
+                android:background="@drawable/bg_onb_badge_spam">
+
+                <ImageView
+                    android:layout_width="@dimen/_10sdp"
+                    android:layout_height="@dimen/_10sdp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_ob_x" />
+            </FrameLayout>
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_8sdp"
+            android:text="Unknown Number"
+            android:textColor="@color/on_surface"
+            android:textSize="@dimen/_9ssp"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_1sdp"
+            android:letterSpacing="0.04"
+            android:text="SPAM · ROBOCALL"
+            android:textColor="@color/spam_on"
+            android:textSize="@dimen/_6ssp"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText" />
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/obStamp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_onb_pill_spam"
+            android:letterSpacing="0.04"
+            android:paddingHorizontal="@dimen/_11sdp"
+            android:paddingVertical="@dimen/_4sdp"
+            android:text="AUTO-BLOCKED"
+            android:textColor="@color/white"
+            android:textSize="@dimen/_6ssp"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+</FrameLayout>

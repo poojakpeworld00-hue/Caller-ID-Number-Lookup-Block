@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Onboarding step 1 — "Know who's calling".
+    A floating phone (obCard) shows a verified incoming caller, sitting inside a
+    soft blue halo with two expanding incoming-call rings (obRing1/obRing2 · obPulse).
+    The green verified badge pops in (obChip · obPop). Verdict colors are fixed.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <!-- glow halo -->
+    <ImageView
+        android:layout_width="@dimen/_165sdp"
+        android:layout_height="@dimen/_165sdp"
+        android:layout_gravity="center"
+        android:contentDescription="@null"
+        android:src="@drawable/bg_onb_halo_blue" />
+
+    <!-- incoming pulse rings -->
+    <View
+        android:id="@+id/obRing1"
+        android:layout_width="@dimen/_140sdp"
+        android:layout_height="@dimen/_140sdp"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_onb_ring_incoming" />
+
+    <View
+        android:id="@+id/obRing2"
+        android:layout_width="@dimen/_140sdp"
+        android:layout_height="@dimen/_140sdp"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_onb_ring_incoming" />
+
+    <!-- phone -->
+    <LinearLayout
+        android:id="@+id/obCard"
+        android:layout_width="@dimen/_115sdp"
+        android:layout_height="@dimen/_184sdp"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_onb_phone_blue"
+        android:clipChildren="false"
+        android:elevation="@dimen/_6sdp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:outlineAmbientShadowColor="@color/card_shadow"
+        android:outlineSpotShadowColor="@color/card_shadow"
+        android:paddingHorizontal="@dimen/_8sdp"
+        android:paddingTop="@dimen/_12sdp"
+        android:paddingBottom="@dimen/_9sdp">
+
+        <View
+            android:layout_width="@dimen/_30sdp"
+            android:layout_height="@dimen/_4sdp"
+            android:layout_marginBottom="@dimen/_9sdp"
+            android:background="@drawable/bg_onb_notch" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.1"
+            android:text="INCOMING CALL"
+            android:textColor="@color/on_surface_variant"
+            android:textSize="@dimen/_6ssp"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText" />
+
+        <FrameLayout
+            android:layout_width="@dimen/_48sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:clipChildren="false">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_splash_avatar"
+                android:gravity="center"
+                android:text="JA"
+                android:textColor="@color/white"
+                android:textSize="@dimen/_13ssp"
+                android:textStyle="bold"
+                tools:ignore="HardcodedText" />
+
+            <FrameLayout
+                android:id="@+id/obChip"
+                android:layout_width="@dimen/_18sdp"
+                android:layout_height="@dimen/_18sdp"
+                android:layout_gravity="bottom|end"
+                android:background="@drawable/bg_onb_badge_verified">
+
+                <ImageView
+                    android:layout_width="@dimen/_10sdp"
+                    android:layout_height="@dimen/_10sdp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_check"
+                    app:tint="@color/white" />
+            </FrameLayout>
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_8sdp"
+            android:text="John Anderson"
+            android:textColor="@color/on_surface"
+            android:textSize="@dimen/_9ssp"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_1sdp"
+            android:letterSpacing="0.04"
+            android:text="BUSINESS · VERIFIED"
+            android:textColor="@color/on_primary_container"
+            android:textSize="@dimen/_6ssp"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText" />
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="@dimen/_26sdp"
+                android:layout_height="@dimen/_26sdp"
+                android:layout_marginEnd="@dimen/_14sdp"
+                android:background="@drawable/bg_onb_circle_spam"
+                android:contentDescription="@null"
+                android:padding="@dimen/_6sdp"
+                android:rotation="135"
+                android:src="@drawable/ic_phone_solid"
+                app:tint="#D93B3B" />
+
+            <ImageView
+                android:layout_width="@dimen/_26sdp"
+                android:layout_height="@dimen/_26sdp"
+                android:background="@drawable/bg_onb_circle_green"
+                android:contentDescription="@null"
+                android:padding="@dimen/_6sdp"
+                android:src="@drawable/ic_phone_solid"
+                app:tint="@color/white" />
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>

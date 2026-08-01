@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "621456667679",
+    "project_id": "callerid-phone-lookup",
+    "storage_bucket": "callerid-phone-lookup.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:621456667679:android:8cdc26434d0bbf9949112a",
+        "android_client_info": {
+          "package_name": "identifycaller.phonelookup.contacts.calllog"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDogrUf8PedB--LXtG2LC331BYyymFCDsw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

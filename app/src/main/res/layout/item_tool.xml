@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Compact tool card — icon tile + name + one-line hint, left-aligned. The tile
+    gradient and glyph are set per tool in ToolsAdapter (controlled 6-hue palette).
+    Kept dense (no dead space) so several rows fit on any phone.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/toolCard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/_5sdp"
+    android:background="@drawable/bg_row_neutral"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:paddingHorizontal="@dimen/_12sdp"
+    android:paddingVertical="@dimen/_10sdp">
+
+    <ImageView
+        android:id="@+id/ivToolIcon"
+        android:layout_width="@dimen/_36sdp"
+        android:layout_height="@dimen/_36sdp"
+        android:background="@drawable/bg_tile_blue"
+        android:padding="@dimen/_8sdp"
+        tools:src="@drawable/ic_tool_compass"
+        tools:ignore="ContentDescription" />
+
+    <TextView
+        android:id="@+id/tvToolTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_7sdp"
+        android:includeFontPadding="false"
+        android:textColor="@color/on_surface"
+        android:textSize="@dimen/_11ssp"
+        android:textStyle="bold"
+        tools:text="Compass" />
+
+    <TextView
+        android:id="@+id/tvToolSub"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_3sdp"
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textColor="@color/on_surface_variant"
+        android:textSize="@dimen/_9ssp"
+        tools:text="Find magnetic north" />
+</LinearLayout>

@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:orientation="vertical">
+
+    <!-- Compact header (pads the status-bar inset from LookupFragment) -->
+    <LinearLayout
+        android:id="@+id/heroHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/_16sdp"
+        android:paddingTop="@dimen/_10sdp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:letterSpacing="-0.02"
+            android:text="@string/nav_lookup"
+            android:textColor="@color/on_surface"
+            android:textSize="@dimen/_16ssp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/btnLookupHistory"
+            android:layout_width="@dimen/_32sdp"
+            android:layout_height="@dimen/_32sdp"
+            android:background="@drawable/bg_onb_circle_lavender"
+            android:contentDescription="@string/recent_lookups"
+            android:padding="@dimen/_8sdp"
+            android:src="@drawable/ic_history"
+            app:tint="@color/on_primary_container" />
+    </LinearLayout>
+
+    <!-- Single search pill: +country · number · clear · search -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/_16sdp"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:background="@drawable/bg_home_search"
+        android:elevation="@dimen/_2sdp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:outlineAmbientShadowColor="@color/card_shadow"
+        android:outlineSpotShadowColor="@color/card_shadow"
+        android:paddingStart="@dimen/_12sdp"
+        android:paddingEnd="@dimen/_6sdp"
+        android:paddingVertical="@dimen/_6sdp">
+
+        <LinearLayout
+            android:id="@+id/llCountryPickerSearch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingVertical="@dimen/_6sdp">
+
+            <TextView
+                android:id="@+id/tvFlagSearch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:gravity="center_vertical"
+                android:includeFontPadding="false"
+                android:textSize="@dimen/_12ssp"
+                tools:text="🇮🇳" />
+
+            <TextView
+                android:id="@+id/tvCountrySearch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="@dimen/_4sdp"
+                android:drawableEnd="@drawable/arrow_down"
+                android:drawablePadding="@dimen/_2sdp"
+                android:gravity="center_vertical"
+                android:includeFontPadding="false"
+                android:textColor="@color/on_surface"
+                android:textSize="@dimen/_11ssp"
+                android:textStyle="bold"
+                tools:text="+91" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="@dimen/_22sdp"
+            android:layout_marginStart="@dimen/_6sdp"
+            android:layout_marginEnd="@dimen/_10sdp"
+            android:background="@color/outline" />
+
+        <EditText
+            android:id="@+id/etNumberInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:hint="@string/lookup_search_hint"
+            android:imeOptions="actionSearch"
+            android:importantForAutofill="no"
+            android:inputType="phone"
+            android:maxLines="1"
+            android:textColor="@color/on_surface"
+            android:textColorHint="@color/on_surface_variant"
+            android:textSize="@dimen/_11ssp" />
+
+        <ImageView
+            android:id="@+id/ivClear"
+            android:layout_width="@dimen/_26sdp"
+            android:layout_height="@dimen/_26sdp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_cancel"
+            android:padding="@dimen/_6sdp"
+            android:src="@drawable/ic_close"
+            android:visibility="gone"
+            app:tint="@color/on_surface_variant" />
+
+        <ImageView
+            android:id="@+id/btnSearch"
+            android:layout_width="@dimen/_36sdp"
+            android:layout_height="@dimen/_36sdp"
+            android:layout_marginStart="@dimen/_2sdp"
+            android:background="@drawable/bg_circle_primary"
+            android:contentDescription="@string/lookup_search_number"
+            android:padding="@dimen/_9sdp"
+            android:src="@drawable/ic_search"
+            app:tint="@color/on_primary" />
+    </LinearLayout>
+
+    <!-- Paste suggestion — shown only when the clipboard holds a phone number.
+         40dp lavender pill: clipboard glyph + "Paste" + mono number (per design). -->
+    <LinearLayout
+        android:id="@+id/chipPaste"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/_38sdp"
+        android:layout_marginStart="@dimen/_16sdp"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:background="@drawable/bg_cta_pill"
+        android:clickable="true"
+        android:elevation="@dimen/_2sdp"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/_12sdp"
+        android:paddingEnd="@dimen/_16sdp"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="@dimen/_15sdp"
+            android:layout_height="@dimen/_15sdp"
+            android:contentDescription="@string/lookup_paste"
+            android:src="@drawable/ic_paste"
+            app:tint="@color/on_primary_container" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_8sdp"
+            android:text="@string/lookup_paste"
+            android:textColor="@color/on_primary_container"
+            android:textSize="@dimen/_11ssp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvPasteNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_6sdp"
+            android:ellipsize="end"
+            android:fontFamily="monospace"
+            android:maxLines="1"
+            android:textColor="@color/on_primary_container"
+            android:textSize="@dimen/_11ssp"
+            tools:text="+91 98220 41177" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- Shimmer skeleton shown during search loading -->
+        <com.facebook.shimmer.ShimmerFrameLayout
+            android:id="@+id/shimmerResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/_16sdp"
+            android:layout_marginTop="@dimen/_14sdp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card_border"
+                android:orientation="vertical"
+                android:padding="@dimen/_12sdp">
+
+                <View
+                    android:layout_width="@dimen/_110sdp"
+                    android:layout_height="@dimen/_12sdp"
+                    android:layout_marginBottom="@dimen/_8sdp"
+                    android:alpha="0.18"
+                    android:background="@drawable/bg_shimmer_placeholder" />
+
+                <View
+                    android:layout_width="@dimen/_160sdp"
+                    android:layout_height="@dimen/_20sdp"
+                    android:layout_marginBottom="@dimen/_8sdp"
+                    android:alpha="0.18"
+                    android:background="@drawable/bg_shimmer_placeholder" />
+
+                <View
+                    android:layout_width="@dimen/_80sdp"
+                    android:layout_height="@dimen/_12sdp"
+                    android:alpha="0.18"
+                    android:background="@drawable/bg_shimmer_placeholder" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_1sdp"
+                    android:layout_marginVertical="@dimen/_14sdp"
+                    android:alpha="0.12"
+                    android:background="@color/on_surface_variant" />
+
+                <View
+                    android:layout_width="@dimen/_140sdp"
+                    android:layout_height="@dimen/_12sdp"
+                    android:alpha="0.18"
+                    android:background="@drawable/bg_shimmer_placeholder" />
+            </LinearLayout>
+        </com.facebook.shimmer.ShimmerFrameLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/scrollContent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:paddingBottom="@dimen/_16sdp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Result Card -->
+                <LinearLayout
+                    android:id="@+id/cvResult"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/_16sdp"
+                    android:layout_marginTop="@dimen/_12sdp"
+                    android:background="@drawable/bg_card_border"
+                    android:orientation="vertical"
+                    android:padding="@dimen/_13sdp"
+                    android:visibility="gone">
+
+                    <!-- Header: identity on the left, quick actions on the right -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_toStartOf="@+id/llResActions"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:letterSpacing="0.08"
+                                android:text="@string/number_lookup"
+                                android:textAllCaps="true"
+                                android:textColor="@color/on_surface_variant"
+                                android:textSize="@dimen/_10ssp"
+                                android:textStyle="bold" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:id="@+id/tvResName"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/_2sdp"
+                                    android:textColor="@color/on_surface"
+                                    android:textSize="@dimen/_12ssp"
+                                    android:textStyle="bold"
+                                    tools:text="Unknown" />
+
+                                <ImageView
+                                    android:id="@+id/ivRevealName"
+                                    android:layout_width="@dimen/_22sdp"
+                                    android:layout_height="@dimen/_22sdp"
+                                    android:layout_marginStart="@dimen/_6sdp"
+                                    android:contentDescription="@string/lookup_unknown_caller"
+                                    android:padding="@dimen/_2sdp"
+                                    android:src="@drawable/ic_view"
+                                    android:visibility="gone"
+                                    app:tint="@color/primary" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvResNumber"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/_1sdp"
+                                android:textColor="@color/on_surface"
+                                android:textSize="@dimen/_18ssp"
+                                android:textStyle="bold"
+                                tools:text="+1 234 567 890" />
+
+                            <TextView
+                                android:id="@+id/tvResValid"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/_8sdp"
+                                android:background="@drawable/bg_pill"
+                                android:backgroundTint="@color/success_soft"
+                                android:drawablePadding="@dimen/_4sdp"
+                                android:gravity="center_vertical"
+                                android:paddingHorizontal="@dimen/_10sdp"
+                                android:paddingVertical="@dimen/_5sdp"
+                                android:textColor="@color/success"
+                                android:textSize="@dimen/_11ssp"
+                                android:textStyle="bold"
+                                app:drawableStartCompat="@drawable/ic_verified"
+                                app:drawableTint="@color/success"
+                                tools:text="Valid number" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/llResActions"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentTop="true"
+                            android:layout_alignParentEnd="true"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:id="@+id/btnResShare"
+                                android:layout_width="@dimen/_38sdp"
+                                android:layout_height="@dimen/_38sdp"
+                                android:layout_marginEnd="@dimen/_6sdp"
+                                android:padding="@dimen/_5sdp"
+                                android:contentDescription="@string/lookup_carrier"
+                                android:src="@drawable/ic_share" />
+
+                            <ImageView
+                                android:id="@+id/btnResCall"
+                                android:layout_width="@dimen/_35sdp"
+                                android:layout_height="@dimen/_35sdp"
+                                android:layout_margin="@dimen/_5sdp"
+                                android:padding="@dimen/_8sdp"
+                                android:background="@drawable/bg_theme_selected"
+                                android:contentDescription="@string/action_call"
+                                app:backgroundTint="@color/success"
+                                android:src="@drawable/ic_call"
+                                />
+                        </LinearLayout>
+                    </RelativeLayout>
+
+                    <!-- Dashed separator -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/_1sdp"
+                        android:layout_marginVertical="@dimen/_5sdp"
+                        android:background="@drawable/divider_dashed"
+                        android:layerType="software" />
+
+                    <!-- Country + Carrier tiles -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_tile"
+                            android:orientation="vertical"
+                            android:padding="@dimen/_12sdp">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <ImageView
+                                    android:layout_width="@dimen/_16sdp"
+                                    android:layout_height="@dimen/_16sdp"
+                                    android:contentDescription="@string/lookup_country"
+                                    android:src="@drawable/ic_language"
+                                     />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="@dimen/_6sdp"
+                                    android:text="@string/lookup_country"
+                                    android:textColor="@color/on_surface_variant"
+                                    android:textSize="@dimen/_10ssp" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvResCountry"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/_6sdp"
+                                android:textColor="@color/on_surface"
+                                android:textSize="@dimen/_12ssp"
+                                android:textStyle="bold"
+                                tools:text="United States" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/_10sdp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_tile"
+                            android:orientation="vertical"
+                            android:padding="@dimen/_12sdp">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <ImageView
+                                    android:layout_width="@dimen/_16sdp"
+                                    android:layout_height="@dimen/_16sdp"
+                                    android:contentDescription="@string/lookup_carrier"
+                                    android:src="@drawable/ic_sim_card"
+                                    />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="@dimen/_6sdp"
+                                    android:text="@string/lookup_carrier"
+                                    android:textColor="@color/on_surface_variant"
+                                    android:textSize="@dimen/_10ssp" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvResCarrier"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/_6sdp"
+                                android:textColor="@color/on_surface"
+                                android:textSize="@dimen/_12ssp"
+                                android:textStyle="bold"
+                                tools:text="AT&amp;T" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Line type tile (full width) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/_10sdp"
+                        android:background="@drawable/bg_tile"
+                        android:orientation="vertical"
+                        android:padding="@dimen/_12sdp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="@dimen/_16sdp"
+                                android:layout_height="@dimen/_16sdp"
+                                android:contentDescription="@string/lookup_line_type"
+                                android:src="@drawable/ic_info"
+                                app:tint="@color/primary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/_6sdp"
+                                android:text="@string/lookup_line_type"
+                                android:textColor="@color/on_surface_variant"
+                                android:textSize="@dimen/_10ssp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvResType"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/_6sdp"
+                            android:textColor="@color/on_surface"
+                            android:textSize="@dimen/_12ssp"
+                            android:textStyle="bold"
+                            tools:text="Mobile" />
+                    </LinearLayout>
+
+                    <!-- Show full detail (full width) -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnShowFullDetail"
+                        style="@style/Widget.Material3.Button"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/_40sdp"
+                        android:layout_marginTop="@dimen/_10sdp"
+                        android:text="@string/show_full_detail"
+                        android:textAllCaps="false"
+                        android:textSize="@dimen/_12ssp"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold"
+                        app:backgroundTint="@color/primary"
+                        app:cornerRadius="@dimen/_24sdp"
+                        app:iconGravity="textEnd"
+                        app:iconSize="@dimen/_16sdp"
+                        app:iconTint="@android:color/white" />
+                </LinearLayout>
+
+                <!-- Empty state — animated breathing search icon (no Lottie) -->
+                <LinearLayout
+                    android:id="@+id/llEmptyState"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_40sdp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="@dimen/_32sdp"
+                    android:visibility="gone">
+
+                    <identifycaller.phonelookup.contacts.calllog.ui.common.BreathingIconView
+                        android:layout_width="@dimen/_76sdp"
+                        android:layout_height="@dimen/_76sdp"
+                        app:biv_disc="@drawable/bg_empty_circle_tools"
+                        app:biv_icon="@drawable/ic_search_plus"
+                        app:biv_iconSize="@dimen/_32sdp"
+                        app:biv_iconTint="@color/on_primary_container"
+                        app:biv_ring="@drawable/bg_ring_tools" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/_16sdp"
+                        android:gravity="center"
+                        android:text="@string/lookup_empty_title"
+                        android:textColor="@color/on_surface"
+                        android:textSize="@dimen/_15ssp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/_6sdp"
+                        android:gravity="center"
+                        android:lineSpacingMultiplier="1.2"
+                        android:text="@string/lookup_empty_sub"
+                        android:textColor="@color/on_surface_variant"
+                        android:textSize="@dimen/_11ssp" />
+
+                    <LinearLayout
+                        android:id="@+id/btnEmptySearch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/_40sdp"
+                        android:layout_marginTop="@dimen/_18sdp"
+                        android:background="@drawable/bg_cta_pill"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="@dimen/_20sdp">
+
+                        <ImageView
+                            android:layout_width="@dimen/_15sdp"
+                            android:layout_height="@dimen/_15sdp"
+                            android:contentDescription="@string/lookup_empty_cta"
+                            android:src="@drawable/ic_search"
+                            app:tint="@color/on_primary_container" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/_8sdp"
+                            android:text="@string/lookup_empty_cta"
+                            android:textColor="@color/on_primary_container"
+                            android:textSize="@dimen/_12ssp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- History Header -->
+                <LinearLayout
+                    android:id="@+id/llHistoryHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_14sdp"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="@dimen/_20sdp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tvHistoryTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/recent_lookups"
+                        android:textColor="@color/on_surface"
+                        android:textSize="@dimen/_12ssp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvHistoryClearAll"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="@dimen/_4sdp"
+                        android:text="@string/clear_all"
+                        android:textColor="@color/primary"
+                        android:textSize="@dimen/_11ssp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvHistory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_4sdp"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="false"
+                    android:paddingHorizontal="@dimen/_14sdp"
+                    android:visibility="gone"
+                    tools:listitem="@layout/item_search_history" />
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
+
+</LinearLayout>

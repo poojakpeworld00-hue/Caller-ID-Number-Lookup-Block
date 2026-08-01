@@ -1,0 +1,593 @@
+<resources>
+    <!-- App -->
+    <string name="app_name">CallerID Phone Lookup</string>
+    <!-- Application label with a leading space so the app sorts to the TOP of
+         system lists like "Display over other apps" / "Default apps". The
+         launcher icon keeps the clean name via the launcher activity's label. -->
+    <string name="app_label">&#160;&#160;CallerID Phone Lookup</string>
+    <string name="dash">&#8211;</string>
+
+    <!-- Splash -->
+    <string name="splash_title">CallerID</string>
+    <string name="splash_tagline">Know who\'s calling. Stay protected.</string>
+    <string name="splash_footer">This Action May Contain Ads</string>
+    <string name="splash_incoming_call">Incoming call…</string>
+    <string name="splash_fraud_blocked">Fraud blocked</string>
+    <string name="splash_avatar_initials">RS</string>
+    <string name="splash_secure_version">Secure v%1$s</string>
+
+    <!-- Language -->
+    <string name="language_title">Choose language</string>
+    <string name="language_continue">Continue</string>
+    <string name="language_search_hint">Search languages</string>
+    <string name="language_suggested">Suggested</string>
+    <string name="language_all">All languages</string>
+    <string name="language_current">Current language</string>
+    <string name="language_info_title">Language Information</string>
+    <string name="language_info_msg">Changing the language will update the app\'s interface. Some regional features may vary based on your selection.</string>
+    <string name="language_info_got_it">Got it</string>
+
+    <!-- Terms &amp; Conditions -->
+    <string name="terms_title">Terms &amp; Conditions</string>
+    <string name="terms_body">Please review these terms carefully. By continuing, you agree to the following:\n\n• CallerID identifies incoming, outgoing and unknown callers in real time.\n• The app detects and helps you block spam, scam and fraud calls.\n• You can look up any phone number to see available caller details.\n• To work properly, the app may access your call log and contacts.\n• The display-over-other-apps (overlay) permission is used to show caller information during calls.\n• Your data stays private and is used only to provide caller identification and spam protection.\n\nBy tapping “Accept &amp; Continue” you confirm that you have read and agree to our Terms &amp; Conditions and Privacy Policy.</string>
+    <string name="terms_agree">I have read and agree to the Terms &amp; Conditions and Privacy Policy.</string>
+    <string name="terms_accept">Accept &amp; Continue</string>
+    <string name="terms_please_accept">Please accept the Terms &amp; Conditions to continue.</string>
+
+    <!-- Overlay-permission guide -->
+    <string name="txt_allow_overlay_access">Allow display over other apps</string>
+    <string name="app_name_overlay">CallerID Phone Lookup</string>
+    <string name="overlay_system_permission">System permission</string>
+    <string name="overlay_permission_desc">Display over other apps allows this app to show caller info while you use other apps.</string>
+    <string name="overlay_banner_desc">Show caller info over other apps</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_title">Know who\'s calling</string>
+    <string name="onboarding_desc">Instantly identify unknown numbers, see the caller\'s name and business, and block spam before it rings.</string>
+    <string name="onboarding_title_2">Block spam &amp; fraud</string>
+    <string name="onboarding_desc_2">Automatically detect and block spam, scam and robocalls so they never disturb you again.</string>
+    <string name="onboarding_title_3">Search any number</string>
+    <string name="onboarding_desc_3">Look up any unknown number to instantly see the caller\'s name, location and business details.</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_spam_id">Spam ID</string>
+    <string name="onboarding_caller_id">Caller ID</string>
+
+    <!-- Home -->
+    <string name="home_title">You\'re protected</string>
+    <string name="home_subtitle">Caller ID and spam blocking are active</string>
+    <string name="home_greeting">Good morning 👋</string>
+    <string name="home_brand">CallerID</string>
+    <string name="home_brand_sub">Phone Lookup</string>
+    <string name="home_search_hint">Search name or number…</string>
+    <string name="home_protection_active">Protection active</string>
+    <string name="home_blocked">Blocked</string>
+    <string name="home_spam">Spam</string>
+    <string name="home_recent_activity">Recent activity</string>
+    <string name="home_quick_actions">Quick Actions</string>
+    <string name="home_see_all">See all</string>
+    <string name="home_protection_line">Protection is on · spam auto-blocked</string>
+    <string name="see_all">See all</string>
+
+    <!-- Quick actions -->
+    <string name="quick_dialer">Dialer</string>
+    <string name="quick_lookup">Lookup</string>
+    <string name="quick_blocklist">Blocklist</string>
+    <string name="quick_tools">Tools</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_recents">Recents</string>
+    <string name="nav_contacts">Contacts</string>
+    <string name="recents_subtitle">Your call history</string>
+    <string name="contacts_count_fmt">%1$d Contacts</string>
+    <string name="action_more">More</string>
+    <string name="nav_lookup">Lookup</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Recents -->
+    <string name="recents_today">Today</string>
+    <string name="recents_yesterday">Yesterday</string>
+    <string name="recents_this_week">This week</string>
+    <string name="recents_earlier">Earlier</string>
+    <string name="recents_empty">No recent calls</string>
+    <string name="recents_search_hint">Search calls</string>
+
+    <!-- Call filters -->
+    <string name="filter_all">All</string>
+    <string name="filter_incoming">Incoming</string>
+    <string name="filter_outgoing">Outgoing</string>
+    <string name="filter_missed">Missed</string>
+
+    <!-- Recents sort menu -->
+    <string name="sort_title">Sort by</string>
+    <string name="sort_newest">Newest first</string>
+    <string name="sort_oldest">Oldest first</string>
+    <string name="sort_name_asc">Name (A–Z)</string>
+    <string name="sort_name_desc">Name (Z–A)</string>
+
+    <!-- Call type labels -->
+    <string name="type_incoming">Incoming</string>
+    <string name="type_outgoing">Outgoing</string>
+    <string name="type_missed">Missed</string>
+    <string name="type_blocked">Blocked</string>
+
+    <!-- Call log permission -->
+    <string name="perm_calllog_title">See your recent calls</string>
+    <string name="perm_calllog_message">Allow access to your call log to show your recent calls here.</string>
+    <string name="action_grant">Grant access</string>
+
+    <!-- Lookup -->
+    <string name="lookup_hint">Enter a phone number</string>
+    <string name="lookup_verified_business">Verified business</string>
+    <string name="lookup_organization">Organization</string>
+    <string name="lookup_location">Location</string>
+    <string name="lookup_spam_risk">Spam risk</string>
+    <string name="action_call">Call</string>
+    <string name="action_save">Save</string>
+    <string name="lookup_idle_hint">Enter a phone number to identify the caller</string>
+    <string name="number_lookup">Number lookup</string>
+    <string name="lookup_unknown_caller">Unknown caller</string>
+    <string name="lookup_in_contacts">In your contacts</string>
+    <string name="lookup_not_in_contacts">Not in your contacts</string>
+    <string name="lookup_status">Status</string>
+    <string name="lookup_region">Region</string>
+    <string name="lookup_detail_title">Number Details</string>
+    <string name="lookup_city">City</string>
+    <string name="lookup_spam_type">Spam type</string>
+    <string name="lookup_local_number">Local number</string>
+    <string name="lookup_international">International</string>
+    <string name="lookup_carrier">Carrier</string>
+    <string name="enter_a_number">Enter phone number</string>
+    <string name="search_global_caller_db">Search Global Caller Database</string>
+    <string name="lookup_action">Lookup</string>
+    <string name="lookup_subtitle">Identify any number worldwide</string>
+    <string name="lookup_search_hint">Search Number</string>
+    <string name="lookup_empty_title">Find out who\'s behind any number</string>
+    <string name="lookup_empty_sub">Your lookups will appear here. Nothing is shared with the numbers you search.</string>
+    <string name="lookup_empty_cta">Search a number</string>
+    <string name="lookup_paste">Paste</string>
+    <string name="lookup_search_number">Search Number</string>
+    <string name="lookup_pick_contact">Pick from contacts</string>
+    <string name="action_settings">Settings</string>
+    <string name="lookup_history_title">Search History</string>
+    <string name="lookup_history_empty">No recent lookups yet</string>
+    <string name="action_back">Back</string>
+    <string name="select_country">Select country</string>
+    <string name="search_country">Search country</string>
+    <string name="show_full_detail">Show full detail</string>
+    <string name="empty_search_hint">Search a number to see details</string>
+    <string name="recent_lookups">Recent lookups</string>
+    <string name="clear_all">Clear all</string>
+    <string name="lookup_valid_number">Valid number</string>
+    <string name="lookup_invalid_number">Invalid number</string>
+    <string name="lookup_country">Country</string>
+    <string name="lookup_line_type">Line type</string>
+
+    <!-- Call details -->
+    <string name="call_detail_title">Call Details</string>
+    <string name="action_message">Message</string>
+    <string name="action_block">Block</string>
+    <string name="action_unblock">Unblock</string>
+    <string name="lookup_also_known_as">Also known as</string>
+    <string name="lookup_nickname_bullet">•  %1$s</string>
+    <string name="lookup_unlock_nicknames">Watch ad to reveal</string>
+    <string name="lookup_unknown_value">Unknown</string>
+    <string name="watch_ad_title">Reveal full details</string>
+    <string name="watch_ad_message">Watch a short ad to unlock the full caller name and details.</string>
+    <string name="watch_ad_button">Watch Ad</string>
+    <string name="watch_ad_cancel">Not now</string>
+    <string name="action_whatsapp">WhatsApp</string>
+    <string name="whatsapp_not_installed">WhatsApp is not installed</string>
+    <string name="detail_verified">Verified</string>
+    <string name="detail_line_mobile">Mobile</string>
+    <string name="detail_total_duration">Total Duration</string>
+    <string name="detail_total_calls">Total Calls</string>
+    <string name="detail_calls_word">calls</string>
+    <string name="detail_total_sub">Total airtime this month</string>
+    <string name="detail_call_history">Call History</string>
+    <string name="detail_last_30">Last 30 days</string>
+    <string name="detail_calls_outgoing">Outgoing only</string>
+    <string name="detail_calls_incoming">Incoming only</string>
+    <string name="detail_calls_missed">Missed only</string>
+    <string name="detail_calls_mixed">Mixed calls</string>
+    <string name="detail_calls_none">No recent calls</string>
+    <string name="detail_view_all">View All History</string>
+    <string name="detail_secure">Secure</string>
+    <string name="detail_no_connection">No connection</string>
+    <string name="detail_today">Today, %1$s</string>
+    <string name="detail_yesterday">Yesterday, %1$s</string>
+    <string name="detail_dot_join">%1$s · %2$s</string>
+    <string name="detail_no_talk_time">No talk time</string>
+    <string name="detail_not_answered">Not answered</string>
+    <string name="detail_not_identified">Not identified yet</string>
+    <string name="detail_identify">Identify this number</string>
+    <string name="detail_history_empty_title">No calls with this number yet</string>
+    <string name="detail_history_empty_sub">When you call or receive calls from this number, the history shows up here.</string>
+    <string name="detail_today_short">Today</string>
+    <string name="detail_yesterday_short">Yesterday</string>
+
+    <!-- Dialer -->
+    <string name="dialer_title">Dialer</string>
+    <string name="dialer_search_hint">Search or enter a number</string>
+    <string name="dialer_search_contacts">Search Contacts</string>
+    <string name="dialer_frequent">Frequently called</string>
+    <string name="dialer_favorites">Favorites</string>
+    <string name="dialer_view_all">View all</string>
+    <string name="dialer_voice_search">Voice search</string>
+    <string name="dialer_empty">No call history yet</string>
+    <string name="dialer_matches">Matches</string>
+    <string name="dialer_empty_title">Dial a number to get started</string>
+    <string name="dialer_empty_sub">Frequently called numbers will appear here for one-tap calling.</string>
+    <string name="dialer_backspace">Delete</string>
+    <string name="add_to_contacts">Add to contacts</string>
+
+    <!-- Blocklist -->
+    <string name="blocklist_title">Blocklist</string>
+    <string name="blocklist_total">Total blocked</string>
+    <plurals name="blocklist_entries">
+        <item quantity="one">%d Entry</item>
+        <item quantity="other">%d Entries</item>
+    </plurals>
+    <string name="blocklist_entry_title">Blocked number</string>
+    <string name="blocklist_status_blocked">Blocked</string>
+    <string name="blocklist_more_options">More options</string>
+    <string name="blocklist_view_details">View Details</string>
+    <string name="blocklist_unblock">Unblock</string>
+    <string name="blocklist_report">Report</string>
+    <string name="blocklist_reported">Reported. Thanks for the feedback.</string>
+    <string name="blocklist_details_title">Blocked number</string>
+    <string name="blocklist_details_added">Blocked on %1$s</string>
+    <string name="blocklist_section_latest">LATEST</string>
+    <string name="blocklist_section_yesterday">YESTERDAY</string>
+    <string name="blocklist_section_earlier">EARLIER</string>
+
+    <!-- Tools -->
+    <string name="tools_title">Tools</string>
+    <string name="tools_compass">Compass</string>
+    <string name="tools_compass_sub">Find magnetic north</string>
+    <string name="tools_speedometer">Speedometer</string>
+    <string name="tools_speedometer_sub">Internet speed test</string>
+    <string name="compass_no_sensor">Compass sensor not available on this device</string>
+    <string name="compass_activity_title">Compass Activity</string>
+    <string name="compass_signal">Signal Strength: %1$s</string>
+    <string name="signal_strong">Strong</string>
+    <string name="signal_medium">Medium</string>
+    <string name="signal_weak">Weak</string>
+    <string name="speedometer_unit">Mbps</string>
+    <string name="speedometer_waiting">Testing…</string>
+    <string name="speedometer_permission">Location permission is needed to measure speed</string>
+    <string name="speedtest_pill">Quantum-Resistant AES-512</string>
+    <string name="speedtest_stable">Secure connection stable</string>
+    <string name="speedtest_error">Connection error — tap to retry</string>
+    <string name="speedtest_upload">Upload speed</string>
+    <string name="speedtest_latency">Latency</string>
+    <string name="speedtest_jitter">Jitter</string>
+    <string name="speedtest_again">Test again</string>
+    <string name="speedtest_mbps">%1$s Mbps</string>
+    <string name="speedtest_ms">%1$d ms</string>
+    <string name="cardinal_n">N</string>
+    <string name="cardinal_e">E</string>
+    <string name="cardinal_s">S</string>
+    <string name="cardinal_w">W</string>
+
+    <!-- Flashlight -->
+    <string name="tools_flashlight">Flashlight</string>
+    <string name="tools_flashlight_sub">Torch &amp; SOS</string>
+    <string name="flashlight_on">Light on</string>
+    <string name="flashlight_off">Light off</string>
+    <string name="flashlight_sos">SOS</string>
+    <string name="flashlight_no_flash">No camera flash on this device</string>
+    <string name="flashlight_integrity">Hardware Integrity: Verified</string>
+    <string name="flashlight_lumen">Lumen output</string>
+    <string name="flashlight_brightness">Brightness control</string>
+    <string name="flashlight_mode_steady">Steady</string>
+    <string name="flashlight_mode_strobe">Strobe</string>
+    <string name="flashlight_lm">%1$d lm</string>
+
+    <!-- Bubble level -->
+    <string name="tools_level">Bubble level</string>
+    <string name="tools_level_sub">Check if a surface is flat</string>
+    <string name="level_current_tilt">Current tilt</string>
+    <string name="level_dual_axis">Dual-axis data</string>
+    <string name="level_x_axis">X-Axis</string>
+    <string name="level_y_axis">Y-Axis</string>
+    <string name="level_calibrate">Calibrate</string>
+    <string name="level_adjusting">Adjusting</string>
+    <string name="level_level">Level</string>
+
+    <!-- Battery -->
+    <string name="tools_battery">Battery</string>
+    <string name="tools_battery_sub">Charge &amp; health info</string>
+    <string name="battery_level">Charge</string>
+    <string name="battery_status">Status</string>
+    <string name="battery_health">Health</string>
+    <string name="battery_temp">Temperature</string>
+    <string name="battery_voltage">Voltage</string>
+    <string name="battery_tech">Technology</string>
+    <string name="battery_plugged">Power source</string>
+    <string name="battery_activity_title">Battery Info</string>
+    <string name="battery_activity_sub">Monitor power consumption and hardware integrity. Review real-time performance and security handshake statuses.</string>
+    <string name="battery_secured">Secured &amp; Optimizing</string>
+    <string name="battery_health_great">Great</string>
+    <string name="battery_health_hot">Hot</string>
+    <string name="battery_health_cold">Cold</string>
+    <string name="battery_health_dead">Dead</string>
+    <string name="battery_health_over">Over voltage</string>
+
+    <!-- Sound meter -->
+    <string name="tools_sound">Sound meter</string>
+    <string name="tools_sound_sub">Measure noise level</string>
+    <string name="sound_unit">dB</string>
+    <string name="sound_permission">Microphone permission is needed to measure sound</string>
+    <string name="sound_peak">Peak level</string>
+    <string name="sound_average">Average level</string>
+    <string name="sound_spectrum">Frequency spectrum</string>
+    <string name="sound_hold">Hold reading</string>
+    <string name="sound_resume">Resume</string>
+    <string name="sound_reset">Reset data</string>
+    <string name="sound_cat_quiet">Quiet</string>
+    <string name="sound_cat_normal">Normal conversation</string>
+    <string name="sound_cat_loud">Loud</string>
+    <string name="sound_cat_very_loud">Very loud</string>
+    <string name="sound_cat_dangerous">Dangerous</string>
+
+    <!-- SIM / Network info -->
+    <string name="tools_sim">Network info</string>
+    <string name="tools_sim_sub">SIM &amp; carrier details</string>
+    <string name="sim_carrier">Carrier</string>
+    <string name="sim_network_type">Network type</string>
+    <string name="sim_phone_type">Phone type</string>
+    <string name="sim_country">Country</string>
+    <string name="sim_state">SIM state</string>
+    <string name="sim_roaming">Roaming</string>
+    <string name="sim_permission">Phone permission is needed for network details</string>
+
+    <!-- Light meter -->
+    <string name="tools_light">Light meter</string>
+    <string name="tools_light_sub">Ambient light in lux</string>
+    <string name="light_unit">lux</string>
+    <string name="light_no_sensor">Light sensor not available on this device</string>
+    <string name="light_capture">Capture</string>
+    <string name="light_resume">Resume</string>
+    <string name="light_zero">Zero</string>
+    <string name="light_min">Minimum</string>
+    <string name="light_avg">Average</string>
+    <string name="light_max">Maximum</string>
+    <string name="light_lx">%1$d lx</string>
+
+    <!-- Stopwatch / Timer -->
+    <string name="tools_stopwatch">Stopwatch</string>
+    <string name="tools_stopwatch_sub">Stopwatch &amp; timer</string>
+    <string name="mode_stopwatch">Stopwatch</string>
+    <string name="mode_timer">Timer</string>
+    <string name="stopwatch_active">Active session</string>
+    <string name="stopwatch_lap">Lap</string>
+    <string name="stopwatch_history">Lap History</string>
+    <string name="stopwatch_laps">%1$d Laps</string>
+    <string name="stopwatch_empty">No lap telemetry recorded for current session.</string>
+    <string name="stopwatch_total">Total records</string>
+    <string name="stopwatch_lap_n">Lap %1$d</string>
+
+    <!-- Timer -->
+    <string name="timer_tool">Timer</string>
+    <string name="timer_tool_sub">Countdown timer</string>
+    <string name="timer_minutes">Minutes</string>
+    <string name="timer_seconds">Seconds</string>
+    <string name="action_start">Start</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_reset">Reset</string>
+    <string name="common_yes">Yes</string>
+    <string name="common_no">No</string>
+    <string name="common_unknown">Unknown</string>
+    <string name="press_back_again">Press back again to exit</string>
+
+    <!-- Incoming-call overlay -->
+    <string name="incall_incoming">Incoming Call</string>
+    <string name="incall_known">Known Contact</string>
+    <string name="incall_unknown">Unknown</string>
+    <string name="incall_now">Now</string>
+    <string name="incall_calls">%1$d calls</string>
+    <string name="incall_service_active">Caller ID active</string>
+
+    <!-- Call-log permission prompt (Home recents) -->
+    <string name="perm_allow">Allow access</string>
+    <string name="action_close">Close</string>
+    <plurals name="dialer_call_count">
+        <item quantity="one">%d call</item>
+        <item quantity="other">%d calls</item>
+    </plurals>
+
+    <!-- Contacts -->
+    <string name="contacts_search_hint">Search contacts</string>
+    <string name="contacts_tab_all">All</string>
+    <string name="contacts_tab_favorites">Favorites</string>
+    <string name="contacts_tab_recents">Recents</string>
+    <string name="contacts_tab_groups">Groups</string>
+    <string name="contacts_empty">No contacts found</string>
+    <string name="perm_contacts_title">See your contacts</string>
+    <string name="perm_contacts_message">Allow access to your contacts to show them here.</string>
+
+    <!-- Settings actions -->
+    <string name="language_dialog_title">Choose language</string>
+    <string name="blocklist_add">Add number</string>
+    <string name="blocklist_empty">No blocked numbers yet</string>
+    <string name="blocklist_add_title">Block a number</string>
+    <string name="blocklist_add_hint">Enter phone number</string>
+    <string name="blocklist_added">Number blocked</string>
+    <string name="blocklist_removed">Number removed</string>
+    <string name="blocklist_remove_title">Remove from block list?</string>
+    <string name="blocklist_empty_subtitle">Reject calls from specific numbers or patterns</string>
+    <string name="blocklist_choose_title">Block a number</string>
+    <string name="blocklist_method_add_title">Add a number</string>
+    <string name="blocklist_method_add_sub">Enter manually</string>
+    <string name="blocklist_method_contacts_title">From contacts</string>
+    <string name="blocklist_method_contacts_sub">Pick someone from your contacts</string>
+    <string name="blocklist_method_recents_title">Block from recent calls</string>
+    <string name="blocklist_method_recents_sub">Pick from your call log</string>
+    <string name="blocklist_pick_recents_title">Recent calls</string>
+    <string name="blocklist_no_recents">No recent calls found</string>
+    <string name="blocklist_contact_no_number">Couldn\'t read that contact\'s number</string>
+    <string name="blocklist_already_blocked">Already blocked</string>
+    <string name="blocklist_perm_calllog">Call-log access is needed to pick recent calls</string>
+    <string name="blocklist_pick_contacts_title">Contacts</string>
+    <string name="blocklist_no_contacts">No contacts found</string>
+    <string name="blocklist_perm_contacts">Contacts access is needed to pick a contact</string>
+    <!-- Caller-ID gate on block management -->
+    <string name="blocklist_enable_cid_title">Enable Caller ID</string>
+    <string name="blocklist_enable_cid_message">Turn on Caller ID to manage blocked numbers and access all blocking features.</string>
+    <string name="blocklist_enable_cid_confirm">Enable Caller ID</string>
+    <string name="blocklist_enable_cid_not_now">Not Now</string>
+    <string name="blocklist_enable_cid_hint_label">Next step — turn this on</string>
+    <string name="blocklist_enable_cid_hint_sub">Set as your Caller ID app</string>
+    <string name="action_add">Add</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_remove">Remove</string>
+
+    <!-- Settings -->
+    <string name="settings_language">Language</string>
+    <string name="settings_language_sub">Choose app language</string>
+    <string name="settings_blocklist">Block list</string>
+    <string name="call_screening">Caller ID Overlay</string>
+    <string name="call_screening_desc">Show caller information during calls</string>
+    <string name="call_screening_hint_tip">Turn this on to see who\'s calling and block spam</string>
+    <string name="settings_blocklist_sub">Numbers you blocked</string>
+    <string name="settings_protection">Spam protection</string>
+    <string name="settings_protection_sub">Caller ID &amp; spam blocking</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_sub">Light, dark or system</string>
+    <string name="settings_section_preferences">Preferences</string>
+    <string name="settings_section_support">Account &amp; Support</string>
+    <string name="settings_section_legal">Legal</string>
+    <string name="settings_sim">SIM Management</string>
+    <string name="settings_sim_sub">Network &amp; carrier settings</string>
+    <string name="settings_rate">Rate Us</string>
+    <string name="settings_rate_sub">Love the app? Let us know.</string>
+    <string name="settings_share">Share</string>
+    <string name="settings_share_sub">Invite friends to secure their digital life.</string>
+    <string name="settings_share_text">Identify unknown callers and block spam with Caller ID Phone Lookup: https://play.google.com/store/apps/details?id=%1$s</string>
+    <string name="settings_privacy">Privacy Policy</string>
+    <string name="settings_terms">Terms of Service</string>
+    <string name="settings_privacy_url">https://sites.google.com/view/calleridphonelookup/privacy</string>
+    <string name="settings_terms_url">https://sites.google.com/view/calleridphonelookup/terms</string>
+
+    <!-- Theme dialog -->
+    <string name="theme_dialog_title">Choose theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System default</string>
+
+    <!-- Call states -->
+    <string name="call_incoming">Incoming call…</string>
+    <string name="call_decline">Decline</string>
+    <string name="call_accept">Accept</string>
+    <string name="call_message">Message</string>
+    <string name="call_identified">Identified by CallerID</string>
+    <string name="label_spam">Spam</string>
+    <string name="label_verified">Verified</string>
+    <string name="please_wait">Please Wait...</string>
+
+    <!-- Post-call (callback) screen -->
+    <string name="pc_recent_calls_empty">No recent calls</string>
+    <string name="recent">Recent</string>
+    <string name="message">Message</string>
+    <string name="reminder">Reminder</string>
+    <string name="whatsapp">WhatsApp</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="add_reminder">Add Reminder</string>
+    <string name="no_reminders_found">No reminders found</string>
+    <string name="reminder_prompt">Remind me about</string>
+    <string name="reminder_name_hint">Birthday</string>
+    <string name="message_custom_hint">Write your own message</string>
+    <string name="call_duration_label">Duration:</string>
+    <string name="call_type_outgoing">Outgoing</string>
+    <string name="incoming_call">Incoming Call</string>
+    <string name="outgoing_call">Outgoing Call</string>
+    <string name="missed_call">Missed Call</string>
+    <string name="feature_send_email">Send Email</string>
+    <string name="feature_calendar">Add to Calendar</string>
+    <string name="feature_web">Open Website</string>
+    <string name="feature_edit_contact">Edit Contact</string>
+
+    <!-- Home search-bar one-time hint -->
+    <string name="search_hint_tip">Type any number here to identify the caller</string>
+    <string name="got_it">Got it</string>
+
+    <!-- App-redirect dialog -->
+    <string name="app_unavailable">App Not Available</string>
+    <string name="app_redirect_desc">This app isn\'t installed on your device. Would you like to open it in the Play Store?</string>
+    <string name="settings_section_call">CALLER PROTECTION</string>
+
+    <!-- ===== Blocklist redesign (2026) ===== -->
+    <string name="blocklist_section_blocked">Blocked numbers</string>
+    <string name="blocklist_summary_sub">Incoming calls from these are auto-rejected</string>
+    <string name="blocklist_unknown_caller">Unknown caller</string>
+    <plurals name="blocklist_blocked_count">
+        <item quantity="one">%1$d number blocked</item>
+        <item quantity="other">%1$d numbers blocked</item>
+    </plurals>
+
+    <string name="action_identify">Identify</string>
+
+    <!-- ===== Number details · Also known as (per-name reveal) ===== -->
+    <string name="lookup_revealed">Revealed</string>
+    <string name="lookup_reveal">Reveal</string>
+    <string name="lookup_nick_footer">One ad reveals one name · revealed names stay unlocked</string>
+    <string name="lookup_x_of_n_revealed">%1$d of %2$d revealed</string>
+    <plurals name="lookup_more_names">
+        <item quantity="one">%1$d name</item>
+        <item quantity="other">%1$d more names</item>
+    </plurals>
+
+    <!-- ===== Tools redesign (2026) ===== -->
+    <string name="tools_search_hint">Search tools</string>
+    <string name="tools_cat_measure">Measure</string>
+    <string name="tools_cat_device">Device</string>
+    <string name="tools_cat_time">Time</string>
+    <string name="tools_empty_title">No tools match \"%1$s\"</string>
+    <string name="tools_empty_sub">Try \"level\" or \"compass\" — or browse the full set.</string>
+    <string name="tools_reset_search">Reset search</string>
+    <string name="tools_clear_search">Clear search</string>
+
+    <!-- Permission priming bottom sheet -->
+    <string name="perm_sheet_title">Enable permissions</string>
+    <string name="perm_sheet_subtitle">Grant access so caller ID, spam alerts and your call history work properly.</string>
+    <string name="perm_sheet_continue">Continue</string>
+    <string name="perm_sheet_not_now">Not now</string>
+    <string name="permsheet_allow">Allow</string>
+    <string name="perm_granted">Granted</string>
+    <string name="perm_notification_title">Notifications</string>
+    <string name="perm_notification_desc">Get spam and call alerts</string>
+    <string name="perm_phone_title">Phone</string>
+    <string name="perm_phone_desc">Identify incoming callers</string>
+    <string name="permsheet_calllog_title">Call log</string>
+    <string name="perm_calllog_desc">Show your recent calls</string>
+    <string name="permsheet_contacts_title">Contacts</string>
+    <string name="perm_contacts_desc">Match names to numbers</string>
+    <string name="perm_overlay_title">Display over apps</string>
+    <string name="perm_overlay_desc">Show caller ID during calls</string>
+
+    <!-- Home permission hint (shown after the permission sheet is dismissed with permissions still pending) -->
+    <string name="home_perm_hint">Some permissions are off. Turn them on for full caller ID.</string>
+    <string name="home_perm_manage">Manage</string>
+
+    <!-- Full-Screen-Intent permission flow (Screen + Dialog). Title/desc/button are
+         overridden at runtime from Remote Config; these are the fallbacks. -->
+    <string name="fsi_incoming_call">Incoming Call</string>
+    <string name="fsi_avatar_initials">ID</string>
+    <string name="fsi_caller_unknown">Unknown</string>
+    <string name="fsi_caller_number">+91 70967 *****</string>
+    <string name="fsi_known_contact">Known Contact</string>
+    <string name="fsi_meta_now">Now</string>
+    <string name="fsi_meta_calls">68 calls</string>
+    <string name="fsi_meta_sim">JIO 4G</string>
+    <string name="fsi_screen_title">Never miss who\'s calling</string>
+    <string name="fsi_screen_desc">Show verified caller details on your lock screen — the instant a call comes in.</string>
+    <string name="fsi_feature_identify">Instantly identify unknown numbers</string>
+    <string name="fsi_feature_spam">See spam &amp; fraud warnings up front</string>
+    <string name="fsi_feature_missed">Never miss an important call again</string>
+    <string name="fsi_enable_now">Enable Now</string>
+    <string name="fsi_not_now">Not now</string>
+</resources>

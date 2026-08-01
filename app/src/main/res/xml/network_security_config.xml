@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- numverify (apilayer) free tier serves over HTTP only -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">apilayer.net</domain>
+    </domain-config>
+    <!-- ip-api.com IP geolocation free tier serves over HTTP only -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">ip-api.com</domain>
+    </domain-config>
+</network-security-config>

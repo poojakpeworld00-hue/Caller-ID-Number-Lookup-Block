@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Contacts v2 — compact header (title + count + Add), pill search, filter chips
+    (All / Favorites / Recents / Groups), a native ad, then the contact list with
+    the A–Z fast-scroll rail. Matches the Home v2 language; bottom nav + AdMob
+    banner live in MainActivity (unchanged).
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:orientation="vertical">
+
+    <!-- Compact header (pads the status-bar inset from ContactsFragment) -->
+    <LinearLayout
+        android:id="@+id/heroHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/_16sdp"
+        android:paddingTop="@dimen/_10sdp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="-0.02"
+                android:text="@string/nav_contacts"
+                android:textColor="@color/on_surface"
+                android:textSize="@dimen/_16ssp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvContactsCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/on_surface_variant"
+                android:textSize="@dimen/_9ssp"
+                android:textStyle="bold"
+                tools:text="3 contacts" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btnContactsAdd"
+            android:layout_width="@dimen/_32sdp"
+            android:layout_height="@dimen/_32sdp"
+            android:background="@drawable/bg_onb_circle_lavender"
+            android:contentDescription="@string/action_add"
+            android:padding="@dimen/_8sdp"
+            android:src="@drawable/ic_person_add"
+            app:tint="@color/on_primary_container" />
+    </LinearLayout>
+
+    <!-- Search pill -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/_16sdp"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:background="@drawable/bg_home_search"
+        android:elevation="@dimen/_2sdp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:outlineAmbientShadowColor="@color/card_shadow"
+        android:outlineSpotShadowColor="@color/card_shadow"
+        android:paddingHorizontal="@dimen/_14sdp"
+        android:paddingVertical="@dimen/_9sdp">
+
+        <ImageView
+            android:layout_width="@dimen/_16sdp"
+            android:layout_height="@dimen/_16sdp"
+            android:contentDescription="@string/contacts_search_hint"
+            android:src="@drawable/ic_search"
+            app:tint="@color/on_surface_variant" />
+
+        <EditText
+            android:id="@+id/etSearch"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_8sdp"
+            android:layout_weight="1"
+            android:background="@null"
+            android:hint="@string/contacts_search_hint"
+            android:importantForAutofill="no"
+            android:inputType="textPersonName"
+            android:maxLines="1"
+            android:textColor="@color/on_surface"
+            android:textColorHint="@color/on_surface_variant"
+            android:textSize="@dimen/_11ssp" />
+
+        <ImageView
+            android:id="@+id/btnClearSearch"
+            android:layout_width="@dimen/_24sdp"
+            android:layout_height="@dimen/_24sdp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/call_decline"
+            android:padding="@dimen/_5sdp"
+            android:src="@drawable/ic_close"
+            android:visibility="gone"
+            app:tint="@color/on_surface_variant" />
+    </LinearLayout>
+
+    <!-- Filter chips -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:overScrollMode="never"
+        android:paddingHorizontal="@dimen/_16sdp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tabAll"
+                style="@style/RecentFilterTab"
+                android:drawableStart="@drawable/ic_group"
+                android:text="@string/contacts_tab_all" />
+
+            <TextView
+                android:id="@+id/tabFavorites"
+                style="@style/RecentFilterTab"
+                android:drawableStart="@drawable/ic_rate_contact"
+                android:text="@string/contacts_tab_favorites" />
+
+            <TextView
+                android:id="@+id/tabRecents"
+                style="@style/RecentFilterTab"
+                android:drawableStart="@drawable/ic_history"
+                android:text="@string/contacts_tab_recents" />
+
+            <TextView
+                android:id="@+id/tabGroups"
+                style="@style/RecentFilterTab"
+                android:layout_marginEnd="0dp"
+                android:drawableStart="@drawable/ic_group"
+                android:text="@string/contacts_tab_groups" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Full-bleed hairline separating the filters from the ad below -->
+    <View
+        android:id="@+id/adNativeDivider"
+        android:layout_marginTop="@dimen/_10sdp"
+        style="@style/AdDivider" />
+
+    <!-- Native ad -->
+    <FrameLayout
+        android:id="@+id/adNativeFrame"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/_16sdp"
+       >
+
+        <com.facebook.shimmer.ShimmerFrameLayout
+            android:id="@+id/adShimmer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#ccc">
+
+            <include layout="@layout/googlenativebanner" />
+        </com.facebook.shimmer.ShimmerFrameLayout>
+    </FrameLayout>
+    <!-- Full-bleed hairline separating the filters from the ad below -->
+    <View
+        android:id="@+id/adNativeDivider1"
+        style="@style/AdDivider" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvContacts"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/_4sdp"
+            android:clipToPadding="false"
+            android:paddingStart="0dp"
+            android:paddingEnd="@dimen/_16sdp"
+            android:paddingBottom="@dimen/_12sdp"
+            tools:listitem="@layout/item_contact" />
+
+        <!-- Alphabet fast-scroll index -->
+        <LinearLayout
+            android:id="@+id/alphaIndex"
+            android:layout_width="@dimen/_18sdp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center_vertical"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingVertical="@dimen/_4sdp" />
+
+        <TextView
+            android:id="@+id/letterBubble"
+            android:layout_width="@dimen/_48sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_letter_bubble"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="@dimen/_20ssp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:text="A"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/tvEmpty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/contacts_empty"
+            android:textColor="@color/on_surface_variant"
+            android:textSize="@dimen/_12ssp"
+            android:visibility="gone" />
+
+        <!-- Permission state -->
+        <LinearLayout
+            android:id="@+id/permState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/_32sdp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="@dimen/_60sdp"
+                android:layout_height="@dimen/_60sdp"
+                android:background="@drawable/bg_icon_box"
+                android:contentDescription="@string/perm_contacts_title"
+                android:padding="@dimen/_16sdp"
+                android:src="@drawable/ic_group"
+                app:tint="@color/primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_14sdp"
+                android:text="@string/perm_contacts_title"
+                android:textColor="@color/on_surface"
+                android:textSize="@dimen/_13ssp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_6sdp"
+                android:gravity="center"
+                android:text="@string/perm_contacts_message"
+                android:textColor="@color/on_surface_variant"
+                android:textSize="@dimen/_11ssp" />
+
+            <TextView
+                android:id="@+id/btnGrant"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_16sdp"
+                android:background="@drawable/bg_btn_primary"
+                android:paddingHorizontal="@dimen/_24sdp"
+                android:paddingVertical="@dimen/_10sdp"
+                android:text="@string/action_grant"
+                android:textColor="@color/white"
+                android:textSize="@dimen/_12ssp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>
