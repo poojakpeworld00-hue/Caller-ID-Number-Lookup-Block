@@ -119,7 +119,7 @@
             app:layout_constraintBottom_toTopOf="@id/bannerAdFrame"
             app:layout_constraintTop_toBottomOf="@id/searchBar">
 
-            <identifycaller.phonelookup.contacts.calllog.ui.common.BreathingIconView
+            <com.calleridapp.numberlookup.ui.common.BreathingIconView
                 android:id="@+id/emptyToolsIcon"
                 android:layout_width="@dimen/_78sdp"
                 android:layout_height="@dimen/_78sdp"

@@ -1,6 +1,6 @@
 <resources>
     <!-- App -->
-    <string name="app_name">CallerID फ़ोन लुकअप</string>
+    <string name="app_name">Caller ID: नंबर लुकअप और ब्लॉक</string>
     <string name="dash">&#8211;</string>
 
     <!-- Splash -->
@@ -147,7 +147,7 @@
     <string name="action_remove">हटाएं</string>
 
     <!-- Added translations -->
-    <string name="app_name_overlay">CallerID Phone Lookup</string>
+    <string name="app_name_overlay">Caller ID Lookup &amp; Block</string>
     <string name="onboarding_spam_id">स्पैम पहचान</string>
     <string name="onboarding_caller_id">कॉलर पहचान</string>
     <string name="number_lookup">नंबर लुकअप</string>
@@ -270,7 +270,7 @@
     <string name="battery_activity_title">बैटरी जानकारी</string>
 
     <!-- Localization batch: missing keys -->
-    <string name="app_label"> CallerID Phone Lookup</string>
+    <string name="app_label"> Caller ID: नंबर लुकअप और ब्लॉक</string>
     <string name="home_brand">CallerID</string>
     <string name="home_brand_sub">फ़ोन लुकअप</string>
     <string name="home_quick_actions">त्वरित क्रियाएँ</string>

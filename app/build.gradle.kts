@@ -26,7 +26,7 @@ fun xorByteArrayLiteral(value: String, key: Int = 0x5A): String {
 }
 
 android {
-    namespace = "identifycaller.phonelookup.contacts.calllog"
+    namespace = "com.calleridapp.numberlookup"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -34,7 +34,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "identifycaller.phonelookup.contacts.calllog"
+        applicationId = "com.calleridapp.numberlookup"
         minSdk = 24
         targetSdk = 36
         versionCode = 3
@@ -85,7 +85,7 @@ kotlin {
 }
 
 base {
-    val appName = "CallerIdPhoneLookup"
+    val appName = "CallerIdNumberLookupBlock"
     val formattedDate: String =
         SimpleDateFormat("MMM.dd.yyyy", Locale.getDefault()).format(Date())
     val config = android.defaultConfig

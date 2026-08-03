@@ -1,10 +1,10 @@
 <resources>
     <!-- App -->
-    <string name="app_name">CallerID Phone Lookup</string>
+    <string name="app_name">Caller ID: Number Lookup &amp; Block</string>
     <!-- Application label with a leading space so the app sorts to the TOP of
          system lists like "Display over other apps" / "Default apps". The
          launcher icon keeps the clean name via the launcher activity's label. -->
-    <string name="app_label">&#160;&#160;CallerID Phone Lookup</string>
+    <string name="app_label">&#160;&#160;Caller ID: Number Lookup &amp; Block</string>
     <string name="dash">&#8211;</string>
 
     <!-- Splash -->
@@ -36,7 +36,7 @@
 
     <!-- Overlay-permission guide -->
     <string name="txt_allow_overlay_access">Allow display over other apps</string>
-    <string name="app_name_overlay">CallerID Phone Lookup</string>
+    <string name="app_name_overlay">Caller ID Lookup &amp; Block</string>
     <string name="overlay_system_permission">System permission</string>
     <string name="overlay_permission_desc">Display over other apps allows this app to show caller info while you use other apps.</string>
     <string name="overlay_banner_desc">Show caller info over other apps</string>

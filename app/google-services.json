@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:621456667679:android:8cdc26434d0bbf9949112a",
         "android_client_info": {
-          "package_name": "identifycaller.phonelookup.contacts.calllog"
+          "package_name": "com.calleridapp.numberlookup"
         }
       },
       "oauth_client": [],

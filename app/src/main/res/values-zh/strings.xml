@@ -1,6 +1,6 @@
 <resources>
     <!-- App -->
-    <string name="app_name">CallerID 号码查询</string>
+    <string name="app_name">Caller ID：号码查询与拦截</string>
     <string name="dash">&#8211;</string>
 
     <!-- Splash -->
@@ -148,7 +148,7 @@
     <string name="label_verified">已认证</string>
 
     <!-- Added translations -->
-    <string name="app_name_overlay">CallerID Phone Lookup</string>
+    <string name="app_name_overlay">Caller ID Lookup &amp; Block</string>
     <string name="onboarding_spam_id">垃圾信息识别</string>
     <string name="onboarding_caller_id">来电显示</string>
     <string name="number_lookup">号码查询</string>
@@ -268,7 +268,7 @@
     <string name="battery_activity_title">电池信息</string>
 
     <!-- Localized (zh) - batch added -->
-    <string name="app_label"> CallerID Phone Lookup</string>
+    <string name="app_label"> Caller ID：号码查询与拦截</string>
     <string name="overlay_banner_desc">在其他应用上层显示来电者信息</string>
     <string name="home_brand">CallerID</string>
     <string name="home_brand_sub">号码查询</string>

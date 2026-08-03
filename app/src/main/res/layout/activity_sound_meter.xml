@@ -244,7 +244,7 @@
                             app:tint="@color/primary" />
                     </LinearLayout>
 
-                    <identifycaller.phonelookup.contacts.calllog.ui.tools.SpectrumView
+                    <com.calleridapp.numberlookup.ui.tools.SpectrumView
                         android:id="@+id/spectrum"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/_90sdp"

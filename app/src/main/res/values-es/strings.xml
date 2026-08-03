@@ -1,6 +1,6 @@
 <resources>
     <!-- App -->
-    <string name="app_name">CallerID Búsqueda de Números</string>
+    <string name="app_name">Caller ID: Búsqueda y bloqueo de números</string>
     <string name="dash">&#8211;</string>
 
     <!-- Splash -->
@@ -147,7 +147,7 @@
     <string name="action_remove">Quitar</string>
 
     <!-- Added translations -->
-    <string name="app_name_overlay">CallerID Phone Lookup</string>
+    <string name="app_name_overlay">Caller ID Lookup &amp; Block</string>
     <string name="onboarding_spam_id">ID de spam</string>
     <string name="onboarding_caller_id">ID de llamada</string>
     <string name="number_lookup">Búsqueda de número</string>
@@ -270,7 +270,7 @@
     <string name="battery_activity_title">Información de batería</string>
 
     <!-- Localized strings (es) -->
-    <string name="app_label"> CallerID Phone Lookup</string>
+    <string name="app_label"> Caller ID: Búsqueda y bloqueo de números</string>
     <string name="home_brand">CallerID</string>
     <string name="home_brand_sub">Búsqueda de números</string>
     <string name="home_quick_actions">Acciones rápidas</string>

@@ -48,17 +48,17 @@
     <!-- Row 2 (highlighted / blocked) -->
     <path
         android:fillColor="#F3F4F5"
-        android:strokeColor="#1A73E8"
+        android:strokeColor="#009688"
         android:strokeWidth="1.5"
         android:pathData="M92,212 h136 a14,14 0 0 1 14,14 v18 a14,14 0 0 1 -14,14 h-136 a14,14 0 0 1 -14,-14 v-18 a14,14 0 0 1 14,-14 z" />
     <path
         android:fillColor="#D8E2FF"
         android:pathData="M86,235 a12,12 0 1 0 24,0 a12,12 0 1 0 -24,0 z" />
     <path
-        android:fillColor="#1A73E8"
+        android:fillColor="#009688"
         android:pathData="M93,235 a5,5 0 1 0 10,0 a5,5 0 1 0 -10,0 z" />
     <path
-        android:fillColor="#1A73E8"
+        android:fillColor="#009688"
         android:pathData="M126,228 h56 a4,4 0 0 1 0,8 h-56 a4,4 0 0 1 0,-8 z" />
     <path
         android:fillColor="#C1C6D6"

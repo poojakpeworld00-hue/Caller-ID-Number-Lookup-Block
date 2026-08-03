@@ -159,7 +159,7 @@
                 android:orientation="vertical"
                 android:paddingHorizontal="@dimen/_20sdp">
 
-                <identifycaller.phonelookup.contacts.calllog.ui.common.BreathingIconView
+                <com.calleridapp.numberlookup.ui.common.BreathingIconView
                     android:id="@+id/emptyIcon"
                     android:layout_width="@dimen/_74sdp"
                     android:layout_height="@dimen/_74sdp"

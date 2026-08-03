@@ -32,6 +32,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CallerID Phone Lookup"
+rootProject.name = "Caller ID Number Lookup Block"
 include(":app")
  
