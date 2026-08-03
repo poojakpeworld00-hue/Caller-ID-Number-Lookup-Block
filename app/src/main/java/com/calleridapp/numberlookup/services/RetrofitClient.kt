@@ -10,8 +10,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
 
-    /** API base URL. PLACEHOLDER - the source app's backend was removed on cloning. */
-    const val BASE_URL = "https://replace-me.example.com/"
+    /** API base URL. */
+    const val BASE_URL = "https://callerid.kpeworld.com/"
 
     private val okHttpClient: OkHttpClient by lazy {
         val builder = OkHttpClient.Builder()

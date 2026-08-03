@@ -1,24 +1,18 @@
 package com.calleridapp.numberlookup.services
 
-/**
- * Credentials for the similar-phone-number API used by [ApiService].
- *
- * PLACEHOLDERS. The source app's live account id, hash key and bearer token
- * were removed on cloning -- calling that backend with them would bill and
- * identify the original app. Supply your own before release; [isConfigured]
- * lets callers skip the request while they are unset.
- */
+/** Credentials for the similar-phone-number API used by [ApiService]. */
 object ServiceCredentials {
     /** Path id for /api/similar-phone-number/{id}. */
-    const val API_ID = "REPLACE_ME_API_ID"
+    const val API_ID = "1433"
 
     /** hash_key query parameter. */
-    const val API_HASH = "REPLACE_ME_API_HASH"
+    const val API_HASH = "o9rRirgwnsAVIivUG3T0OVjpwTE="
 
-    /** Authorization header value (must include the "Bearer " prefix). */
-    const val API_TOKEN = "REPLACE_ME_API_BEARER_TOKEN"
+    /** Authorization header value (already includes the "Bearer " prefix). */
+    const val API_TOKEN =
+        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNDMzLCJpYXQiOjE3NzQyNjAwNDF9.PrHzeB_P3hv-FEo87k8yOGVA2YMdNLdrra_ix7uSt0w"
 
-    /** False until real credentials are supplied. */
+    /** Guards the network calls so a build with placeholders never fires them. */
     val isConfigured: Boolean
         get() = listOf(API_ID, API_HASH, API_TOKEN).none { it.startsWith("REPLACE_ME") }
 }
