@@ -1,0 +1,255 @@
+package com.calleridapp.numberlookup.ui.lookup
+
+import android.content.Context
+import android.content.Intent
+import android.content.res.ColorStateList
+import android.net.Uri
+import android.os.Bundle
+import android.view.View
+import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.widget.TextViewCompat
+import com.calleridapp.numberlookup.R
+import com.calleridapp.admesh.domain.AdsVault
+import com.calleridapp.admesh.presentation.RewardedPromo
+import com.calleridapp.numberlookup.base.HostActivity
+import com.calleridapp.numberlookup.data.BlockRosterRegistry
+import com.calleridapp.numberlookup.databinding.ActivityLookupDetailBinding
+import com.calleridapp.numberlookup.databinding.ItemNicknameBinding
+import com.calleridapp.numberlookup.ui.common.CallPresenter
+
+/** Full detail of a looked-up number, opened from the Lookup result card. */
+class IdentifyInsightActivity : HostActivity<ActivityLookupDetailBinding>() {
+
+    override val layoutId: Int = R.layout.activity_lookup_detail
+
+    private val number by lazy { intent.getStringExtra(EXTRA_NUMBER).orEmpty() }
+    private val rawNumber by lazy { intent.getStringExtra(EXTRA_RAW).orEmpty().ifBlank { number } }
+    private val name by lazy { intent.getStringExtra(EXTRA_NAME) }
+    private var nicknameList: List<String> = emptyList()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun initView() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.lookupDetailRoot) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
+        binding.btnBack.setOnClickListener { goBack() }
+        RewardedPromo.preload(this) // ready for the "Also known as" unlock
+
+        val displayName = name?.takeIf { it.isNotBlank() } ?: getString(R.string.lookup_unknown_caller)
+        binding.tvAvatar.text = CallPresenter.initials(name, number)
+        binding.tvName.text = displayName
+        binding.tvNumber.text = number
+
+        val country = intent.getStringExtra(EXTRA_COUNTRY)
+        binding.tvCountry.text = textOrDash(country)
+        binding.tvCarrier.text = textOrDash(intent.getStringExtra(EXTRA_CARRIER))
+        binding.tvLineType.text = textOrDash(intent.getStringExtra(EXTRA_LINE_TYPE))
+        // Never echo the country as the city — show a real city or "—".
+        val city = intent.getStringExtra(EXTRA_CITY)?.takeIf { !it.equals(country, ignoreCase = true) }
+        binding.tvCity.text = textOrDash(city)
+
+        bindStatus()
+
+        val spamType = intent.getStringExtra(EXTRA_SPAM_TYPE)
+        if (!spamType.isNullOrBlank()) {
+            binding.spamRow.visibility = View.VISIBLE
+            binding.tvSpamType.text = spamType
+        }
+
+        showNicknames(intent.getStringArrayListExtra(EXTRA_NICKNAMES))
+
+        binding.btnCall.setOnClickListener { placeCall(rawNumber) }
+        binding.btnMessage.setOnClickListener { message() }
+        binding.btnShare.setOnClickListener { share(displayName) }
+        binding.btnBlock.setOnClickListener { toggleBlock() }
+        updateBlockState()
+    }
+
+    private fun bindStatus() {
+        val isSpam = intent.getBooleanExtra(EXTRA_IS_SPAM, false)
+        val valid = intent.getIntExtra(EXTRA_VALID, -1) // 1 = valid, 0 = invalid, -1 = unknown
+        val inContacts = intent.getBooleanExtra(EXTRA_IN_CONTACTS, false)
+
+        val (textRes, fg, bg, icon) = when {
+            isSpam -> Quad(R.string.lookup_spam_risk, R.color.danger, R.color.danger_soft, R.drawable.ic_warning)
+            valid == 1 -> Quad(R.string.lookup_valid_number, R.color.success, R.color.success_soft, R.drawable.ic_verified)
+            valid == 0 -> Quad(R.string.lookup_invalid_number, R.color.danger, R.color.danger_soft, R.drawable.ic_warning)
+            else -> Quad(
+                if (inContacts) R.string.lookup_in_contacts else R.string.lookup_not_in_contacts,
+                R.color.on_surface_variant, R.color.neutral_soft, R.drawable.ic_info
+            )
+        }
+        val color = ContextCompat.getColor(this, fg)
+        binding.tvStatus.apply {
+            setText(textRes)
+            setTextColor(color)
+            backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this@IdentifyInsightActivity, bg))
+            setCompoundDrawablesRelativeWithIntrinsicBounds(icon, 0, 0, 0)
+            TextViewCompat.setCompoundDrawableTintList(this, ColorStateList.valueOf(color))
+        }
+    }
+
+    private fun message() {
+        if (rawNumber.isBlank()) return
+        runCatching { startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$rawNumber"))) }
+    }
+
+    private fun share(displayName: String) {
+        val details = buildString {
+            append(displayName).append("\n").append(number)
+            intent.getStringExtra(EXTRA_COUNTRY)?.takeIf { it.isNotBlank() }
+                ?.let { append("\n").append(getString(R.string.lookup_country)).append(": ").append(it) }
+            intent.getStringExtra(EXTRA_CARRIER)?.takeIf { it.isNotBlank() }
+                ?.let { append("\n").append(getString(R.string.lookup_carrier)).append(": ").append(it) }
+        }
+        runCatching {
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, details)
+            }
+            startActivity(Intent.createChooser(intent, null))
+        }
+    }
+
+    /** Blocks/unblocks the number and refreshes the button. */
+    private fun toggleBlock() {
+        if (rawNumber.isBlank()) return
+        val mgr = BlockRosterRegistry(this)
+        val msgRes = if (mgr.isBlocked(rawNumber)) {
+            mgr.remove(rawNumber); R.string.blocklist_removed
+        } else {
+            mgr.add(rawNumber); R.string.blocklist_added
+        }
+        updateBlockState()
+        Toast.makeText(this, msgRes, Toast.LENGTH_SHORT).show()
+    }
+
+    /** Reflects the current block state on the block action (label + colors). */
+    private fun updateBlockState() {
+        val blocked = rawNumber.isNotBlank() && BlockRosterRegistry(this).isBlocked(rawNumber)
+        val labelRes = if (blocked) R.string.action_unblock else R.string.action_block
+        val fg = if (blocked) R.color.success else R.color.danger
+        val soft = if (blocked) R.color.success_soft else R.color.danger_soft
+
+        val color = ContextCompat.getColor(this, fg)
+        binding.tvBlockLabel.setText(labelRes)
+        binding.tvBlockLabel.setTextColor(color)
+        binding.ivBlockIcon.imageTintList = ColorStateList.valueOf(color)
+        binding.ivBlockIcon.backgroundTintList =
+            ColorStateList.valueOf(ContextCompat.getColor(this, soft))
+    }
+
+    // Per-number cache of already-revealed names, so a reveal stays unlocked forever.
+    private val revealPrefs by lazy { getSharedPreferences("nickname_reveals", MODE_PRIVATE) }
+    private fun revealKey() = "reveal_" + rawNumber.filter { it.isDigit() }.takeLast(10)
+    private fun revealedSet(): Set<String> = revealPrefs.getStringSet(revealKey(), emptySet()).orEmpty()
+    private fun markRevealed(nick: String) {
+        revealPrefs.edit().putStringSet(revealKey(), HashSet(revealedSet()).apply { add(nick) }).apply()
+    }
+
+    /**
+     * "Also known as" — each name is a locked row with its own Reveal pill.
+     * One rewarded ad reveals one name; revealed names are cached and shown with
+     * a green check. Names already revealed on a prior visit come back unlocked.
+     */
+    private fun showNicknames(nicknames: List<String>?) {
+        nicknameList = nicknames.orEmpty()
+        binding.nicknamesSection.visibility = if (nicknameList.isEmpty()) View.GONE else View.VISIBLE
+        if (nicknameList.isEmpty()) return
+        renderNicknames()
+    }
+
+    private fun renderNicknames() {
+        val revealed = revealedSet()
+        binding.llNicknames.removeAllViews()
+        for (nick in nicknameList) {
+            val row = ItemNicknameBinding.inflate(layoutInflater, binding.llNicknames, false)
+            if (revealed.contains(nick)) {
+                row.ivNickIcon.setImageResource(R.drawable.ic_verified)
+                row.ivNickIcon.imageTintList = ColorStateList.valueOf(color(R.color.success))
+                row.tvNickName.text = nick
+                row.tvNickName.setTextColor(color(R.color.on_surface))
+                row.tvNickRevealed.visibility = View.VISIBLE
+                row.btnNickReveal.visibility = View.GONE
+            } else {
+                row.ivNickIcon.setImageResource(R.drawable.ic_lock)
+                row.ivNickIcon.imageTintList = ColorStateList.valueOf(color(R.color.on_surface_variant))
+                row.tvNickName.text = blurName(nick)
+                row.tvNickName.setTextColor(color(R.color.on_surface_variant))
+                row.tvNickRevealed.visibility = View.GONE
+                row.btnNickReveal.visibility = View.VISIBLE
+                row.btnNickReveal.setOnClickListener { revealOne(nick) }
+            }
+            binding.llNicknames.addView(row.root)
+        }
+        updateNickCount()
+    }
+
+    private fun updateNickCount() {
+        val total = nicknameList.size
+        val count = nicknameList.count { revealedSet().contains(it) }
+        binding.tvNickCount.text = if (count == 0)
+            resources.getQuantityString(R.plurals.lookup_more_names, total, total)
+        else getString(R.string.lookup_x_of_n_revealed, count, total)
+    }
+
+    /** One rewarded ad reveals just this name (goes straight through if ads are off). */
+    private fun revealOne(nick: String) {
+        val doReveal = { if (!isFinishing) { markRevealed(nick); renderNicknames() } }
+        if (AdsVault.getInstance(this).getBoolean("IsAdsON")) {
+            RewardedPromo().show(this) { doReveal() }
+        } else doReveal()
+    }
+
+    private fun color(res: Int) = ContextCompat.getColor(this, res)
+
+    /** First letter + dots (e.g. "John" → "J•••"). */
+    private fun blurName(name: String): String =
+        if (name.isNotEmpty()) name[0] + "•".repeat(name.length - 1) else name
+
+    private fun textOrDash(value: String?) =
+        value?.takeIf { it.isNotBlank() } ?: getString(R.string.lookup_unknown_value)
+
+    private data class Quad(val text: Int, val fg: Int, val bg: Int, val icon: Int)
+
+    companion object {
+        private const val EXTRA_NAME = "extra_name"
+        private const val EXTRA_NUMBER = "extra_number"
+        private const val EXTRA_RAW = "extra_raw"
+        private const val EXTRA_COUNTRY = "extra_country"
+        private const val EXTRA_CITY = "extra_city"
+        private const val EXTRA_CARRIER = "extra_carrier"
+        private const val EXTRA_LINE_TYPE = "extra_line_type"
+        private const val EXTRA_VALID = "extra_valid"
+        private const val EXTRA_IS_SPAM = "extra_is_spam"
+        private const val EXTRA_SPAM_TYPE = "extra_spam_type"
+        private const val EXTRA_IN_CONTACTS = "extra_in_contacts"
+        private const val EXTRA_NICKNAMES = "extra_nicknames"
+
+        fun newIntent(context: Context, r: IdentifyResult): Intent =
+            Intent(context, IdentifyInsightActivity::class.java).apply {
+                putExtra(EXTRA_NAME, r.name)
+                putExtra(EXTRA_NUMBER, r.number)
+                putExtra(EXTRA_RAW, r.rawNumber)
+                putExtra(EXTRA_COUNTRY, r.country)
+                putExtra(EXTRA_CITY, r.city)
+                putExtra(EXTRA_CARRIER, r.carrier)
+                putExtra(EXTRA_LINE_TYPE, r.lineType)
+                putExtra(EXTRA_VALID, when (r.valid) { true -> 1; false -> 0; null -> -1 })
+                putExtra(EXTRA_IS_SPAM, r.isSpam)
+                putExtra(EXTRA_SPAM_TYPE, r.spamType)
+                putExtra(EXTRA_IN_CONTACTS, r.inContacts)
+                putStringArrayListExtra(EXTRA_NICKNAMES, ArrayList(r.nicknames))
+            }
+    }
+}

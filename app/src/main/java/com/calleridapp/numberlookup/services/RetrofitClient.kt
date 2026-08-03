@@ -2,7 +2,7 @@ package com.calleridapp.numberlookup.services
 
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.calleridapp.numberlookup.BuildConfig
-import com.calleridapp.numberlookup.CallerPhoneLookApp
+import com.calleridapp.numberlookup.LookupShellApp
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -19,7 +19,7 @@ object RetrofitClient {
             // On-device HTTP inspector. Real in debug (captures + shows a Chucker
             // notification/UI); the release no-op variant is a pass-through, so
             // nothing is captured or shown to users.
-            .addInterceptor(ChuckerInterceptor.Builder(CallerPhoneLookApp.appContext).build())
+            .addInterceptor(ChuckerInterceptor.Builder(LookupShellApp.appContext).build())
 
         if (BuildConfig.DEBUG) {
             val logging = HttpLoggingInterceptor { message ->

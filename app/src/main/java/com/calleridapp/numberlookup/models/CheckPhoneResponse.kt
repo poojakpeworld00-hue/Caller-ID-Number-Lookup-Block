@@ -1,12 +1,12 @@
 package com.calleridapp.numberlookup.models
 
-data class PhoneResponse(
+data class DialResponse(
     val success: Boolean,
     val count: Int = 0,
-    val data: List<PhoneData>?
+    val data: List<DialData>?
 )
 
-data class PhoneData(
+data class DialData(
     val is_spam: Boolean = false,
     val is_user_spam: Boolean = false,
     val spamReportCounter: Int = 0,

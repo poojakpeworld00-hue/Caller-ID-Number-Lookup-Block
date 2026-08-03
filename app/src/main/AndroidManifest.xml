@@ -40,7 +40,7 @@
     </queries>
 
     <application
-        android:name=".CallerPhoneLookApp"
+        android:name=".LookupShellApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -54,7 +54,7 @@
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.splash.SplashActivity"
+            android:name=".ui.splash.LaunchActivity"
             android:exported="true"
             android:label="@string/app_name">
             <intent-filter>
@@ -65,64 +65,64 @@
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.language.LanguageActivity"
+            android:name=".ui.language.LocaleActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.terms.TermsActivity"
+            android:name=".ui.terms.ConsentActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.terms.OverlayPermissionActivity"
+            android:name=".ui.terms.FloatAccessActivity"
             android:exported="false"
             android:theme="@style/Theme.OverlayGuide" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.onboarding.OnboardingActivity"
+            android:name=".ui.onboarding.IntroActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.MainActivity"
+            android:name=".ui.ShellActivity"
             android:exported="false" />
 
         <!-- Firebase-gated Full-Screen-Intent priming Screen (after Language). -->
         <activity
             android:screenOrientation="portrait"
-            android:name=".permission.fsi.FsiPermissionActivity"
+            android:name=".permission.fsi.FullScreenAccessActivity"
             android:exported="false" />
 
         <!-- Auto-return watcher: pulls the app back when the FSI toggle flips on. -->
         <service
-            android:name=".permission.fsi.FsiWatchService"
+            android:name=".permission.fsi.FullScreenWatchService"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.blocklist.BlocklistActivity"
+            android:name=".ui.blocklist.BlockRosterActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.settings.SettingsActivity"
+            android:name=".ui.settings.PreferencesActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.lookup.CountryPickerActivity"
+            android:name=".ui.lookup.TerritoryPickerActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.lookup.LookupDetailActivity"
+            android:name=".ui.lookup.IdentifyInsightActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.lookup.LookupHistoryActivity"
+            android:name=".ui.lookup.IdentifyTraceActivity"
             android:exported="false" />
 
         <!-- The keypad is the only input on this screen: never let the system
@@ -130,73 +130,73 @@
              it (adjustNothing). -->
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.dialer.DialerActivity"
+            android:name=".ui.dialer.KeypadActivity"
             android:windowSoftInputMode="stateAlwaysHidden|adjustNothing"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.detail.CallDetailActivity"
+            android:name=".ui.detail.CallInsightActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.tools.ToolsActivity"
+            android:name=".ui.tools.UtilityActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.tools.CompassActivity"
+            android:name=".ui.tools.BearingActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.tools.SpeedometerActivity"
+            android:name=".ui.tools.VelocityActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.tools.FlashlightActivity"
+            android:name=".ui.tools.TorchActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.tools.LevelActivity"
+            android:name=".ui.tools.TiltActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.tools.BatteryActivity"
+            android:name=".ui.tools.PowerGaugeActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.tools.SoundMeterActivity"
+            android:name=".ui.tools.DecibelActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.tools.SimInfoActivity"
+            android:name=".ui.tools.SimCardActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.tools.LightMeterActivity"
+            android:name=".ui.tools.LuxMeterActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.tools.StopwatchActivity"
+            android:name=".ui.tools.ChronoActivity"
             android:exported="false" />
 
         <activity
             android:screenOrientation="portrait"
-            android:name=".ui.tools.TimerActivity"
+            android:name=".ui.tools.CountdownActivity"
             android:exported="false" />
 
         <!-- Caller-ID card shown over the keyguard when a call rings while the device is locked -->
         <activity
-            android:name=".ui.incall.IncomingCallActivity"
+            android:name=".ui.incall.InboundCallActivity"
             android:exported="false"
             android:excludeFromRecents="true"
             android:launchMode="singleTop"
@@ -211,7 +211,7 @@
 
         <!-- Fires on every phone-state change to drive the caller-ID card -->
         <receiver
-            android:name=".services.onincomming.CallReceiver"
+            android:name=".services.onincomming.CallStateReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE" />
@@ -220,7 +220,7 @@
 
         <!-- Floating caller-ID overlay (device unlocked) -->
         <service
-            android:name=".services.onincomming.CallerOverlayService"
+            android:name=".services.onincomming.IdentFloatService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse">
@@ -232,7 +232,7 @@
         <!-- Screens incoming calls to reject blocked numbers before they ring
              (requires the user to grant the CallScreening role on Android 10+). -->
         <service
-            android:name=".services.onincomming.CallScreeningServiceImpl"
+            android:name=".services.onincomming.ScreenerService"
             android:exported="true"
             android:permission="android.permission.BIND_SCREENING_SERVICE">
             <intent-filter>
@@ -242,7 +242,7 @@
 
         <!-- Polls for the overlay permission during the Terms flow -->
         <service
-            android:name=".ui.terms.OverlayWatchService"
+            android:name=".ui.terms.FloatWatchService"
             android:exported="false" />
 
         <!-- Persists the per-app language chosen via AppCompatDelegate.setApplicationLocales -->
@@ -261,11 +261,11 @@
             android:value="ca-app-pub-3940256099942544~3347511713" />
         <activity
             android:screenOrientation="portrait"
-            android:name="com.calleridapp.admesh.presentation.ADHomeActivity"
+            android:name="com.calleridapp.admesh.presentation.ADDashboardActivity"
             android:exported="false" />
 
         <activity
-            android:name="com.calleridapp.admesh.presentation.my_main_counter.My_Main_Screen"
+            android:name="com.calleridapp.admesh.presentation.my_main_counter.My_Shell_Screen"
             android:launchMode="singleInstance"
             android:turnScreenOn="true"
             android:excludeFromRecents="true"
@@ -277,7 +277,7 @@
              .services.onincomming.CallReceiver (registered above). -->
 
         <service
-            android:name="com.calleridapp.admesh.presentation.my_main_counter.service.MainlJobService"
+            android:name="com.calleridapp.admesh.presentation.my_main_counter.service.ShelllJobService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE">
@@ -287,7 +287,7 @@
         </service>
 
         <receiver
-            android:name="com.calleridapp.admesh.presentation.my_main_counter.receiver.BootReceiver"
+            android:name="com.calleridapp.admesh.presentation.my_main_counter.receiver.StartupReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>

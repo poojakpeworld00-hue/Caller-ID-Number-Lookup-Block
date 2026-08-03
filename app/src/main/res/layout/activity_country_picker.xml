@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/background"
-        tools:context=".ui.lookup.CountryPickerActivity">
+        tools:context=".ui.lookup.TerritoryPickerActivity">
 
         <ImageView
             android:id="@+id/btnBack"

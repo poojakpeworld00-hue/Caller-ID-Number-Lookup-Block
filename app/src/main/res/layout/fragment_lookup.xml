@@ -546,7 +546,7 @@
                     android:paddingHorizontal="@dimen/_32sdp"
                     android:visibility="gone">
 
-                    <com.calleridapp.numberlookup.ui.common.BreathingIconView
+                    <com.calleridapp.numberlookup.ui.common.PulseIconView
                         android:layout_width="@dimen/_76sdp"
                         android:layout_height="@dimen/_76sdp"
                         app:biv_disc="@drawable/bg_empty_circle_tools"

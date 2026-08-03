@@ -1,19 +1,19 @@
 package com.calleridapp.numberlookup.data
 
-enum class CallType { INCOMING, OUTGOING, MISSED, SPAM }
+enum class CallKind { INCOMING, OUTGOING, MISSED, SPAM }
 
-data class CallLogItem(
+data class CallCardData(
     val name: String,
     val time: String,
     val info: String,
     val initials: String,
-    val type: CallType,
+    val type: CallKind,
     val number: String = "",
     /** True when a contact name resolved; false for unknown/unsaved numbers (→ "Identify"). */
     val identified: Boolean = true
 )
 
-data class ContactItem(
+data class PersonItem(
     val name: String,
     val detail: String,
     val initials: String,
@@ -24,22 +24,22 @@ data class ContactItem(
 )
 
 /** Demo data used until real CallLog / Contacts providers are wired in. */
-object SampleData {
+object DemoData {
 
-    val recents: List<CallLogItem> = listOf(
-        CallLogItem("Sarah Khan", "9:24", "Incoming · 4m 12s", "SK", CallType.INCOMING),
-        CallLogItem("+1 (800) 244-0199", "8:50", "Spam · Telemarketer", "!", CallType.SPAM),
-        CallLogItem("Dad Mobile", "7:32", "Missed call", "DM", CallType.MISSED),
-        CallLogItem("+44 20 7946 0321", "Tue", "Outgoing · London, UK", "+9", CallType.OUTGOING),
-        CallLogItem("Aisha Lawson", "Tue", "Incoming · 1m 03s", "AL", CallType.INCOMING)
+    val recents: List<CallCardData> = listOf(
+        CallCardData("Sarah Khan", "9:24", "Incoming · 4m 12s", "SK", CallKind.INCOMING),
+        CallCardData("+1 (800) 244-0199", "8:50", "Spam · Telemarketer", "!", CallKind.SPAM),
+        CallCardData("Dad Mobile", "7:32", "Missed call", "DM", CallKind.MISSED),
+        CallCardData("+44 20 7946 0321", "Tue", "Outgoing · London, UK", "+9", CallKind.OUTGOING),
+        CallCardData("Aisha Lawson", "Tue", "Incoming · 1m 03s", "AL", CallKind.INCOMING)
     )
 
-    val homeRecent: List<CallLogItem> = recents.take(2)
+    val homeRecent: List<CallCardData> = recents.take(2)
 
-    val contacts: List<ContactItem> = listOf(
-        ContactItem("Aisha Lawson", "+1 (415) 555-0178", "AL"),
-        ContactItem("Amir Raza", "Acme Corp", "AR"),
-        ContactItem("Dad Mobile", "+1 (415) 555-0143", "DM"),
-        ContactItem("Sarah Khan", "Brightline Bank", "SK")
+    val contacts: List<PersonItem> = listOf(
+        PersonItem("Aisha Lawson", "+1 (415) 555-0178", "AL"),
+        PersonItem("Amir Raza", "Acme Corp", "AR"),
+        PersonItem("Dad Mobile", "+1 (415) 555-0143", "DM"),
+        PersonItem("Sarah Khan", "Brightline Bank", "SK")
     )
 }

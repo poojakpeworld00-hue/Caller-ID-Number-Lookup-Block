@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/background"
-        tools:context=".ui.tools.SoundMeterActivity">
+        tools:context=".ui.tools.DecibelActivity">
 
         <LinearLayout
             android:id="@+id/topBar"
@@ -244,7 +244,7 @@
                             app:tint="@color/primary" />
                     </LinearLayout>
 
-                    <com.calleridapp.numberlookup.ui.tools.SpectrumView
+                    <com.calleridapp.numberlookup.ui.tools.BarMeterView
                         android:id="@+id/spectrum"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/_90sdp"

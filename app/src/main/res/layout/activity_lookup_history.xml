@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/background"
-        tools:context=".ui.lookup.LookupHistoryActivity">
+        tools:context=".ui.lookup.IdentifyTraceActivity">
 
         <!-- Top bar -->
         <LinearLayout
@@ -84,7 +84,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/topBar">
 
-            <com.calleridapp.numberlookup.ui.common.BreathingIconView
+            <com.calleridapp.numberlookup.ui.common.PulseIconView
                 android:layout_width="@dimen/_76sdp"
                 android:layout_height="@dimen/_76sdp"
                 app:biv_disc="@drawable/bg_empty_circle_tools"

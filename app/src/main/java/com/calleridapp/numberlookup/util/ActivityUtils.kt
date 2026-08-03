@@ -14,7 +14,7 @@ import android.view.WindowInsetsController
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
-import com.calleridapp.admesh.domain.AdsPreferance
+import com.calleridapp.admesh.domain.AdsVault
 import com.calleridapp.numberlookup.R
 import java.io.InputStream
 
@@ -114,7 +114,7 @@ fun Context.openPolicyLink() {
 
             setPackage("com.android.chrome") // Optional: Use Chrome
             data =
-                Uri.parse(AdsPreferance.getInstance(this@openPolicyLink).getString("PrivacyPolicy"))
+                Uri.parse(AdsVault.getInstance(this@openPolicyLink).getString("PrivacyPolicy"))
         }
         startActivity(intent)
     } catch (e: Exception) {
@@ -138,7 +138,7 @@ fun Context.openTermLink() {
 
             setPackage("com.android.chrome") // Optional: Use Chrome
             data =
-                Uri.parse(AdsPreferance.getInstance(this@openTermLink).getString("TermLink"))
+                Uri.parse(AdsVault.getInstance(this@openTermLink).getString("TermLink"))
         }
         startActivity(intent)
     } catch (e: Exception) {

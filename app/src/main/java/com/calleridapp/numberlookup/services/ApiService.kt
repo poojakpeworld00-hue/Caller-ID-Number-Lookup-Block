@@ -1,7 +1,7 @@
 package com.calleridapp.numberlookup.services
 
 import com.google.gson.JsonObject
-import com.calleridapp.numberlookup.models.PhoneResponse
+import com.calleridapp.numberlookup.models.DialResponse
 import okhttp3.MultipartBody
 import retrofit2.Call
 import retrofit2.Response
@@ -21,7 +21,7 @@ interface ApiService {
         @Query("phone") phone: String,
         @Query("hash_key") hashKey: String,
         @Header("Authorization") token: String
-    ): Response<PhoneResponse>
+    ): Response<DialResponse>
 
     @Multipart
     @POST("/api/save_contact2")

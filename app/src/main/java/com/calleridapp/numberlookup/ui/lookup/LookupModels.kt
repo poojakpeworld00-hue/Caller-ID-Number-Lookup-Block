@@ -1,7 +1,7 @@
 package com.calleridapp.numberlookup.ui.lookup
 
 /** Result of identifying a phone number (on-device + optional online metadata). */
-data class LookupResult(
+data class IdentifyResult(
     val name: String?,        // contact name, or null if unknown
     val number: String,       // formatted number
     val rawNumber: String,    // original digits for dialing / saving
@@ -19,7 +19,7 @@ data class LookupResult(
 )
 
 /** A persisted recent lookup shown in the history list. */
-data class HistoryEntry(
+data class TraceEntry(
     val rawNumber: String,
     val number: String,
     val name: String?,
@@ -27,8 +27,8 @@ data class HistoryEntry(
 )
 
 /** UI state for the Lookup screen. */
-sealed interface LookupState {
-    data object Idle : LookupState
-    data object Loading : LookupState
-    data class Result(val result: LookupResult) : LookupState
+sealed interface IdentifyState {
+    data object Idle : IdentifyState
+    data object Loading : IdentifyState
+    data class Result(val result: IdentifyResult) : IdentifyState
 }

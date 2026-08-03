@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/background"
-        tools:context=".ui.tools.ToolsActivity">
+        tools:context=".ui.tools.UtilityActivity">
 
         <!-- Top bar -->
         <LinearLayout
@@ -119,7 +119,7 @@
             app:layout_constraintBottom_toTopOf="@id/bannerAdFrame"
             app:layout_constraintTop_toBottomOf="@id/searchBar">
 
-            <com.calleridapp.numberlookup.ui.common.BreathingIconView
+            <com.calleridapp.numberlookup.ui.common.PulseIconView
                 android:id="@+id/emptyToolsIcon"
                 android:layout_width="@dimen/_78sdp"
                 android:layout_height="@dimen/_78sdp"

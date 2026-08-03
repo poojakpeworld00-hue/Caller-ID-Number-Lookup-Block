@@ -20,7 +20,7 @@
         android:layout_height="match_parent"
         android:paddingTop="@dimen/_10sdp"
         android:background="@color/background"
-        tools:context=".ui.language.LanguageActivity">
+        tools:context=".ui.language.LocaleActivity">
 
         <!-- ===== Toolbar ===== -->
         <ImageView

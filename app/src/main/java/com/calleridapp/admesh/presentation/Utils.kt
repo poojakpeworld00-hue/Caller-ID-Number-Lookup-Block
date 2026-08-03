@@ -18,8 +18,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.viewbinding.ViewBinding
-import com.calleridapp.admesh.domain.AdsPreferance
-import com.calleridapp.admesh.presentation.oninterAds.InterADsNormal
+import com.calleridapp.admesh.domain.AdsVault
+import com.calleridapp.admesh.presentation.oninterAds.InterstitialNormal
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.databinding.DialogAppRedirectBinding
 import kotlin.apply
@@ -52,7 +52,7 @@ fun Directlink(context: Context?) {
     // Activity lifecycle safety
     if (activity.isFinishing || activity.isDestroyed) return
 
-    val adsPref = AdsPreferance.getInstance(activity)
+    val adsPref = AdsVault.getInstance(activity)
     if (!adsPref.getBoolean("IsCustomADS")) return
 
     val url = adsPref.getString("DirectLink")
@@ -94,7 +94,7 @@ private fun isPackageInstalled(context: Context, packageName: String): Boolean {
 
 
 fun Activity.showAppRedirectPopup(onDismiss: (() -> Unit)? = null) {
-    val appUrl = AdsPreferance(this).getString("In_App_Update_Link")
+    val appUrl = AdsVault(this).getString("In_App_Update_Link")
     if (appUrl.isNullOrEmpty()) return
 
     val dialogBinding = DialogAppRedirectBinding.inflate(layoutInflater)
@@ -156,10 +156,10 @@ fun showDialog(
     return dialog
 }
 
-fun Context.getLast_Result_HD_VBC_Type() = AdsPreferance.getInstance(this).result_HD_VBC_Type
+fun Context.getLast_Result_HD_VBC_Type() = AdsVault.getInstance(this).result_HD_VBC_Type
 
 fun Context.getHD_VBC_Type(): String {
-    val type = AdsPreferance.getInstance(this).getString("HD_VBC_Type") ?: "nb"
+    val type = AdsVault.getInstance(this).getString("HD_VBC_Type") ?: "nb"
 
     return when (type) {
         "b" -> "b"
@@ -171,7 +171,7 @@ fun Context.getHD_VBC_Type(): String {
 }
 
 fun Context.setLast_Result_HD_VBC_Type() {
-    val pref = AdsPreferance.getInstance(this)
+    val pref = AdsVault.getInstance(this)
     pref.result_HD_VBC_Type = if (pref.result_HD_VBC_Type == "b") "n" else "b"
 }
 
@@ -212,7 +212,7 @@ inline fun <reified T : Activity> Context.openActivity(
     }
 
     // Show interstitial first, open activity in the close callback
-    InterADsNormal().showInterAds(activity) {
+    InterstitialNormal().showInterAds(activity) {
         activity.startActivity(intent)
     }
 }
