@@ -20,10 +20,10 @@
             android:layout_height="match_parent"
             android:background="@drawable/bg_avatar"
             android:backgroundTint="@color/primary_container"
+            android:fontFamily="@font/nunito_extrabold"
             android:gravity="center"
             android:textColor="@color/on_primary_container"
             android:textSize="@dimen/_11ssp"
-            android:textStyle="bold"
             tools:text="AL" />
 
         <!-- Real contact photo, loaded over the initials when one exists -->
@@ -48,10 +48,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
+            android:fontFamily="@font/nunito_bold"
+            android:letterSpacing="-0.005"
             android:maxLines="1"
             android:textColor="@color/on_surface"
             android:textSize="@dimen/_11ssp"
-            android:textStyle="bold"
             tools:text="Aisha Lawson" />
 
         <TextView
@@ -59,6 +60,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/_2sdp"
+            android:fontFamily="@font/nunito_regular"
             android:textColor="@color/on_surface_variant"
             android:textSize="@dimen/_10ssp"
             tools:text="+1 (415) 555-0178" />

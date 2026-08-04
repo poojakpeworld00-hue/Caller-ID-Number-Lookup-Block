@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.calleridapp.numberlookup.databinding.ItemSearchHistoryBinding
 import com.calleridapp.numberlookup.ui.common.CallPresenter
+import com.calleridapp.numberlookup.ui.common.HomeMotion
 
 class IdentifyTraceAdapter(
     private val onClick: (TraceEntry) -> Unit,
@@ -21,10 +22,14 @@ class IdentifyTraceAdapter(
     /** rawNumbers whose caller name has been unlocked (rewarded ad watched) this session. */
     private val revealed = mutableSetOf<String>()
 
+    /** Rows animate in once; a reveal's partial rebind must not replay the stagger. */
+    private var lastAnimated = -1
+
     @SuppressLint("NotifyDataSetChanged")
     fun submit(list: List<TraceEntry>) {
         items.clear()
         items.addAll(list)
+        lastAnimated = -1
         notifyDataSetChanged()
     }
 
@@ -87,6 +92,17 @@ class IdentifyTraceAdapter(
             ivHistReveal.visibility = if (locked) View.VISIBLE else View.GONE
             tvHistSub.text = item.subtitle ?: item.number
         }
+
+        // Claude Design's cid-rise-in stagger, once per row per submit().
+        if (position > lastAnimated) {
+            lastAnimated = position
+            HomeMotion.riseIn(holder.itemView, delay = position * HomeMotion.STAGGER_STEP)
+        }
+    }
+
+    override fun onViewDetachedFromWindow(holder: VH) {
+        super.onViewDetachedFromWindow(holder)
+        holder.itemView.animate().cancel()
     }
 
     override fun getItemCount(): Int = items.size

@@ -40,11 +40,11 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/nunito_extrabold"
                 android:letterSpacing="-0.02"
                 android:text="@string/home_brand"
                 android:textColor="@color/on_surface"
-                android:textSize="@dimen/_16ssp"
-                android:textStyle="bold" />
+                android:textSize="@dimen/_16ssp" />
         </LinearLayout>
 
         <ImageView
@@ -54,8 +54,69 @@
             android:background="@drawable/bg_onb_circle_lavender"
             android:contentDescription="@string/nav_settings"
             android:padding="@dimen/_8sdp"
-            android:src="@drawable/ic_settings"
+            android:src="@drawable/ph_gear_six"
             app:tint="@color/on_primary_container" />
+    </LinearLayout>
+
+    <!-- Protection card — Claude Design hero C's banner: shield + title/subtitle +
+         chevron. Fixed above the scroll area, matching the design's order (banner
+         above the search pill) while keeping the header/search/hint's existing
+         non-scrolling behavior. -->
+    <LinearLayout
+        android:id="@+id/cardProtection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/_16sdp"
+        android:layout_marginTop="@dimen/_9sdp"
+        android:background="@drawable/bg_home_protection"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/_16sdp"
+        android:paddingVertical="@dimen/_14sdp">
+
+        <ImageView
+            android:layout_width="@dimen/_22sdp"
+            android:layout_height="@dimen/_22sdp"
+            android:contentDescription="@null"
+            android:src="@drawable/ph_shield_check"
+            app:tint="@color/cid_g_050" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/nunito_extrabold"
+                android:text="@string/home_protection_title"
+                android:textColor="@color/cid_g_050"
+                android:textSize="@dimen/_13ssp" />
+
+            <TextView
+                android:id="@+id/tvProtectionSub"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_1sdp"
+                android:alpha="0.7"
+                android:fontFamily="@font/nunito_regular"
+                android:textColor="@color/cid_g_050"
+                android:textSize="@dimen/_10ssp"
+                tools:text="128 spam calls blocked this week" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="@dimen/_14sdp"
+            android:layout_height="@dimen/_14sdp"
+            android:alpha="0.8"
+            android:contentDescription="@null"
+            android:src="@drawable/ph_caret_right"
+            app:tint="@color/cid_g_050" />
     </LinearLayout>
 
     <!-- Search pill with the +91 country selector -->
@@ -66,7 +127,7 @@
         android:layout_marginHorizontal="@dimen/_16sdp"
         android:layout_marginTop="@dimen/_10sdp"
         android:background="@drawable/bg_home_search"
-        android:elevation="@dimen/_2sdp"
+        android:elevation="@dimen/_10sdp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:outlineAmbientShadowColor="@color/card_shadow"
@@ -102,13 +163,13 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:layout_marginStart="@dimen/_4sdp"
-                android:drawableEnd="@drawable/arrow_down"
+                android:drawableEnd="@drawable/ph_caret_down"
                 android:drawablePadding="@dimen/_2sdp"
+                android:fontFamily="@font/nunito_bold"
                 android:gravity="center_vertical"
                 android:includeFontPadding="false"
                 android:textColor="@color/on_surface"
                 android:textSize="@dimen/_11ssp"
-                android:textStyle="bold"
                 tools:text="+91" />
         </LinearLayout>
 
@@ -125,6 +186,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
+            android:fontFamily="@font/nunito_regular"
             android:hint="@string/home_search_hint"
             android:imeOptions="actionSearch"
             android:importantForAutofill="no"
@@ -141,7 +203,7 @@
             android:background="@drawable/bg_circle_primary"
             android:contentDescription="@string/lookup_hint"
             android:padding="@dimen/_9sdp"
-            android:src="@drawable/ic_search"
+            android:src="@drawable/ph_magnifying_glass"
             app:tint="@color/on_primary" />
     </LinearLayout>
 
@@ -167,7 +229,7 @@
             android:layout_width="@dimen/_18sdp"
             android:layout_height="@dimen/_18sdp"
             android:contentDescription="@null"
-            android:src="@drawable/ic_shield_check"
+            android:src="@drawable/ph_shield_check"
             app:tint="@color/primary" />
 
         <TextView
@@ -204,61 +266,28 @@
             android:orientation="vertical"
             android:paddingBottom="@dimen/_16sdp">
 
-            <!-- Protection card -->
+            <!-- Quick actions — Claude Design "actions 3": one shared card, split cells. -->
             <LinearLayout
-                android:id="@+id/cardProtection"
+                android:id="@+id/quickActionsRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="@dimen/_16sdp"
-                android:layout_marginTop="@dimen/_9sdp"
-                android:background="@drawable/bg_home_protection"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingHorizontal="@dimen/_13sdp"
-                android:paddingVertical="@dimen/_10sdp">
-
-                <ImageView
-                    android:layout_width="@dimen/_17sdp"
-                    android:layout_height="@dimen/_17sdp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_shield_check" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/_10sdp"
-                    android:layout_weight="1"
-                    android:text="@string/home_protection_line"
-                    android:textColor="@color/white"
-                    android:textSize="@dimen/_10ssp"
-                    android:textStyle="bold" />
-
-                <ImageView
-                    android:layout_width="@dimen/_14sdp"
-                    android:layout_height="@dimen/_14sdp"
-                    android:alpha="0.85"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_chevron_right"
-                    app:tint="@color/white" />
-            </LinearLayout>
-
-            <!-- Quick actions -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="@dimen/_12sdp"
                 android:layout_marginTop="@dimen/_10sdp"
+                android:background="@drawable/bg_home_tile"
                 android:baselineAligned="false"
-                android:orientation="horizontal">
+                android:elevation="@dimen/_1sdp"
+                android:orientation="horizontal"
+                android:outlineAmbientShadowColor="@color/card_shadow"
+                android:outlineSpotShadowColor="@color/card_shadow"
+                android:paddingHorizontal="@dimen/_4sdp"
+                android:paddingTop="@dimen/_14sdp"
+                android:paddingBottom="@dimen/_12sdp">
 
                 <include
                     android:id="@+id/qaDialer"
                     layout="@layout/item_quick_action"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/_5sdp"
                     android:layout_weight="1" />
 
                 <include
@@ -266,7 +295,6 @@
                     layout="@layout/item_quick_action"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/_5sdp"
                     android:layout_weight="1" />
 
                 <include
@@ -274,7 +302,6 @@
                     layout="@layout/item_quick_action"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/_5sdp"
                     android:layout_weight="1" />
 
                 <include
@@ -282,7 +309,6 @@
                     layout="@layout/item_quick_action"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/_5sdp"
                     android:layout_weight="1" />
             </LinearLayout>
 
@@ -315,6 +341,7 @@
                 style="@style/AdDivider" />
             <!-- Recent activity header -->
             <LinearLayout
+                android:id="@+id/recentHeaderRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="@dimen/_16sdp"
@@ -326,23 +353,23 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:fontFamily="@font/nunito_extrabold"
                     android:letterSpacing="-0.01"
                     android:text="@string/home_recent_activity"
                     android:textColor="@color/on_surface"
-                    android:textSize="@dimen/_12ssp"
-                    android:textStyle="bold" />
+                    android:textSize="@dimen/_12ssp" />
 
                 <TextView
                     android:id="@+id/tvSeeAll"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackgroundBorderless"
+                    android:fontFamily="@font/nunito_semibold"
                     android:paddingHorizontal="@dimen/_4sdp"
                     android:paddingVertical="@dimen/_2sdp"
                     android:text="@string/home_see_all"
                     android:textColor="@color/primary"
-                    android:textSize="@dimen/_10ssp"
-                    android:textStyle="bold" />
+                    android:textSize="@dimen/_10ssp" />
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
@@ -372,17 +399,17 @@
                     android:background="@drawable/bg_icon_box"
                     android:contentDescription="@string/perm_calllog_title"
                     android:padding="@dimen/_12sdp"
-                    android:src="@drawable/ic_history"
+                    android:src="@drawable/ph_clock_counter_clockwise"
                     app:tint="@color/primary" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_10sdp"
+                    android:fontFamily="@font/nunito_extrabold"
                     android:text="@string/perm_calllog_title"
                     android:textColor="@color/on_surface"
-                    android:textSize="@dimen/_13ssp"
-                    android:textStyle="bold" />
+                    android:textSize="@dimen/_13ssp" />
 
                 <TextView
                     android:layout_width="match_parent"

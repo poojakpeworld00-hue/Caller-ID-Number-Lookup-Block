@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Controlled 6-hue palette · Blue tile (135° gradient) — Visual System v1 -->
+<!-- Tools tile · g-700 (flat, per Claude Design — no gradient). -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <gradient
-        android:angle="315"
-        android:startColor="#14A79A"
-        android:endColor="#00897B"
-        android:type="linear" />
+    <solid android:color="@color/primary" />
     <corners android:radius="@dimen/_14sdp" />
 </shape>

@@ -39,6 +39,7 @@ import com.calleridapp.numberlookup.ui.blocklist.BlockRosterActivity
 import com.calleridapp.numberlookup.ui.common.CallRowAdapter
 import com.calleridapp.admesh.presentation.NativePromoBanner
 import com.calleridapp.numberlookup.ui.common.CoachMarkFloat
+import com.calleridapp.numberlookup.ui.common.HomeMotion
 import com.calleridapp.numberlookup.util.openActivity
 import com.calleridapp.numberlookup.ui.dialer.KeypadActivity
 import com.calleridapp.numberlookup.ui.lookup.Territories
@@ -109,10 +110,13 @@ class DashboardFragment : HostFragment<FragmentHomeBinding>() {
             insets
         }
 
-        bindQuick(binding.qaDialer, R.drawable.ic_dialpad, R.string.quick_dialer, R.color.primary, R.color.primary_container)
-        bindQuick(binding.qaLookup, R.drawable.ic_search, R.string.quick_lookup, R.color.accent_purple, R.color.accent_purple_soft)
-        bindQuick(binding.qaBlocklist, R.drawable.ic_block, R.string.quick_blocklist, R.color.danger, R.color.danger_soft)
-        bindQuick(binding.qaTools, R.drawable.ic_qa_tools, R.string.quick_tools, R.color.success, R.color.success_soft)
+        // Per-tile tint = Claude Design's actions-3 cells (g-700/teal/clay/amber).
+        // Blocklist/Tools deliberately do NOT reuse the danger/success verdict
+        // colors here -- those are fixed verdict roles, not decorative tints.
+        bindQuick(binding.qaDialer, R.drawable.ph_grid_nine, R.string.quick_dialer, R.color.primary, R.color.primary_container)
+        bindQuick(binding.qaLookup, R.drawable.ph_magnifying_glass, R.string.quick_lookup, R.color.cid_teal, R.color.cid_teal_100)
+        bindQuick(binding.qaBlocklist, R.drawable.ph_prohibit, R.string.quick_blocklist, R.color.cid_clay, R.color.cid_clay_100)
+        bindQuick(binding.qaTools, R.drawable.ph_squares_four, R.string.quick_tools, R.color.cid_amber, R.color.cid_amber_100)
 
         binding.rvRecent.layoutManager = LinearLayoutManager(requireContext())
         binding.rvRecent.adapter = recentAdapter
@@ -172,9 +176,26 @@ class DashboardFragment : HostFragment<FragmentHomeBinding>() {
             (activity as? ShellActivity)?.showPermissionSheet()
         }
 
+        HomeMotion.attachFocusScale(binding.searchBar, binding.etHomeSearch)
+
         loadRecentIfAllowed()
         maybeShowSearchHint()
         refreshPermissionHint()
+        playEntrance()
+    }
+
+    /**
+     * Screen entrance: the Protection banner rises first, then the search pill,
+     * the quick-actions card and the "Recent activity" header, each a beat
+     * later -- the design's `cid-rise-in` rhythm. The recent list's own stagger
+     * continues from [CallRowAdapter]. Runs once per Fragment instance (Home's
+     * view is created once; tab switches show/hide it rather than recreating it).
+     */
+    private fun playEntrance() {
+        HomeMotion.riseIn(binding.cardProtection, delay = 0L)
+        HomeMotion.riseIn(binding.searchBar, delay = 90L)
+        HomeMotion.riseIn(binding.quickActionsRow, delay = 150L)
+        HomeMotion.riseIn(binding.recentHeaderRow, delay = 200L)
     }
 
     /**
@@ -346,14 +367,18 @@ class DashboardFragment : HostFragment<FragmentHomeBinding>() {
         item.qaIcon.setImageResource(icon)
         item.qaLabel.setText(label)
         val ctx = requireContext()
-//        item.qaIcon.imageTintList =
-//            ColorStateList.valueOf(ContextCompat.getColor(ctx, fgColor))
-//        item.qaIcon.backgroundTintList =
-//            ColorStateList.valueOf(ContextCompat.getColor(ctx, softColor))
+        item.qaIcon.imageTintList =
+            ColorStateList.valueOf(ContextCompat.getColor(ctx, fgColor))
+        item.qaIconCircle.backgroundTintList =
+            ColorStateList.valueOf(ContextCompat.getColor(ctx, softColor))
     }
 
     override fun initObservers() {
         viewModel.recent.observe(viewLifecycleOwner) { recentAdapter.submit(it) }
+        // Protection banner subtitle -- Claude Design's hero C reads the count inline.
+        viewModel.blockedCount.observe(viewLifecycleOwner) {
+            binding.tvProtectionSub.text = getString(R.string.home_protection_subtitle, it)
+        }
     }
 
     override fun onResume() {

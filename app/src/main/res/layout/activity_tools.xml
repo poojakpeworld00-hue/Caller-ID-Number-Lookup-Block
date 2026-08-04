@@ -37,10 +37,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/_2sdp"
+                android:fontFamily="@font/nunito_extrabold"
+                android:letterSpacing="-0.02"
                 android:text="@string/tools_title"
                 android:textColor="@color/on_surface"
-                android:textSize="@dimen/_14ssp"
-                android:textStyle="bold" />
+                android:textSize="@dimen/_14ssp" />
         </LinearLayout>
 
         <!-- Search field -->

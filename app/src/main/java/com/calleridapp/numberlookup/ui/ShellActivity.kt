@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -39,6 +38,7 @@ import com.calleridapp.numberlookup.permission.fsi.FullScreenReturnWatcher
 import com.calleridapp.numberlookup.databinding.ActivityMainBinding
 import com.calleridapp.numberlookup.databinding.ItemNavBinding
 import com.calleridapp.numberlookup.services.PersonUploader
+import com.calleridapp.numberlookup.ui.common.HomeMotion
 import com.calleridapp.numberlookup.ui.contacts.PeopleFragment
 import com.calleridapp.numberlookup.ui.home.DashboardFragment
 import com.calleridapp.numberlookup.ui.lookup.IdentifyFragment
@@ -575,11 +575,13 @@ class ShellActivity : HostActivity<ActivityMainBinding>() {
         tabs.forEachIndexed { i, t ->
             val active = i == index
             t.nav.navIcon.setImageResource(if (active) t.selectedIcon else t.unselectedIcon)
-            val color = ContextCompat.getColor(
+            val from = t.nav.navLabel.currentTextColor
+            val to = ContextCompat.getColor(
                 this, if (active) R.color.primary else R.color.on_surface_variant
             )
-            t.nav.navIcon.imageTintList = ColorStateList.valueOf(color)
-            t.nav.navLabel.setTextColor(color)
+            // Icon shape swap is instant (selected/unselected are different
+            // drawables); the colour itself crossfades instead of snapping.
+            HomeMotion.animateTint(t.nav.navIcon, t.nav.navLabel, from, to)
             t.nav.navIndicator.visibility = if (active) View.VISIBLE else View.INVISIBLE
         }
 

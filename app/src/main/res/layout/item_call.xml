@@ -26,10 +26,10 @@
         android:layout_width="@dimen/_34sdp"
         android:layout_height="@dimen/_34sdp"
         android:background="@drawable/bg_avatar"
+        android:fontFamily="@font/nunito_extrabold"
         android:gravity="center"
         android:textColor="@color/on_primary_container"
         android:textSize="@dimen/_11ssp"
-        android:textStyle="bold"
         tools:text="112" />
 
     <LinearLayout
@@ -44,10 +44,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
+            android:fontFamily="@font/nunito_bold"
             android:maxLines="1"
             android:textColor="@color/on_surface"
             android:textSize="@dimen/_11ssp"
-            android:textStyle="bold"
             tools:text="Emergency · 112" />
 
         <LinearLayout
@@ -70,6 +70,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/_4sdp"
+                android:fontFamily="@font/nunito_regular"
                 android:textColor="@color/on_surface_variant"
                 android:textSize="@dimen/_9ssp"
                 tools:text="Outgoing · Jul 13" />
@@ -83,7 +84,7 @@
         android:background="@drawable/bg_circle_surface"
         android:contentDescription="@string/action_call"
         android:padding="@dimen/_7sdp"
-        android:src="@drawable/ic_call"
+        android:src="@drawable/ph_phone"
         app:tint="@color/primary" />
 
     <!-- Shown instead of Call for unknown / unsaved numbers → opens Lookup. -->

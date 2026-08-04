@@ -6,11 +6,11 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginEnd">@dimen/_7sdp</item>
         <item name="android:background">@drawable/bg_chip</item>
+        <item name="android:fontFamily">@font/nunito_semibold</item>
         <item name="android:paddingHorizontal">@dimen/_11sdp</item>
         <item name="android:paddingVertical">@dimen/_5sdp</item>
         <item name="android:textColor">@color/csl_filter_tab</item>
         <item name="android:textSize">@dimen/_10ssp</item>
-        <item name="android:textStyle">bold</item>
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
         <item name="android:gravity">center</item>
@@ -33,15 +33,16 @@
     <style name="DialKeyDigit">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">@font/nunito_bold</item>
         <item name="android:textColor">@color/on_surface</item>
-        <item name="android:textSize">@dimen/_18ssp</item>
-        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">@dimen/_20ssp</item>
     </style>
 
     <style name="DialKeyLetters">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:letterSpacing">0.1</item>
+        <item name="android:fontFamily">@font/nunito_bold</item>
+        <item name="android:letterSpacing">0.13</item>
         <item name="android:textColor">@color/on_surface_variant</item>
         <item name="android:textSize">@dimen/_7ssp</item>
     </style>
@@ -234,11 +235,11 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">@dimen/_12sdp</item>
         <item name="android:layout_marginBottom">@dimen/_2sdp</item>
-        <item name="android:letterSpacing">0.08</item>
+        <item name="android:fontFamily">@font/nunito_extrabold</item>
+        <item name="android:letterSpacing">0.1</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">@color/on_surface_variant</item>
+        <item name="android:textColor">@color/on_surface</item>
         <item name="android:textSize">@dimen/_9ssp</item>
-        <item name="android:textStyle">bold</item>
     </style>
 
     <!-- Uppercase section label on the Settings screen -->

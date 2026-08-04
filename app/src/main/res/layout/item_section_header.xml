@@ -8,7 +8,9 @@
     android:paddingTop="@dimen/_10sdp"
     android:paddingEnd="@dimen/_16sdp"
     android:paddingBottom="@dimen/_3sdp"
+    android:fontFamily="@font/nunito_bold"
+    android:letterSpacing="0.1"
+    android:textAllCaps="true"
     android:textColor="@color/on_surface_variant"
     android:textSize="@dimen/_9ssp"
-    android:textStyle="bold"
     tools:text="Today" />

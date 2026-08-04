@@ -38,9 +38,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/_3sdp"
             android:layout_marginBottom="@dimen/_6sdp"
+            android:fontFamily="@font/nunito_semibold"
             android:textColor="@color/on_surface_variant"
             android:textSize="@dimen/_8ssp"
-            android:textStyle="bold"
             tools:text="Home" />
     </LinearLayout>
 </layout>

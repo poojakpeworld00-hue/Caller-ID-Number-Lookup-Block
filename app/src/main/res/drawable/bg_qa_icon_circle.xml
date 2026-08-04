@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Quick-action icon circle: plain oval, per-tile tinted at runtime via
+     backgroundTintList in DashboardFragment.bindQuick (g-100/teal-100/clay-100/
+     amber-100, per Claude Design's actions-3). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="@color/primary_container" />
+</shape>

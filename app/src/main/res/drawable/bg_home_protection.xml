@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Protection card — the app's own value in the header slot (hero gradient). -->
+<!-- Protection card — Claude Design hero C's banner: flat g-900, no gradient. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <gradient
-        android:angle="315"
-        android:startColor="@color/splash_grad_start"
-        android:endColor="@color/splash_accent_2"
-        android:type="linear" />
+    <solid android:color="@color/cid_g_900" />
     <corners android:radius="@dimen/_16sdp" />
 </shape>

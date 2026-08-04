@@ -29,6 +29,9 @@ class UtilityActivity : HostActivity<ActivityToolsBinding>() {
         val device = getString(R.string.tools_cat_device)
         val time = getString(R.string.tools_cat_time)
         listOf(
+            // Tile colour per tool matches Claude Design's exact assignment
+            // (g-700 / teal / clay / amber -- bg_tile_blue/teal/violet/amber
+            // are now flat fills in those colours, not the old 6-hue gradients).
             UtilityUi(getString(R.string.tools_compass), getString(R.string.tools_compass_sub),
                 R.drawable.ic_tool_compass, R.drawable.bg_tile_blue, measure, BearingActivity::class.java),
             UtilityUi(getString(R.string.tools_level), getString(R.string.tools_level_sub),
@@ -40,15 +43,15 @@ class UtilityActivity : HostActivity<ActivityToolsBinding>() {
             UtilityUi(getString(R.string.tools_flashlight), getString(R.string.tools_flashlight_sub),
                 R.drawable.ic_tool_flashlight, R.drawable.bg_tile_amber, device, TorchActivity::class.java),
             UtilityUi(getString(R.string.tools_battery), getString(R.string.tools_battery_sub),
-                R.drawable.ic_tool_battery, R.drawable.bg_tile_green, device, PowerGaugeActivity::class.java),
+                R.drawable.ic_tool_battery, R.drawable.bg_tile_blue, device, PowerGaugeActivity::class.java),
             UtilityUi(getString(R.string.tools_sim), getString(R.string.tools_sim_sub),
-                R.drawable.ic_tool_network, R.drawable.bg_tile_sky, device, SimCardActivity::class.java),
+                R.drawable.ic_tool_network, R.drawable.bg_tile_teal, device, SimCardActivity::class.java),
             UtilityUi(getString(R.string.tools_speedometer), getString(R.string.tools_speedometer_sub),
-                R.drawable.ic_tool_speedometer, R.drawable.bg_tile_blue, device, VelocityActivity::class.java),
+                R.drawable.ic_tool_speedometer, R.drawable.bg_tile_violet, device, VelocityActivity::class.java),
             UtilityUi(getString(R.string.tools_stopwatch), getString(R.string.tools_stopwatch_sub),
-                R.drawable.ic_tool_stopwatch, R.drawable.bg_tile_violet, time, ChronoActivity::class.java),
+                R.drawable.ic_tool_stopwatch, R.drawable.bg_tile_blue, time, ChronoActivity::class.java),
             UtilityUi(getString(R.string.timer_tool), getString(R.string.timer_tool_sub),
-                R.drawable.ic_tool_timer, R.drawable.bg_tile_green, time, CountdownActivity::class.java),
+                R.drawable.ic_tool_timer, R.drawable.bg_tile_teal, time, CountdownActivity::class.java),
         )
     }
 

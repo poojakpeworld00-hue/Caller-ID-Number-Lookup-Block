@@ -1,10 +1,12 @@
 package com.calleridapp.numberlookup.ui.dialer
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.ContactsContract
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
@@ -121,7 +123,23 @@ class KeypadActivity : HostActivity<ActivityDialerBinding>() {
             val key = cell.tag?.toString() ?: continue
             cell.setOnClickListener { appendDial(key) }
             if (key == "0") cell.setOnLongClickListener { appendDial("+"); true }
+            cell.setOnTouchListener(keyPressScale)
         }
+    }
+
+    /** Press-scale (0.94) with a spring release -- the design's key-press motion.
+     *  Returns false so the cell's own click/long-click listeners still fire. */
+    @SuppressLint("ClickableViewAccessibility")
+    private val keyPressScale = View.OnTouchListener { v, event ->
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN ->
+                v.animate().scaleX(0.94f).scaleY(0.94f).setDuration(90L).start()
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL ->
+                v.animate().scaleX(1f).scaleY(1f)
+                    .setInterpolator(android.view.animation.OvershootInterpolator())
+                    .setDuration(180L).start()
+        }
+        false
     }
 
     private fun dialedNumber(): String = binding.tvDialNumber.text?.toString().orEmpty()

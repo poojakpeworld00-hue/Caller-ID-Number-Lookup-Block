@@ -15,10 +15,10 @@
         android:layout_width="@dimen/_36sdp"
         android:layout_height="@dimen/_36sdp"
         android:background="@drawable/bg_avatar"
+        android:fontFamily="@font/nunito_extrabold"
         android:gravity="center"
         android:textColor="@color/white"
         android:textSize="@dimen/_12ssp"
-        android:textStyle="bold"
         tools:text="SK" />
 
     <LinearLayout
@@ -41,10 +41,10 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:ellipsize="end"
+                android:fontFamily="@font/nunito_bold"
                 android:maxLines="1"
                 android:textColor="@color/on_surface"
                 android:textSize="@dimen/_12ssp"
-                android:textStyle="bold"
                 tools:text="+1 415 555 0132" />
 
             <!-- Eye: shown only while the name is locked; tap plays a rewarded ad to reveal it. -->

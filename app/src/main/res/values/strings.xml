@@ -19,6 +19,7 @@
     <!-- Language -->
     <string name="language_title">Choose language</string>
     <string name="language_continue">Continue</string>
+    <string name="language_done">Done</string>
     <string name="language_search_hint">Search languages</string>
     <string name="language_suggested">Suggested</string>
     <string name="language_all">All languages</string>
@@ -67,7 +68,8 @@
     <string name="home_recent_activity">Recent activity</string>
     <string name="home_quick_actions">Quick Actions</string>
     <string name="home_see_all">See all</string>
-    <string name="home_protection_line">Protection is on · spam auto-blocked</string>
+    <string name="home_protection_title">Protection is on</string>
+    <string name="home_protection_subtitle">%1$d spam calls blocked this week</string>
     <string name="see_all">See all</string>
 
     <!-- Quick actions -->

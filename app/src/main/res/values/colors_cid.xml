@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Claude Design "CID03" tokens, light theme.
+
+    The design declares these in OKLCH; the values here are the exact sRGB
+    conversions. The neutral ramp and the shadows come from the Broadsheet
+    design system (styles.css); everything else is declared on the page.
+    Dark-theme overrides live in values-night/colors_cid.xml.
+-->
+<resources>
+    <!-- green ramp -->
+    <color name="cid_g_900">#FF0E301F</color>
+    <color name="cid_g_800">#FF1C4730</color>
+    <color name="cid_g_700">#FF2C6547</color>
+    <color name="cid_g_600">#FF3E7E5B</color>
+    <color name="cid_g_500">#FF589673</color>
+    <color name="cid_g_200">#FFC8E2D2</color>
+    <color name="cid_g_100">#FFE2F1E8</color>
+    <color name="cid_g_050">#FFF2F9F4</color>
+
+    <!-- accents -->
+    <color name="cid_clay">#FFC76841</color>
+    <color name="cid_clay_100">#FFFEE5DC</color>
+    <color name="cid_clay_ink">#FF713319</color>
+    <color name="cid_teal">#FF0A8A98</color>
+    <color name="cid_teal_100">#FFD7F1F5</color>
+    <color name="cid_teal_ink">#FF004C56</color>
+    <color name="cid_amber">#FFB98833</color>
+    <color name="cid_amber_100">#FFFAEAD3</color>
+    <color name="cid_amber_ink">#FF664603</color>
+    <color name="cid_on_accent">#FFFFFFFF</color>
+
+    <!-- Broadsheet neutrals -->
+    <color name="cid_bg">#FFF3F2F2</color>
+    <color name="cid_text">#FF201E1D</color>
+    <color name="cid_neutral_100">#FFF8F4F4</color>
+    <color name="cid_neutral_200">#FFEAE7E7</color>
+    <color name="cid_neutral_300">#FFD7D3D3</color>
+    <color name="cid_neutral_400">#FFBAB6B6</color>
+    <color name="cid_neutral_600">#FF7D7979</color>
+    <color name="cid_neutral_700">#FF605D5D</color>
+</resources>

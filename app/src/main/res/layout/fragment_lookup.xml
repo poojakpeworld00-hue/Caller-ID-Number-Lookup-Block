@@ -21,11 +21,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:letterSpacing="-0.02"
+            android:fontFamily="@font/nunito_extrabold"
+            android:letterSpacing="-0.03"
             android:text="@string/nav_lookup"
             android:textColor="@color/on_surface"
-            android:textSize="@dimen/_16ssp"
-            android:textStyle="bold" />
+            android:textSize="@dimen/_16ssp" />
 
         <ImageView
             android:id="@+id/btnLookupHistory"
@@ -296,9 +296,9 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="@dimen/_2sdp"
+                                    android:fontFamily="@font/nunito_bold"
                                     android:textColor="@color/on_surface"
                                     android:textSize="@dimen/_12ssp"
-                                    android:textStyle="bold"
                                     tools:text="Unknown" />
 
                                 <ImageView
@@ -318,9 +318,10 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/_1sdp"
+                                android:fontFamily="@font/nunito_extrabold"
+                                android:letterSpacing="-0.02"
                                 android:textColor="@color/on_surface"
                                 android:textSize="@dimen/_18ssp"
-                                android:textStyle="bold"
                                 tools:text="+1 234 567 890" />
 
                             <TextView
@@ -423,9 +424,9 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/_6sdp"
+                                android:fontFamily="@font/nunito_bold"
                                 android:textColor="@color/on_surface"
                                 android:textSize="@dimen/_12ssp"
-                                android:textStyle="bold"
                                 tools:text="United States" />
                         </LinearLayout>
 
@@ -465,9 +466,9 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/_6sdp"
+                                android:fontFamily="@font/nunito_bold"
                                 android:textColor="@color/on_surface"
                                 android:textSize="@dimen/_12ssp"
-                                android:textStyle="bold"
                                 tools:text="AT&amp;T" />
                         </LinearLayout>
                     </LinearLayout>
@@ -508,9 +509,9 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/_6sdp"
+                            android:fontFamily="@font/nunito_bold"
                             android:textColor="@color/on_surface"
                             android:textSize="@dimen/_12ssp"
-                            android:textStyle="bold"
                             tools:text="Mobile" />
                     </LinearLayout>
 
@@ -559,16 +560,18 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/_16sdp"
+                        android:fontFamily="@font/nunito_extrabold"
                         android:gravity="center"
+                        android:letterSpacing="-0.02"
                         android:text="@string/lookup_empty_title"
                         android:textColor="@color/on_surface"
-                        android:textSize="@dimen/_15ssp"
-                        android:textStyle="bold" />
+                        android:textSize="@dimen/_15ssp" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/_6sdp"
+                        android:fontFamily="@font/nunito_regular"
                         android:gravity="center"
                         android:lineSpacingMultiplier="1.2"
                         android:text="@string/lookup_empty_sub"

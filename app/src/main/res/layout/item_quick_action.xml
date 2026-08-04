@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Quick action: a white tile with a single primary-tinted icon and a label
-     beneath it (Home v2 — one icon language). -->
+<!-- Quick action — Claude Design "actions 3" cell: a per-action tinted icon
+     circle (background/icon tint set per-instance in DashboardFragment.bindQuick)
+     and a label beneath it. No per-tile card — the shared card is the parent
+     row's own background in fragment_home.xml. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -12,30 +14,28 @@
     android:orientation="vertical">
 
     <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/_46sdp"
-        android:background="@drawable/bg_home_tile"
-        android:elevation="@dimen/_1sdp"
-        android:outlineAmbientShadowColor="@color/card_shadow"
-        android:outlineSpotShadowColor="@color/card_shadow">
+        android:id="@+id/qaIconCircle"
+        android:layout_width="@dimen/_44sdp"
+        android:layout_height="@dimen/_44sdp"
+        android:background="@drawable/bg_qa_icon_circle">
 
         <ImageView
             android:id="@+id/qaIcon"
-            android:layout_width="@dimen/_19sdp"
-            android:layout_height="@dimen/_19sdp"
+            android:layout_width="@dimen/_22sdp"
+            android:layout_height="@dimen/_22sdp"
             android:layout_gravity="center"
             android:src="@drawable/ic_dialpad"
-            app:tint="@color/primary"
             tools:ignore="ContentDescription" />
     </FrameLayout>
 
+    <!-- gap 9px, matches Claude Design's actions-3 cell -->
     <TextView
         android:id="@+id/qaLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/_5sdp"
-        android:textColor="@color/on_surface_variant"
+        android:layout_marginTop="@dimen/_9sdp"
+        android:fontFamily="@font/nunito_semibold"
+        android:textColor="@color/on_surface"
         android:textSize="@dimen/_8ssp"
-        android:textStyle="bold"
         tools:text="Dialer" />
 </LinearLayout>

@@ -27,11 +27,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:letterSpacing="-0.02"
+            android:fontFamily="@font/nunito_extrabold"
+            android:letterSpacing="-0.03"
             android:text="@string/nav_recents"
             android:textColor="@color/on_surface"
-            android:textSize="@dimen/_16ssp"
-            android:textStyle="bold" />
+            android:textSize="@dimen/_16ssp" />
 
         <ImageView
             android:id="@+id/btnRecentsFilter"

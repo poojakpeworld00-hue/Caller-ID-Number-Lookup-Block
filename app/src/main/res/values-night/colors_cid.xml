@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Claude Design "CID03" tokens, dark theme (.theme-dark in the design).
+
+    The design inverts the green ramp in dark mode: g-900 becomes the LIGHTEST
+    step and g-050 the darkest, so every "g-900 text on g-050 ground" pairing in
+    the layouts flips automatically without a single layout change.
+-->
+<resources>
+    <color name="cid_g_900">#FFDBF2E4</color>
+    <color name="cid_g_800">#FFB6E5C8</color>
+    <color name="cid_g_700">#FF93D6AE</color>
+    <color name="cid_g_600">#FF7FBB98</color>
+    <color name="cid_g_500">#FF62A27E</color>
+    <color name="cid_g_200">#FF2F3F35</color>
+    <color name="cid_g_100">#FF212F27</color>
+    <color name="cid_g_050">#FF08150D</color>
+
+    <color name="cid_clay">#FFEB9A7A</color>
+    <color name="cid_clay_100">#FF432519</color>
+    <color name="cid_clay_ink">#FFFFB699</color>
+    <color name="cid_teal">#FF70C7D4</color>
+    <color name="cid_teal_100">#FF153337</color>
+    <color name="cid_teal_ink">#FF94D8E2</color>
+    <color name="cid_amber">#FFE9BC74</color>
+    <color name="cid_amber_100">#FF3D2D15</color>
+    <color name="cid_amber_ink">#FFF7D197</color>
+    <color name="cid_on_accent">#FF08150D</color>
+
+    <color name="cid_bg">#FF111814</color>
+    <color name="cid_text">#FFE6EDE9</color>
+    <color name="cid_neutral_100">#FF1B241F</color>
+    <color name="cid_neutral_200">#FF2A332D</color>
+    <color name="cid_neutral_300">#FF3C453F</color>
+    <color name="cid_neutral_400">#FF5D6660</color>
+    <color name="cid_neutral_600">#FFA4ADA8</color>
+    <color name="cid_neutral_700">#FFBEC7C1</color>
+</resources>

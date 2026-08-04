@@ -5,29 +5,33 @@
     automatically. Brand/literal colors (primary, on_primary, accent, danger,
     warn, white, black) are intentionally NOT overridden — they stay defined
     once in values/colors.xml and apply to both themes.
+
+    Surface/text tokens below delegate to colors_cid.xml's own night variants
+    (values-night/colors_cid.xml) via @color reference, so they track the
+    Claude Design's dark-mode g-ramp inversion automatically.
 -->
 <resources>
-    <!-- Surfaces & background — Visual System v1 true-dark ramp (OLED) -->
-    <color name="background">#0A0F0E</color>
-    <color name="surface">#131C1A</color>
-    <color name="surface_2">#1B2624</color>
+    <!-- Surfaces & background — Claude Design (CID03) dark ramp -->
+    <color name="background">@color/cid_bg</color>
+    <color name="surface">@color/cid_neutral_100</color>
+    <color name="surface_2">@color/cid_g_100</color>
     <color name="card_bg_light">#131C1A</color>
 
-    <!-- Soft elevation shadow on dark surfaces -->
+    <!-- Soft elevation shadow on dark surfaces (brand-agnostic, unchanged) -->
     <color name="card_shadow">#59000000</color>
 
     <!-- Text / icons on surfaces -->
-    <color name="on_surface">#F0F5F4</color>
-    <color name="on_surface_variant">#869C98</color>
+    <color name="on_surface">@color/cid_g_900</color>
+    <color name="on_surface_variant">@color/cid_neutral_700</color>
 
     <!-- Lines & containers -->
-    <color name="outline">#283936</color>
+    <color name="outline">@color/cid_neutral_300</color>
     <color name="ad_divider">#26FFFFFF</color>       <!-- hairline between app content and ads -->
-    <color name="primary_container">#1B2624</color>
-    <color name="on_primary_container">#7FD8CC</color>
+    <color name="primary_container">@color/cid_g_100</color>
+    <color name="on_primary_container">@color/cid_g_800</color>
 
     <!-- Language screen: unselected radio ring (dark) -->
-    <color name="radio_unselected">#5A716D</color>
+    <color name="radio_unselected">@color/cid_neutral_400</color>
 
     <!-- Verdict containers (dark) -->
     <color name="identified_container">#143126</color>

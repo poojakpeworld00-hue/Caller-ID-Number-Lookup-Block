@@ -3,27 +3,29 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- ===== Brand / Material 3 tokens — Visual System v1 =====
-         One calm brand blue (Sapphire). Verdict colors are fixed and never take
-         a "brand" role. Light values here; dark overrides in values-night. -->
-    <color name="primary">#00897B</color>            <!-- Sapphire · seed -->
-    <color name="primary_dark">#00695C</color>       <!-- pressed / status scrim -->
+    <!-- ===== Brand / Material 3 tokens — Visual System v2 =====
+         Claude Design (CID03) green, imported from the design system's own
+         g-ramp (see colors_cid.xml). Verdict colors are fixed and never take
+         a "brand" role, so they are NOT part of this rebrand. Light values
+         here; dark overrides in values-night. -->
+    <color name="primary">#2C6547</color>            <!-- Claude Design g-700 · seed -->
+    <color name="primary_dark">#1C4730</color>       <!-- Claude Design g-800 · pressed / status scrim -->
     <color name="on_primary">#FFFFFFFF</color>
-    <color name="primary_container">#D3EEEA</color>
-    <color name="on_primary_container">#00695C</color>
+    <color name="primary_container">@color/cid_g_100</color>
+    <color name="on_primary_container">@color/cid_g_800</color>
     <color name="accent">#1E8E5A</color>             <!-- verdict · identified -->
     <color name="danger">#D93B3B</color>             <!-- verdict · spam -->
     <color name="warn">#E5920A</color>               <!-- verdict · suspicious -->
 
-    <color name="background">#F4F8F7</color>
+    <color name="background">@color/cid_bg</color>
     <!-- Callback-screen aliases — point at semantic tokens so they flip light/dark automatically -->
     <color name="bg">@color/background</color>
     <color name="text_secondary">@color/on_surface_variant</color>
-    <color name="surface">#FFFFFFFF</color>
-    <color name="surface_2">#E9F1EF</color>          <!-- surfaceContainer -->
-    <color name="on_surface">#0F1917</color>
-    <color name="on_surface_variant">#5F7370</color>
-    <color name="outline">#CFDDDA</color>            <!-- outlineVariant -->
+    <color name="surface">@color/cid_neutral_100</color>
+    <color name="surface_2">@color/cid_g_100</color>          <!-- surfaceContainer -->
+    <color name="on_surface">@color/cid_g_900</color>
+    <color name="on_surface_variant">@color/cid_neutral_700</color>
+    <color name="outline">@color/cid_neutral_300</color>            <!-- outlineVariant -->
     <color name="ad_divider">#1F000000</color>       <!-- hairline between app content and ads -->
 
     <!-- Overlay-permission guide card -->
@@ -33,7 +35,7 @@
     <color name="card_shadow">#33101319</color>
 
     <!-- Language screen: unselected radio ring (muted, distinct from body text) -->
-    <color name="radio_unselected">#93AEA9</color>
+    <color name="radio_unselected">@color/cid_neutral_400</color>
 
     <!-- Verdict containers (Visual System) — fixed roles; dark variants in values-night -->
     <color name="identified_container">#DDF2E7</color>

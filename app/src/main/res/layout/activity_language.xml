@@ -42,11 +42,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/_12sdp"
-            android:letterSpacing="-0.01"
+            android:fontFamily="@font/nunito_extrabold"
+            android:letterSpacing="-0.02"
             android:text="@string/settings_language"
             android:textColor="@color/on_surface"
             android:textSize="@dimen/_15ssp"
-            android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="@id/btnContinue"
             app:layout_constraintEnd_toStartOf="@id/btnInfo"
             app:layout_constraintStart_toEndOf="@id/btnBack"
@@ -65,20 +65,39 @@
             app:layout_constraintTop_toTopOf="@id/btnContinue"
             app:tint="@color/on_surface_variant" />
 
-        <!-- Filled confirm: primary disc + white check (a real button, not a bare glyph). -->
-        <ImageView
+        <!-- Filled confirm: "Done" pill (Claude Design's labelled confirm), not a bare glyph. -->
+        <LinearLayout
             android:id="@+id/btnContinue"
-            android:layout_width="@dimen/_30sdp"
-            android:layout_height="@dimen/_30sdp"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/_28sdp"
             android:layout_marginEnd="@dimen/_10sdp"
-            android:background="@drawable/bg_circle_primary"
-            android:contentDescription="@string/language_continue"
+            android:background="@drawable/bg_btn_primary"
+            android:clickable="true"
+            android:contentDescription="@string/language_done"
             android:elevation="@dimen/_4sdp"
-            android:padding="@dimen/_8sdp"
-            android:src="@drawable/ic_check"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingHorizontal="@dimen/_11sdp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/on_primary" />
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="@dimen/_11sdp"
+                android:layout_height="@dimen/_11sdp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_check"
+                app:tint="@color/on_primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/_4sdp"
+                android:fontFamily="@font/nunito_bold"
+                android:text="@string/language_done"
+                android:textColor="@color/on_primary"
+                android:textSize="@dimen/_10ssp" />
+        </LinearLayout>
 
         <!-- ===== Suggested + All languages — one continuous scroll ===== -->
         <androidx.core.widget.NestedScrollView
@@ -104,12 +123,12 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/_18sdp"
                     android:layout_marginTop="@dimen/_10sdp"
-                    android:letterSpacing="0.08"
+                    android:fontFamily="@font/nunito_extrabold"
+                    android:letterSpacing="0.1"
                     android:text="@string/language_suggested"
                     android:textAllCaps="true"
-                    android:textColor="@color/on_surface_variant"
-                    android:textSize="@dimen/_10ssp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/on_surface"
+                    android:textSize="@dimen/_10ssp" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvSuggested"
@@ -135,12 +154,12 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/_18sdp"
                     android:layout_marginTop="@dimen/_10sdp"
-                    android:letterSpacing="0.08"
+                    android:fontFamily="@font/nunito_extrabold"
+                    android:letterSpacing="0.1"
                     android:text="@string/language_all"
                     android:textAllCaps="true"
-                    android:textColor="@color/on_surface_variant"
-                    android:textSize="@dimen/_10ssp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/on_surface"
+                    android:textSize="@dimen/_10ssp" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvLanguages"

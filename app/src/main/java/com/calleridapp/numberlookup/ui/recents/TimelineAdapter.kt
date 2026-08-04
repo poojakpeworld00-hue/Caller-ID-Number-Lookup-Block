@@ -13,6 +13,7 @@ import com.calleridapp.numberlookup.data.CallKind
 import com.calleridapp.numberlookup.databinding.ItemCallBinding
 import com.calleridapp.numberlookup.databinding.ItemSectionHeaderBinding
 import com.calleridapp.numberlookup.ui.common.CallPresenter
+import com.calleridapp.numberlookup.ui.common.HomeMotion
 
 class TimelineAdapter(
     private val onCall: (String) -> Unit,
@@ -22,9 +23,13 @@ class TimelineAdapter(
 
     private var rows: List<TimelineRow> = emptyList()
 
+    /** Rows animate in once; scrolling back or re-submitting must not replay the stagger. */
+    private var lastAnimated = -1
+
     @SuppressLint("NotifyDataSetChanged")
     fun submit(list: List<TimelineRow>) {
         rows = list
+        lastAnimated = -1
         notifyDataSetChanged()
     }
 
@@ -45,6 +50,17 @@ class TimelineAdapter(
             is TimelineRow.Header -> (holder as HeaderVH).binding.tvHeader.setText(row.titleRes)
             is TimelineRow.Call -> (holder as CallVH).bind(row)
         }
+
+        // Claude Design's cid-rise-in stagger, once per row per submit().
+        if (position > lastAnimated) {
+            lastAnimated = position
+            HomeMotion.riseIn(holder.itemView, delay = position * HomeMotion.STAGGER_STEP)
+        }
+    }
+
+    override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
+        super.onViewDetachedFromWindow(holder)
+        holder.itemView.animate().cancel()
     }
 
     override fun getItemCount(): Int = rows.size

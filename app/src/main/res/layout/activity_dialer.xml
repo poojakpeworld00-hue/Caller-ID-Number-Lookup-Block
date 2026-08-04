@@ -37,10 +37,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/_4sdp"
+                android:fontFamily="@font/nunito_extrabold"
+                android:letterSpacing="-0.02"
                 android:text="@string/dialer_title"
                 android:textColor="@color/on_surface"
-                android:textSize="@dimen/_16ssp"
-                android:textStyle="bold" />
+                android:textSize="@dimen/_16ssp" />
         </LinearLayout>
 
         <!-- Match block — bottom-aligned so it hugs the keypad sheet like the design -->
@@ -194,10 +195,10 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="@font/nunito_bold"
                     android:text="@string/add_to_contacts"
                     android:textColor="@color/on_primary_container"
-                    android:textSize="@dimen/_10ssp"
-                    android:textStyle="bold" />
+                    android:textSize="@dimen/_10ssp" />
             </LinearLayout>
 
             <GridLayout
@@ -282,23 +283,27 @@
                     android:layout_height="@dimen/_1sdp"
                     android:layout_weight="1" />
 
-                <com.google.android.material.button.MaterialButton
+                <!-- Circular call button (Claude Design's dialer CTA — icon only, no label). -->
+                <FrameLayout
                     android:id="@+id/btnDialCall"
-                    style="@style/Widget.Material3.Button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/_46sdp"
-                    android:minWidth="@dimen/_130sdp"
-                    android:paddingHorizontal="@dimen/_24sdp"
-                    android:text="@string/action_call"
-                    android:textAllCaps="false"
-                    android:textSize="@dimen/_13ssp"
-                    android:textStyle="bold"
-                    app:backgroundTint="@color/primary"
-                    app:cornerRadius="@dimen/_24sdp"
-                    app:icon="@drawable/ic_call"
-                    app:iconGravity="textStart"
-                    app:iconSize="@dimen/_18sdp"
-                    app:iconTint="@color/white" />
+                    android:layout_width="@dimen/_58sdp"
+                    android:layout_height="@dimen/_58sdp"
+                    android:background="@drawable/bg_circle_primary"
+                    android:clickable="true"
+                    android:contentDescription="@string/action_call"
+                    android:elevation="@dimen/_6sdp"
+                    android:focusable="true"
+                    android:outlineAmbientShadowColor="@color/card_shadow"
+                    android:outlineSpotShadowColor="@color/card_shadow">
+
+                    <ImageView
+                        android:layout_width="@dimen/_22sdp"
+                        android:layout_height="@dimen/_22sdp"
+                        android:layout_gravity="center"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_call"
+                        app:tint="@color/white" />
+                </FrameLayout>
 
                 <FrameLayout
                     android:layout_width="0dp"
