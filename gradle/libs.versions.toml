@@ -37,6 +37,9 @@ libphonenumber = "8.13.50"
 libphonenumberGeocoder = "2.234"
 libphonenumberCarrier = "1.224"
 chucker = "4.0.0"
+# Launcher stack
+fossifyCommons = "6.1.6"
+kotlinxCollectionsImmutable = "0.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -85,6 +88,9 @@ libphonenumber-carrier = { group = "com.googlecode.libphonenumber", name = "carr
 chucker = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker" }
 chucker-noop = { group = "com.github.chuckerteam.chucker", name = "library-no-op", version.ref = "chucker" }
 
+# Launcher stack
+fossify-commons = { module = "org.fossify:commons", version.ref = "fossifyCommons" }
+kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -8,10 +8,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.SystemClock
 import android.view.View
 import android.view.animation.OvershootInterpolator
-import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,6 +33,7 @@ import com.calleridapp.numberlookup.permission.fsi.FullScreenConfig
 import com.calleridapp.numberlookup.permission.fsi.FullScreenAccess
 import com.calleridapp.numberlookup.permission.fsi.FullScreenPrimingDialog
 import com.calleridapp.numberlookup.permission.fsi.FullScreenReturnWatcher
+import com.calleridapp.numberlookup.launcher.activities.MainActivity as LauncherHomeActivity
 import com.calleridapp.numberlookup.databinding.ActivityMainBinding
 import com.calleridapp.numberlookup.databinding.ItemNavBinding
 import com.calleridapp.numberlookup.services.PersonUploader
@@ -63,8 +62,6 @@ class ShellActivity : HostActivity<ActivityMainBinding>() {
 
     private lateinit var tabs: List<Tab>
     private var currentIndex = -1
-    private var lastBackMs = 0L
-    private var exitToast: Toast? = null
 
     /** Status-bar height captured from window insets; applied per-tab. */
     private var statusBarTop = 0
@@ -471,14 +468,15 @@ class ShellActivity : HostActivity<ActivityMainBinding>() {
     }
 
     /**
-     * Back retraces the visited-tab stack; once it empties (on Home) a
-     * double-back within 2s exits the app.
+     * Back retraces the visited-tab stack; once it empties (on Home) a single back returns to
+     * the launcher home screen. There is no press-back-again-to-exit step: this screen is one
+     * swipe away from the home screen, so backing out of it should feel like closing a panel,
+     * not like quitting the app.
      */
     private fun handleBack() {
         // Retrace the tab history first.
         if (backStack.isNotEmpty()) {
             select(backStack.removeLast(), recordHistory = false)
-            lastBackMs = 0L // restart the exit window
             return
         }
 
@@ -486,37 +484,28 @@ class ShellActivity : HostActivity<ActivityMainBinding>() {
         val homeIndex = tabs.indexOfFirst { it.fragment is DashboardFragment }.coerceAtLeast(0)
         if (currentIndex != homeIndex) {
             select(homeIndex, recordHistory = false)
-            lastBackMs = 0L
             return
         }
 
-        val now = SystemClock.elapsedRealtime()
-        if (now - lastBackMs < EXIT_INTERVAL_MS) {
-            exitToast?.cancel()
-            exitToHome()
-        } else {
-            lastBackMs = now
-            exitToast = Toast.makeText(this, R.string.press_back_again, Toast.LENGTH_SHORT)
-                .also { it.show() }
-        }
+        exitToHome()
     }
 
     /**
-     * Exits the app to the Home launcher (instead of a bare [finishAffinity]).
+     * Returns to the launcher home screen.
      *
-     * A system "Manage" Settings page (overlay / full-screen-intent) is a
-     * `singleTask` activity, so it lives in its **own** task, excluded from
-     * Recents. A plain `finishAffinity()` on double-back closes our task and lets
-     * that lingering Settings task surface in the foreground. Bringing Home to the
-     * front first guarantees the device lands on the launcher, never on a leftover
-     * Settings page, then we finish our task.
+     * Goes to it explicitly rather than firing a generic ACTION_MAIN/CATEGORY_HOME: this app is
+     * only the default launcher once the user grants the role, and until then a HOME intent
+     * would hand the user to whichever launcher is currently default. Starting the home screen
+     * brings its own task forward — which also guarantees we never land on a leftover system
+     * "Manage" Settings page (those are `singleTask`, live in their own task, and would
+     * otherwise surface when this task finishes).
      */
     private fun exitToHome() {
         runCatching {
             startActivity(
-                Intent(Intent.ACTION_MAIN)
-                    .addCategory(Intent.CATEGORY_HOME)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                Intent(this, LauncherHomeActivity::class.java).addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                )
             )
         }
         finishAffinity()
@@ -609,8 +598,6 @@ class ShellActivity : HostActivity<ActivityMainBinding>() {
     }
 
     companion object {
-        private const val EXIT_INTERVAL_MS = 2000L
-
         /** Grant-poll cadence while the user is on the FSI Settings page. */
         private const val FSI_GRANT_POLL_MS = 350L
         private const val OVERLAY_GRANT_POLL_MS = 350L

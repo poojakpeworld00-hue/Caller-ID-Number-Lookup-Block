@@ -16,6 +16,8 @@ import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.base.HostActivity
 import com.calleridapp.numberlookup.data.VaultRegistry
 import com.calleridapp.numberlookup.databinding.ActivityOnboardingBinding
+import com.calleridapp.numberlookup.launcher.helpers.LauncherFlow
+import com.calleridapp.numberlookup.ui.language.LocaleActivity
 import com.calleridapp.numberlookup.permission.AccessEngine
 import com.calleridapp.numberlookup.ui.ShellActivity
 import com.calleridapp.numberlookup.ui.intro.IntroRevealConfig
@@ -170,8 +172,16 @@ class IntroActivity : HostActivity<ActivityOnboardingBinding>() {
             // Permission done → show the interstitial (Firebase-gated; fires its
             // callback immediately when there's nothing to show) → THEN navigate.
             InterstitialNormal().showInterAds(this) {
-                startActivity(Intent(this, ShellActivity::class.java))
-                finish()
+                // Reached from the launcher's "skip setting me as default" branch: the
+                // language picker is the last onboarding step before the home screen.
+                if (LauncherFlow.isOnboarding(this)) {
+                    startActivity(
+                        LauncherFlow.onboardingIntent(this, LocaleActivity::class.java)
+                    )
+                    finish()
+                } else {
+                    LauncherFlow.goHome(this)
+                }
             }
         }
     }

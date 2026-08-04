@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+    Onboarding step 1 of 4. Notifications and phone state are each their own toggle so the user
+    can opt out of either before continuing; both default to on. Only the toggles that are still
+    on are actually requested when Continue is tapped.
+-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include
+        android:id="@+id/onboarding_progress"
+        layout="@layout/onboarding_progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="24dp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/onboarding_continue"
+        android:layout_below="@id/onboarding_progress"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingTop="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp">
+
+            <FrameLayout
+                android:layout_width="200dp"
+                android:layout_height="200dp">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_onboarding_ring" />
+
+                <ImageView
+                    android:layout_width="88dp"
+                    android:layout_height="88dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_cid_shield" />
+
+            </FrameLayout>
+
+            <org.fossify.commons.views.MyTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:letterSpacing="-0.02"
+                android:text="@string/onboarding_welcome_title"
+                android:textColor="@color/onboarding_text"
+                android:textSize="30sp"
+                android:textStyle="bold" />
+
+            <org.fossify.commons.views.MyTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:lineSpacingMultiplier="1.2"
+                android:text="@string/onboarding_welcome_headline"
+                android:textColor="@color/onboarding_subtitle"
+                android:textSize="25sp"
+                android:textStyle="bold" />
+
+            <org.fossify.commons.views.MyTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:lineSpacingMultiplier="1.4"
+                android:text="@string/onboarding_welcome_lead"
+                android:textColor="@color/onboarding_text_muted"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="26dp"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/bg_welcome_card"
+                android:orientation="vertical"
+                android:paddingVertical="6dp">
+
+                <LinearLayout
+                    android:id="@+id/onboarding_notifications_holder"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="12dp">
+
+                    <ImageView
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:background="@drawable/bg_welcome_tile_blue"
+                        android:contentDescription="@null"
+                        android:padding="7dp"
+                        android:src="@drawable/ic_onboarding_bell" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <org.fossify.commons.views.MyTextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/onboarding_permission_notifications"
+                            android:textColor="@color/onboarding_text"
+                            android:textSize="15sp" />
+
+                        <org.fossify.commons.views.MyTextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/onboarding_permission_notifications_summary"
+                            android:textColor="@color/onboarding_text_faint"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/onboarding_notifications_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginHorizontal="16dp"
+                    android:background="@color/welcome_divider" />
+
+                <LinearLayout
+                    android:id="@+id/onboarding_phone_state_holder"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="12dp">
+
+                    <ImageView
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:background="@drawable/bg_welcome_tile_teal"
+                        android:contentDescription="@null"
+                        android:padding="7dp"
+                        android:src="@drawable/ic_phone_in_talk" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <org.fossify.commons.views.MyTextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/onboarding_permission_phone_state"
+                            android:textColor="@color/onboarding_text"
+                            android:textSize="15sp" />
+
+                        <org.fossify.commons.views.MyTextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/onboarding_permission_phone_state_summary"
+                            android:textColor="@color/onboarding_text_faint"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/onboarding_phone_state_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/onboarding_continue"
+        style="@style/OnboardingButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="32dp"
+        android:text="@string/onboarding_continue" />
+
+</RelativeLayout>

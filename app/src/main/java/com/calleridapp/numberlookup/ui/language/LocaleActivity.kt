@@ -21,6 +21,7 @@ import com.calleridapp.numberlookup.data.RegionLocator
 import com.calleridapp.numberlookup.data.LocaleRegistry
 import com.calleridapp.numberlookup.data.VaultRegistry
 import com.calleridapp.numberlookup.databinding.ActivityLanguageBinding
+import com.calleridapp.numberlookup.launcher.helpers.LauncherFlow
 import com.calleridapp.numberlookup.permission.AccessEngine
 import com.calleridapp.numberlookup.permission.fsi.FullScreenAccess
 import com.calleridapp.numberlookup.permission.fsi.FullScreenAccessActivity
@@ -206,12 +207,21 @@ class LocaleActivity : HostActivity<ActivityLanguageBinding>() {
         // in-flight permission request (that's why nothing showed and the app
         // closed). So we defer BOTH until the engine reports it's done.
         AccessEngine.check(this) {
-            // Mirror Splash's routing: Terms and Onboarding both follow the same
-            // IntroRevealPolicy frequency gate.
+            // Reached as the launcher's final onboarding step (Intro → Language → Home):
+            // everything ahead of it already ran, so go straight to the home screen.
+            // Otherwise mirror Splash's routing — Terms and Onboarding both follow the
+            // same IntroRevealPolicy frequency gate.
             val next = when {
+                LauncherFlow.isOnboarding(this) -> LauncherFlow.homeActivity()
                 IntroRevealPolicy.shouldShowTerms(this) -> ConsentActivity::class.java
                 IntroRevealPolicy.shouldShowOnboarding(this) -> IntroActivity::class.java
-                else -> ShellActivity::class.java
+                else -> LauncherFlow.homeActivity()
+            }
+            // Landing on the home screen means the first run is over. Recorded here rather
+            // than at navigation time because the full-screen-intent prompt below may still
+            // sit between this screen and the home screen.
+            if (next == LauncherFlow.homeActivity()) {
+                LauncherFlow.markOnboardingCompleted(this)
             }
             // Conditional Full-Screen-Intent Screen: when the Remote Config gate
             // passes, it shows here (after Language) and then continues to `next`.

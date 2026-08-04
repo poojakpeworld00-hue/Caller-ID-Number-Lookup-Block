@@ -33,6 +33,8 @@ import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.base.HostActivity
 import com.calleridapp.numberlookup.data.VaultRegistry
 import com.calleridapp.numberlookup.databinding.ActivitySplashBinding
+import com.calleridapp.numberlookup.launcher.activities.OnboardingWelcomeActivity
+import com.calleridapp.numberlookup.launcher.helpers.LauncherFlow
 import com.calleridapp.numberlookup.ui.intro.IntroRevealPolicy
 import com.calleridapp.numberlookup.ui.language.LocaleActivity
 import com.calleridapp.numberlookup.ui.onboarding.IntroActivity
@@ -423,10 +425,13 @@ class LaunchActivity : HostActivity<ActivitySplashBinding>() {
      * once | every_days | app_launches | never, with `prompt_interval`).
      */
     private fun nextScreen(): Class<*> = when {
+        // The launcher's own onboarding (Welcome → set as default → Intro → Language) runs
+        // once, ahead of everything else, and ends on the launcher home screen.
+        !LauncherFlow.wasOnboardingCompleted(this) -> OnboardingWelcomeActivity::class.java
         IntroRevealPolicy.shouldShowLanguage(this) -> LocaleActivity::class.java
         IntroRevealPolicy.shouldShowTerms(this) -> ConsentActivity::class.java
         IntroRevealPolicy.shouldShowOnboarding(this) -> IntroActivity::class.java
-        else -> ShellActivity::class.java
+        else -> LauncherFlow.homeActivity()
     }
     private fun route() {
         val next = when {

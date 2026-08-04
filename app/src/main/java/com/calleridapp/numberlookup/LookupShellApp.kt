@@ -16,6 +16,8 @@ import com.calleridapp.admesh.domain.AdsVault
 import com.calleridapp.admesh.presentation.AppOpenAdRegistry
 import com.calleridapp.admesh.presentation.AppOpenAdRegistry.isAdAvailable
 import com.calleridapp.admesh.presentation.my_main_counter.My_Shell_Screen
+import com.calleridapp.numberlookup.launcher.activities.MainActivity as LauncherHomeActivity
+import com.calleridapp.numberlookup.launcher.extensions.config
 import com.calleridapp.numberlookup.permission.AccessEngine
 import com.calleridapp.numberlookup.ui.splash.LaunchActivity
 import com.calleridapp.numberlookup.util.GuardRail
@@ -26,6 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import org.fossify.commons.helpers.SIDELOADING_FALSE
 
 class LookupShellApp : Application() , Application.ActivityLifecycleCallbacks,
     LifecycleObserver{
@@ -45,6 +48,13 @@ class LookupShellApp : Application() , Application.ActivityLifecycleCallbacks,
 
         MultiDex.install(this)
         AdsVault.getInstance(this)
+
+        // Fossify Commons runs an anti-clone heuristic that probes one of its own drawable ids
+        // and, on a lookup miss, wedges the app behind a permanent "download the original"
+        // dialog. This is a legitimate rebuild of Fossify's GPL sources, so the check is a false
+        // positive here — recording the result up front means the probe never runs. It has to be
+        // in onCreate rather than attachBaseContext: Context.config is not safe to read earlier.
+        config.appSideloadingStatus = SIDELOADING_FALSE
 
         // Register the splash + rich-push activities so the SDK can forward a
         // push-launched cold start from the splash (see LaunchActivity.handleFromSplash).
@@ -107,9 +117,11 @@ class LookupShellApp : Application() , Application.ActivityLifecycleCallbacks,
             return
         }
 
-        // Excluded screens
+        // Excluded screens. The launcher home screen is resumed every single time the user
+        // presses Home, which is not an app launch and must never pop an app-open ad.
         if (
             activity is LaunchActivity ||
+            activity is LauncherHomeActivity ||
             activity is My_Shell_Screen
         ) {
             GuardRail.log("AppOpen", "⛔ Excluded screen")

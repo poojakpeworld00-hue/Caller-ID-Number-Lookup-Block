@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+    Deliberately empty. The reference launcher put "About" and "More apps from us" here; both
+    lead into Fossify's own Play Store listings and fossify.org pages, which have no place in
+    this app.
+-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android" />

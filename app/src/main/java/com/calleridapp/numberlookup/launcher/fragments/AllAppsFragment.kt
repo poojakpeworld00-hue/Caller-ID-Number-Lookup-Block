@@ -1,0 +1,269 @@
+package com.calleridapp.numberlookup.launcher.fragments
+
+import android.annotation.SuppressLint
+import android.content.Context
+import android.util.AttributeSet
+import android.view.MotionEvent
+import android.view.inputmethod.EditorInfo
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.OnScrollListener
+import org.fossify.commons.extensions.beGone
+import org.fossify.commons.extensions.beVisibleIf
+import org.fossify.commons.extensions.getProperPrimaryColor
+import org.fossify.commons.extensions.hideKeyboard
+import org.fossify.commons.extensions.normalizeString
+import org.fossify.commons.views.MyGridLayoutManager
+import com.calleridapp.numberlookup.R
+import com.calleridapp.numberlookup.launcher.activities.MainActivity
+import com.calleridapp.numberlookup.launcher.adapters.LaunchersAdapter
+import com.calleridapp.numberlookup.databinding.AllAppsFragmentBinding
+import com.calleridapp.numberlookup.launcher.extensions.applyDrawerSkin
+import com.calleridapp.numberlookup.launcher.extensions.config
+import com.calleridapp.numberlookup.launcher.extensions.launchApp
+import com.calleridapp.numberlookup.launcher.extensions.setupDrawerBackground
+import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_ICON
+import com.calleridapp.numberlookup.launcher.interfaces.AllAppsListener
+import com.calleridapp.numberlookup.launcher.models.AppLauncher
+import com.calleridapp.numberlookup.launcher.models.HomeScreenGridItem
+import com.calleridapp.numberlookup.launcher.models.appLauncherComparator
+
+class AllAppsFragment(
+    context: Context,
+    attributeSet: AttributeSet
+) : MyFragment<AllAppsFragmentBinding>(context, attributeSet), AllAppsListener {
+
+    private var lastTouchCoords = Pair(0f, 0f)
+    var touchDownY = -1
+    var ignoreTouches = false
+
+    private var launchers = emptyList<AppLauncher>()
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun setupFragment(activity: MainActivity) {
+        this.activity = activity
+        this.binding = AllAppsFragmentBinding.bind(this)
+
+        binding.allAppsGrid.setOnTouchListener { _, event ->
+            if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
+                touchDownY = -1
+            }
+
+            return@setOnTouchListener false
+        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        setupDrawerBackground(context.getColor(R.color.all_app_bg))
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun onResume() {
+        if (binding.allAppsGrid.layoutManager == null || binding.allAppsGrid.adapter == null) {
+            return
+        }
+
+        val layoutManager = binding.allAppsGrid.layoutManager as MyGridLayoutManager
+        if (layoutManager.spanCount != context.config.drawerColumnCount) {
+            onConfigurationChanged()
+            // Force redraw due to changed item size
+            (binding.allAppsGrid.adapter as LaunchersAdapter).notifyDataSetChanged()
+        }
+    }
+
+    fun onConfigurationChanged() {
+        binding.allAppsGrid.scrollToPosition(0)
+        binding.allAppsFastscroller.resetManualScrolling()
+        setupViews()
+
+        val layoutManager = binding.allAppsGrid.layoutManager as MyGridLayoutManager
+        layoutManager.spanCount = context.config.drawerColumnCount
+        setupAdapter(launchers)
+    }
+
+    override fun onInterceptTouchEvent(event: MotionEvent?): Boolean {
+        if (event == null) {
+            return super.onInterceptTouchEvent(event)
+        }
+
+        var shouldIntercept = false
+
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                touchDownY = event.y.toInt()
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                if (ignoreTouches) {
+                    // some devices ACTION_MOVE keeps triggering for the whole long press duration, but we are interested in real moves only, when coords change
+                    if (lastTouchCoords.first != event.x || lastTouchCoords.second != event.y) {
+                        touchDownY = -1
+                        return true
+                    }
+                }
+
+                // pull the whole fragment down if it is scrolled way to the top and the user pulls it even further
+                if (touchDownY != -1) {
+                    val distance = event.y.toInt() - touchDownY
+                    shouldIntercept =
+                        distance > 0 && binding.allAppsGrid.computeVerticalScrollOffset() == 0
+                    if (shouldIntercept) {
+                        // Hiding is expensive, only do it if focused
+                        if (binding.searchBar.hasFocus()) {
+                            activity?.hideKeyboard()
+                        }
+                        activity?.startHandlingTouches(touchDownY)
+                        touchDownY = -1
+                    }
+                }
+            }
+        }
+
+        lastTouchCoords = Pair(event.x, event.y)
+        return shouldIntercept
+    }
+
+    fun gotLaunchers(appLaunchers: List<AppLauncher>) {
+        launchers = appLaunchers.sortedWith(appLauncherComparator)
+
+        setupAdapter(launchers)
+    }
+
+    private fun getAdapter() = binding.allAppsGrid.adapter as? LaunchersAdapter
+
+    private fun setupAdapter(launchers: List<AppLauncher>) {
+        activity?.runOnUiThread {
+            val layoutManager = binding.allAppsGrid.layoutManager as MyGridLayoutManager
+            layoutManager.spanCount = context.config.drawerColumnCount
+
+            if (getAdapter() == null) {
+                LaunchersAdapter(activity!!, this) {
+                    activity?.launchApp((it as AppLauncher).packageName, it.activityName)
+                    if (activity?.config?.closeAppDrawer == true) {
+                        activity?.closeAppDrawer(delayed = true)
+                    }
+                    ignoreTouches = false
+                    touchDownY = -1
+                }.apply {
+                    binding.allAppsGrid.itemAnimator = null
+                    binding.allAppsGrid.adapter = this
+                }
+            }
+
+            submitList(launchers.toMutableList())
+        }
+    }
+
+    fun onIconHidden(item: HomeScreenGridItem) {
+        val itemToRemove = launchers.firstOrNull {
+            it.getLauncherIdentifier() == item.getItemIdentifier()
+        }
+
+        if (itemToRemove != null) {
+            val position = launchers.indexOfFirst {
+                it.getLauncherIdentifier() == item.getItemIdentifier()
+            }
+
+            launchers = launchers.toMutableList().apply {
+                removeAt(position)
+            }
+
+            submitList(launchers.toMutableList())
+        }
+    }
+
+    fun setupViews() {
+        if (activity == null) {
+            return
+        }
+
+        binding.allAppsFastscroller.updateColors(context.getProperPrimaryColor())
+        binding.allAppsGrid.addOnScrollListener(object : OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                // Hiding is expensive, only do it if focused
+                if (binding.searchBar.hasFocus() && dy > 0 && binding.allAppsGrid.computeVerticalScrollOffset() > 0) {
+                    activity?.hideKeyboard()
+                }
+            }
+        })
+
+        setupDrawerBackground(context.getColor(R.color.all_app_bg))
+
+        binding.searchBar.beVisibleIf(context.config.showSearchBar)
+        binding.searchBar.requireToolbar().beGone()
+        binding.searchBar.updateColors()
+        binding.searchBar.applyDrawerSkin()
+        binding.searchBar.setupMenu()
+
+        binding.searchBar.onSearchTextChangedListener = {
+            submitList(launchers)
+        }
+
+        binding.searchBar.binding.topToolbarSearch.setOnEditorActionListener { _, actionId, _ ->
+            if (binding.searchBar.getCurrentQuery().isEmpty()) return@setOnEditorActionListener false
+            when (actionId) {
+                EditorInfo.IME_ACTION_DONE,
+                EditorInfo.IME_ACTION_SEARCH,
+                EditorInfo.IME_ACTION_GO -> getAdapter()?.launchFirstApp() == true
+                else -> false
+            }
+        }
+    }
+
+    private fun showNoResultsPlaceholderIfNeeded() {
+        val itemCount = getAdapter()?.itemCount
+        binding.noResultsPlaceholder.beVisibleIf(itemCount != null && itemCount == 0)
+    }
+
+    override fun onAppLauncherLongPressed(x: Float, y: Float, appLauncher: AppLauncher) {
+        val gridItem = HomeScreenGridItem(
+            id = null,
+            left = -1,
+            top = -1,
+            right = -1,
+            bottom = -1,
+            page = 0,
+            packageName = appLauncher.packageName,
+            activityName = appLauncher.activityName,
+            title = appLauncher.title,
+            type = ITEM_TYPE_ICON,
+            className = "",
+            widgetId = -1,
+            shortcutId = "",
+            icon = null,
+            docked = false,
+            parentId = null,
+            drawable = appLauncher.drawable
+        )
+
+        activity?.showHomeIconMenu(x, y, gridItem, true)
+        ignoreTouches = true
+
+        binding.searchBar.closeSearch()
+    }
+
+    fun onBackPressed(): Boolean {
+        if (binding.searchBar.isSearchOpen) {
+            binding.searchBar.closeSearch()
+            return true
+        }
+
+        return false
+    }
+
+    private fun submitList(items: List<AppLauncher>) {
+        val searchQuery = binding.searchBar.getCurrentQuery()
+        val filtered = if (searchQuery.isNotEmpty()) {
+            items.filter {
+                it.title.normalizeString()
+                    .contains(searchQuery.normalizeString(), ignoreCase = true)
+            }
+        } else {
+            items
+        }
+
+        getAdapter()?.submitList(filtered) {
+            showNoResultsPlaceholderIfNeeded()
+        }
+    }
+}

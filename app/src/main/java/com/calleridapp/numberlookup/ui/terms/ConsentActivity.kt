@@ -13,6 +13,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.calleridapp.numberlookup.ui.ShellActivity
 import com.calleridapp.numberlookup.ui.intro.IntroRevealConfig
+import com.calleridapp.numberlookup.launcher.helpers.LauncherFlow
 import com.calleridapp.numberlookup.ui.intro.IntroRevealPolicy
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.base.HostActivity
@@ -177,7 +178,10 @@ class ConsentActivity : HostActivity<ActivityTermsBinding>() {
 
         // Onboarding follows the same IntroRevealPolicy frequency gate as Splash.
         val next = if (IntroRevealPolicy.shouldShowOnboarding(this)) IntroActivity::class.java
-        else ShellActivity::class.java
+        else LauncherFlow.homeActivity()
+        if (next == LauncherFlow.homeActivity()) {
+            LauncherFlow.markOnboardingCompleted(this)
+        }
         startActivity(
             Intent(this, next).addFlags(
                 Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

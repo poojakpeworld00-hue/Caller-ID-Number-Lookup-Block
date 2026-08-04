@@ -35,7 +35,10 @@ android {
 
     defaultConfig {
         applicationId = "com.calleridapp.numberlookup"
-        minSdk = 24
+        // Raised from 24: org.fossify:commons (the launcher's UI/theming base) declares
+        // minSdkVersion 26, and the launcher itself leans on API 25/26 LauncherApps
+        // shortcut + pinned-item APIs.
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -69,8 +72,9 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        // 17, not 11: org.fossify:commons is compiled against Java 17.
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildFeatures {
@@ -81,7 +85,7 @@ android {
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(17)
 }
 
 base {
@@ -147,4 +151,19 @@ dependencies {
     // LightHouse push SDK (replaces OneSignal).
     implementation(libs.lighthouse)
     implementation(libs.lighthouse.extended)
+
+    // ── Home-screen launcher ──────────────────────────────────────────────────
+    // Fossify commons supplies the launcher's base activities, theming engine and
+    // the view widgets its layouts reference.
+    implementation(libs.fossify.commons) {
+        // patternLockView (commons' app-lock screen) still depends on the pre-AndroidX
+        // support library, which collides class-for-class with androidx.core / androidx.media.
+        exclude(group = "com.android.support")
+    }
+    // commons keeps this one `implementation`, so the launcher's grid code has to ask
+    // for it directly.
+    implementation(libs.kotlinx.collections.immutable)
+    // The launcher's own storage (app-drawer cache, home-screen grid, hidden icons) is
+    // hand-rolled SQLite rather than Room: AGP 9's built-in Kotlin rejects KSP, and the
+    // external Kotlin plugin needed for KSP does not support AGP 9.
 }

@@ -17,6 +17,18 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
+    <!-- ── Home-screen launcher ─────────────────────────────────────────────────────
+         The app drawer has to enumerate every installed launcher activity, the home
+         screen hosts app widgets, and the icon menu offers uninstall. -->
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+    <uses-permission
+        android:name="android.permission.BIND_APPWIDGET"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
+
     <!-- Package visibility (Android 11+) for the apps/intents we hand off to. -->
     <queries>
         <package android:name="com.whatsapp" />
@@ -88,6 +100,104 @@
             android:screenOrientation="portrait"
             android:name=".ui.ShellActivity"
             android:exported="false" />
+
+        <!-- ══ Home-screen launcher ═══════════════════════════════════════════════
+             LauncherHomeActivity is the actual home screen: it carries the HOME
+             intent-filter, so it is what the system shows once the user makes this
+             app their default launcher. The onboarding screens ahead of it run once,
+             right after the caller-ID splash. -->
+        <activity
+            android:name=".launcher.activities.OnboardingWelcomeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/OnboardingTheme" />
+
+        <activity
+            android:name=".launcher.activities.OnboardingDefaultLauncherActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/OnboardingTheme" />
+
+        <activity
+            android:name=".launcher.activities.MainActivity"
+            android:clearTaskOnLaunch="true"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/LauncherTheme">
+
+            <intent-filter>
+                <action android:name="android.content.pm.action.CONFIRM_PIN_SHORTCUT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".launcher.activities.SettingsActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/launcher_settings"
+            android:parentActivityName=".launcher.activities.MainActivity"
+            android:theme="@style/LauncherBaseTheme" />
+
+        <activity
+            android:name=".launcher.activities.HiddenIconsActivity"
+            android:exported="false"
+            android:label="@string/hidden_icons"
+            android:parentActivityName=".launcher.activities.SettingsActivity"
+            android:theme="@style/LauncherBaseTheme" />
+
+        <activity
+            android:name="org.fossify.commons.activities.CustomizationActivity"
+            android:exported="false"
+            android:label="@string/customize_colors"
+            android:parentActivityName=".launcher.activities.SettingsActivity"
+            android:theme="@style/LauncherBaseTheme" />
+
+        <!-- The long-press "lock screen" action needs a device-admin component to call
+             lockNow() through. -->
+        <receiver
+            android:name=".launcher.receivers.LockDeviceAdminReceiver"
+            android:exported="true"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_policies" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".launcher.widgets.DigitalClockWidgetProvider"
+            android:exported="false"
+            android:label="@string/digital_clock_widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/digital_clock_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".launcher.widgets.AnalogClockWidgetProvider"
+            android:exported="false"
+            android:label="@string/analog_clock_widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/analog_clock_widget_info" />
+        </receiver>
 
         <!-- Firebase-gated Full-Screen-Intent priming Screen (after Language). -->
         <activity

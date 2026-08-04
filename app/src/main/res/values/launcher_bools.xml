@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Overrides org.fossify.commons. The commons library gates all of its Google Play and
+         fossify.org promotions behind this flag: the periodic "Donate / buy Fossify Thank You"
+         dialog and the "rate us" prompt in appLaunched(), the store links in its About screen,
+         and the Thank You upsell that otherwise fronts the colour picker. This app ships none
+         of that, so the flag is forced on. -->
+    <bool name="hide_google_relations">true</bool>
+</resources>

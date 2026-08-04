@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<!-- Home-screen launcher. Ported from the reference launcher; kept in its own file
+     so it stays separable from the caller-ID app's own resources. -->
+
+    <color name="semitransparent_navigation">#33000000</color>
+
+    <color name="all_app_bg">#80000000</color>
+    <color name="all_app_search_bg">#33ffffff</color>
+    <color name="panel_search_fill">#19ffffff</color>
+    <color name="panel_search_stroke">#33ffffff</color>
+    <color name="panel_divider">#dabababa</color>
+
+    <!-- Onboarding palette, converted from the design's OKLCH values (Message Launcher design
+         project). A fixed light look, regardless of the user's chosen theme. -->
+    <color name="onboarding_bg">#ffffff</color>
+    <color name="onboarding_bg_elevated">#ffffff</color>
+    <color name="onboarding_accent">#1570d1</color>
+    <color name="onboarding_accent_dark">#0462d3</color>
+    <color name="onboarding_text">#141414</color>
+    <color name="onboarding_text_muted">#6d7277</color>
+    <color name="onboarding_text_faint">#9a9fa5</color>
+    <!-- text drawn on top of the accent, e.g. the CTA label -->
+    <color name="onboarding_on_accent">#ffffff</color>
+
+    <color name="onboarding_cta_start">#3496ef</color>
+    <color name="onboarding_cta_end">#0462d3</color>
+    <color name="onboarding_subtitle">#2275e8</color>
+    <color name="onboarding_caption">#7c8186</color>
+    <color name="onboarding_dot_inactive">#c4cfdb</color>
+    <color name="onboarding_ring">#3a93e6</color>
+    <color name="onboarding_glow">#60b6fa</color>
+
+    <color name="splash_bg_top">#ddedff</color>
+    <color name="splash_bg_mid">#edf7fe</color>
+    <color name="splash_bg_bottom">#fdfaf4</color>
+    <color name="splash_prop_start">#319cfc</color>
+    <color name="splash_prop_end">#005ccc</color>
+    <color name="splash_tagline">#2784d5</color>
+
+    <color name="welcome_tile_blue">#cbe1f8</color>
+    <color name="welcome_tile_purple">#e3d7fb</color>
+    <color name="welcome_tile_teal">#b9e8f0</color>
+    <color name="welcome_badge">#b3261e</color>
+    <color name="welcome_check">#00885e</color>
+    <color name="welcome_divider">#e3e8ee</color>
+    <color name="welcome_card_stroke">#d9dfe5</color>
+</resources>

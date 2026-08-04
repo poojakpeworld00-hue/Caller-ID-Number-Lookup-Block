@@ -1,0 +1,7 @@
+<resources>
+<!-- Home-screen launcher. Ported from the reference launcher; kept in its own file
+     so it stays separable from the caller-ID app's own resources. -->
+
+    <integer name="portrait_column_count">4</integer>
+    <integer name="landscape_column_count">8</integer>
+</resources>
