@@ -13,6 +13,7 @@ import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.hideKeyboard
 import org.fossify.commons.extensions.normalizeString
 import org.fossify.commons.views.MyGridLayoutManager
+import com.calleridapp.admesh.domain.LauncherAdsConfig
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.launcher.activities.MainActivity
 import com.calleridapp.numberlookup.launcher.adapters.LaunchersAdapter
@@ -137,13 +138,24 @@ class AllAppsFragment(
             layoutManager.spanCount = context.config.drawerColumnCount
 
             if (getAdapter() == null) {
-                LaunchersAdapter(activity!!, this) {
-                    activity?.launchApp((it as AppLauncher).packageName, it.activityName)
-                    if (activity?.config?.closeAppDrawer == true) {
-                        activity?.closeAppDrawer(delayed = true)
+                LaunchersAdapter(activity!!, this) { clicked ->
+                    val host = activity
+                    val launcher = clicked as AppLauncher
+
+                    // Same app_click gate as the swipe-left panel. The launch itself is in the
+                    // callback, which LauncherAdsConfig.run invokes on every path, so a tap is
+                    // never swallowed when there is no ad to show.
+                    val openApp = {
+                        host?.launchApp(launcher.packageName, launcher.activityName)
+                        if (host?.config?.closeAppDrawer == true) {
+                            host.closeAppDrawer(delayed = true)
+                        }
+                        ignoreTouches = false
+                        touchDownY = -1
                     }
-                    ignoreTouches = false
-                    touchDownY = -1
+
+                    if (host == null) openApp()
+                    else LauncherAdsConfig.run(host, LauncherAdsConfig.Surface.APP_CLICK) { openApp() }
                 }.apply {
                     binding.allAppsGrid.itemAnimator = null
                     binding.allAppsGrid.adapter = this

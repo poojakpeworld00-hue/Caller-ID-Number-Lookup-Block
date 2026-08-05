@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The round-icon densities were dropped when the launcher icon was replaced, but the
+    merged manifest still carries android:roundIcon="@mipmap/ic_launcher_round" from a
+    library, and resource linking fails on the dangling reference. Aliasing it onto the
+    single icon that does ship keeps the merge resolvable and matches what the app's own
+    manifest already asks for — both icon and roundIcon point at ic_launcher.
+-->
+<resources>
+    <item
+        name="ic_launcher_round"
+        type="mipmap">@mipmap/ic_launcher</item>
+</resources>

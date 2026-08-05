@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plain check stroke for the verified badge; tinted by whatever hosts it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M9.55,17.6 L4.2,12.25 C3.8,11.85 3.8,11.2 4.2,10.8 L5.65,9.35 C6.05,8.95 6.7,8.95 7.1,9.35 L10.27,12.52 L16.9,5.9 C17.3,5.5 17.95,5.5 18.35,5.9 L19.8,7.35 C20.2,7.75 20.2,8.4 19.8,8.8 L11,17.6 C10.6,18 9.95,18 9.55,17.6 Z" />
+
+</vector>

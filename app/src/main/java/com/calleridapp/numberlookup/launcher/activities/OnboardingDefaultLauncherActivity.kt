@@ -1,54 +1,202 @@
 package com.calleridapp.numberlookup.launcher.activities
 
+import android.animation.ValueAnimator
+import android.app.role.RoleManager
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
+import androidx.activity.OnBackPressedCallback
+import com.calleridapp.admesh.presentation.NativePromo
 import com.calleridapp.numberlookup.databinding.ActivityOnboardingDefaultLauncherBinding
+import com.calleridapp.numberlookup.launcher.extensions.excludeAppFromRecents
 import com.calleridapp.numberlookup.launcher.extensions.isDefaultLauncher
-import com.calleridapp.numberlookup.launcher.extensions.requestSetAsDefaultLauncher
+import com.calleridapp.numberlookup.launcher.extensions.roleManager
 import com.calleridapp.numberlookup.launcher.helpers.LauncherFlow
-import com.calleridapp.numberlookup.launcher.helpers.setOnboardingStep
+import com.calleridapp.numberlookup.launcher.helpers.breathe
+import com.calleridapp.numberlookup.launcher.helpers.riseIn
+import com.calleridapp.numberlookup.launcher.helpers.stampIn
+import com.calleridapp.numberlookup.launcher.helpers.twinkle
 import com.calleridapp.numberlookup.ui.onboarding.IntroActivity
+import com.calleridapp.numberlookup.util.followAdContainer
 import org.fossify.commons.extensions.viewBinding
+import org.fossify.commons.helpers.isQPlus
 
 /**
  * The "Set as default launcher?" decision point.
  *
- * Granting it here — or coming back from Settings having granted it — is the whole point of
- * onboarding, so that path drops straight onto the home screen. Skipping (or backing out of the
- * system dialog) continues through the intro carousel and the language picker instead. Either
- * way the request stays reachable later from the home-screen long-press menu and the
- * "Setup Required" banner.
+ * The CTA gives the user two chances, in this order:
+ *
+ *  1. the system's home-app settings page. Come back having chosen us and we drop straight
+ *     onto the home screen;
+ *  2. otherwise the Q+ role dialog, which is the one-tap version of the same choice. Grant
+ *     it and we drop onto the home screen; cancel it and onboarding continues to the intro
+ *     carousel and the language picker.
+ *
+ * Skip goes to the intro without asking for anything. Either way the request stays reachable
+ * later from the home-screen long-press menu and the "Setup Required" banner, so cancelling
+ * here costs the user nothing permanent.
+ *
+ * This screen deliberately does NOT use [com.calleridapp.numberlookup.launcher.extensions
+ * .requestSetAsDefaultLauncher]: that helper fires whichever intent resolves first and never
+ * reaches the role dialog on a device that has a home-app settings page, which is every device
+ * that matters here. The two stages have to be driven separately, hence the two request codes.
  */
 class OnboardingDefaultLauncherActivity : SimpleActivity() {
 
+    private companion object {
+        const val REQ_HOME_SETTINGS = 7011
+        const val REQ_ROLE_HOME = 7012
+    }
+
     private val binding by viewBinding(ActivityOnboardingDefaultLauncherBinding::inflate)
+    private var shieldPulse: ValueAnimator? = null
+    private var sparklePulses: List<ValueAnimator> = emptyList()
+
+    /** One-way latch: once a destination is committed, nothing else may pick another. */
+    private var leaving = false
+
+    /** True between launching a request and its result, so a fast double-Back or a Back
+     *  landing on the CTA cannot stack two of them. */
+    private var requestInFlight = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        setOnboardingStep(
-            listOf(
-                binding.onboardingProgress.progressStep1,
-                binding.onboardingProgress.progressStep2,
-                binding.onboardingProgress.progressStep3,
-                binding.onboardingProgress.progressStep4,
-            ),
-            activeStep = 2
-        )
+        // also keeps the settings page and role dialog we launch out of recents — they run
+        // in this task, so they inherit its recents state
+        excludeAppFromRecents()
 
-        binding.onboardingSetDefault.setOnClickListener { requestSetAsDefaultLauncher() }
+        binding.onboardingSetDefault.setOnClickListener { openHomeSettings() }
         binding.onboardingSkip.setOnClickListener { goToIntro() }
+
+        // Back gets one last ask: the role dialog, the cheapest version of the request. It is
+        // the same stage 2 the CTA reaches after the settings page, so cancelling it lands in
+        // the intro exactly as it does there. On 26-28, where there is no dialog to show,
+        // promptForRole falls through to the intro instead.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() = promptForRole()
+        })
+
+        // Mid native pinned above the CTA. showMidNative hides the frame outright when ads
+        // are off or the network is down, and followAdContainer drops the hairline with it.
+        NativePromo().showMidNative(this, binding.adNativeFrame, binding.adShimmer)
+        binding.adNativeDivider.followAdContainer(binding.adNativeFrame)
+
+        playEntrance()
+    }
+
+    // ===== the two-stage request =====
+
+    /** Stage 1 — the settings page listing the installed home apps. */
+    private fun openHomeSettings() {
+        if (leaving || requestInFlight) return
+
+        val opened = launchForResult(Intent(Settings.ACTION_HOME_SETTINGS), REQ_HOME_SETTINGS) ||
+                launchForResult(
+                    Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS),
+                    REQ_HOME_SETTINGS
+                )
+
+        // A ROM with neither page would otherwise dead-end the CTA, so skip to stage 2.
+        if (!opened) {
+            promptForRole()
+        }
+    }
+
+    /** Stage 2 — the one-tap role dialog, for when stage 1 came back with nothing changed. */
+    private fun promptForRole() {
+        if (leaving || requestInFlight) return
+
+        // RoleManager landed in Q. On 26-28 there is no dialog to show, so this IS the
+        // cancelled branch and onboarding simply carries on.
+        if (!isQPlus()) {
+            goToIntro()
+            return
+        }
+
+        if (!launchForResult(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME), REQ_ROLE_HOME)) {
+            goToIntro()
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun launchForResult(intent: Intent, requestCode: Int): Boolean = try {
+        startActivityForResult(intent, requestCode)
+        requestInFlight = true
+        true
+    } catch (_: ActivityNotFoundException) {
+        false
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
+        super.onActivityResult(requestCode, resultCode, resultData)
+        requestInFlight = false
+        if (leaving) return
+
+        // resultCode is not worth reading: both the settings page and the role dialog report
+        // RESULT_CANCELED when dismissed with Back, whether or not the role actually changed.
+        // Whether we hold the role is the only honest signal.
+        if (isDefaultLauncher()) {
+            // onResume runs straight after this and drops onto the home screen.
+            return
+        }
+
+        when (requestCode) {
+            REQ_HOME_SETTINGS -> promptForRole()
+            REQ_ROLE_HOME -> goToIntro()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        // covers returning from the system role dialog or Settings, whichever handled the request
+        // Covers every way the role can arrive: the settings page, the role dialog, or the
+        // user wandering off and setting it somewhere else entirely.
         if (isDefaultLauncher()) {
-            LauncherFlow.goHome(this)
+            goHome()
         }
     }
 
+    // ===== destinations =====
+
+    private fun goHome() {
+        if (leaving) return
+        leaving = true
+        LauncherFlow.goHome(this)
+    }
+
     private fun goToIntro() {
+        if (leaving) return
+        leaving = true
         startActivity(LauncherFlow.onboardingIntent(this, IntroActivity::class.java))
         finish()
+    }
+
+    // ===== motion =====
+
+    private fun playEntrance() = with(binding) {
+        riseIn(
+            listOf(
+                onboardingHero,
+                onboardingTitle,
+                onboardingLead,
+                onboardingFooter,
+            )
+        )
+        stampIn(onboardingBadge)
+        shieldPulse = breathe(onboardingShield)
+        sparklePulses = twinkle(
+            listOf(onboardingSparkle1, onboardingSparkle2, onboardingSparkle3)
+        )
+    }
+
+    override fun onDestroy() {
+        // infinite animators keep hard references to the views they drive
+        shieldPulse?.cancel()
+        shieldPulse = null
+        sparklePulses.forEach { it.cancel() }
+        sparklePulses = emptyList()
+        super.onDestroy()
     }
 }

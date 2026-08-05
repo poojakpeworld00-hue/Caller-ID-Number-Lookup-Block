@@ -54,11 +54,12 @@
             android:imeOptions="actionSearch"
             android:inputType="text"
             android:maxLines="1"
+            android:importantForAutofill="no"
             android:paddingStart="5dp"
             android:paddingEnd="0dp"
             android:singleLine="true"
             android:textColor="@android:color/white"
-            android:textColorHint="@android:color/white"
+            android:textColorHint="#99ffffff"
             android:textSize="14sp" />
 
     </RelativeLayout>
@@ -67,6 +68,7 @@
         android:id="@+id/panel_scroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_above="@+id/ad_native_frame"
         android:layout_below="@+id/panel_search_holder"
         android:clipToPadding="false"
         android:paddingBottom="50dp">
@@ -116,6 +118,21 @@
                 android:paddingBottom="5dp"
                 android:visibility="gone"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+            <!-- nothing matched the query, shown instead of the results list -->
+            <TextView
+                android:id="@+id/panel_no_results"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:alpha="0.8"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="@string/no_items_found"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/bigger_text_size"
+                android:textStyle="italic"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/panel_suggested_header"
@@ -186,5 +203,28 @@
         </LinearLayout>
 
     </ScrollView>
+
+    <!-- ===== Native ad, pinned to the bottom of the panel =====
+         The app list scrolls above it (panel_scroll is layout_above this frame), so the ad
+         stays put rather than riding along with the results. showMidNative2 empties and hides
+         the frame when ads are off, the network is down, or the counter says skip, and the
+         ScrollView then takes the space back. MainActivity pads this frame for the navigation
+         bar via setupEdgeToEdge. -->
+    <FrameLayout
+        android:id="@+id/ad_native_frame"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+        <com.facebook.shimmer.ShimmerFrameLayout
+            android:id="@+id/ad_shimmer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#ccc">
+
+            <include layout="@layout/googlemidnative2" />
+
+        </com.facebook.shimmer.ShimmerFrameLayout>
+    </FrameLayout>
 
 </com.calleridapp.numberlookup.launcher.fragments.LeftPanelFragment>

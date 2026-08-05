@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One of the three Welcome feature tiles: pale ground, hairline green edge. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="@color/cid_onb_card" />
+
+    <stroke
+        android:width="1dp"
+        android:color="@color/cid_onb_card_stroke" />
+
+    <corners android:radius="16dp" />
+
+</shape>

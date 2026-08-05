@@ -1157,11 +1157,22 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         val widgetView = if (pseudoWidgetLayout != null) {
             MyAppWidgetHostView((context as MainActivity).baseContext).apply {
                 View.inflate(context, pseudoWidgetLayout, this)
-                if (item.className == PSEUDO_WIDGET_SEARCH) {
-                    // The reference app opened its AI chat here; the search bar's natural
-                    // counterpart in this build is the launcher's own app search panel.
-                    setOnClickListener {
-                        (this@HomeScreenGrid.context as MainActivity).openAppSearch()
+                val activity = this@HomeScreenGrid.context as MainActivity
+                when (item.className) {
+                    PSEUDO_WIDGET_SEARCH -> {
+                        // The reference app opened its AI chat here; the search bar's natural
+                        // counterpart in this build is the launcher's own app search panel.
+                        setOnClickListener { activity.openAppSearch() }
+                    }
+
+                    PSEUDO_WIDGET_CLOCK -> {
+                        // the two halves go where their content points, like every other launcher
+                        findViewById<View>(R.id.widget_text_clock)?.setOnClickListener {
+                            activity.openClockApp()
+                        }
+                        findViewById<View>(R.id.widget_date)?.setOnClickListener {
+                            activity.openCalendarApp()
+                        }
                     }
                 }
             }

@@ -59,7 +59,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_label"
         android:networkSecurityConfig="@xml/network_security_config"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_launcher"
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
         android:theme="@style/Theme.CallerLookupBlock">
@@ -106,14 +106,24 @@
              intent-filter, so it is what the system shows once the user makes this
              app their default launcher. The onboarding screens ahead of it run once,
              right after the caller-ID splash. -->
+        <!--
+             excludeFromRecents only governs recents when the activity is the ROOT of its
+             task, and these two are not — the caller-ID splash roots the task and starts
+             them into it (dumpsys: rootOfTask=false). It is declared anyway so the flow
+             still behaves if it is ever entered directly, but the attribute that actually
+             does the work is the runtime AppTask.setExcludeFromRecents() call in
+             SimpleActivity.excludeAppFromRecents(), invoked by both screens.
+        -->
         <activity
             android:name=".launcher.activities.OnboardingWelcomeActivity"
+            android:excludeFromRecents="true"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/OnboardingTheme" />
 
         <activity
             android:name=".launcher.activities.OnboardingDefaultLauncherActivity"
+            android:excludeFromRecents="true"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/OnboardingTheme" />

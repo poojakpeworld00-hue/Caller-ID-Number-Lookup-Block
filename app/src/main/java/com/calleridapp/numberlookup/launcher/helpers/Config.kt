@@ -24,6 +24,11 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getBoolean(WAS_SEARCH_BAR_SEEDED, false)
         set(wasSearchBarSeeded) = prefs.edit().putBoolean(WAS_SEARCH_BAR_SEEDED, wasSearchBarSeeded).apply()
 
+    // same idea for the clock, it was added after the search pill
+    var wasClockSeeded: Boolean
+        get() = prefs.getBoolean(WAS_CLOCK_SEEDED, false)
+        set(wasClockSeeded) = prefs.edit().putBoolean(WAS_CLOCK_SEEDED, wasClockSeeded).apply()
+
     var wasSwipeHintShown: Boolean
         get() = prefs.getBoolean(WAS_SWIPE_HINT_SHOWN, false)
         set(wasSwipeHintShown) = prefs.edit()

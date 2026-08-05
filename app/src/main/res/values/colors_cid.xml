@@ -30,6 +30,26 @@
     <color name="cid_amber_ink">#FF664603</color>
     <color name="cid_on_accent">#FFFFFFFF</color>
 
+    <!--
+        Onboarding palette, sampled from the reference screens. Deliberately NOT the
+        theme-flipping cid_g_* tokens: these two screens are a fixed light brand look,
+        and the mock call screen inside the illustration has to stay dark ink whatever
+        theme the user runs. Values are literal, with no values-night counterpart.
+    -->
+    <color name="cid_onb_ink">#FF12331F</color>
+    <color name="cid_onb_accent">#FF3E7E5B</color>
+    <color name="cid_onb_paper">#FFF1F3F1</color>
+    <color name="cid_onb_on_ink">#FFFFFFFF</color>
+    <color name="cid_onb_decline">#FFC0522D</color>
+    <color name="cid_onb_blob">#FFEAF3EE</color>
+    <color name="cid_onb_card">#FFF7FAF8</color>
+    <color name="cid_onb_card_stroke">#FFDCEBE2</color>
+    <color name="cid_onb_tile">#FFE3F0E8</color>
+    <color name="cid_onb_muted">#FF7D8B83</color>
+    <color name="cid_onb_mock_avatar">#FF6B7B72</color>
+    <color name="cid_onb_mock_chip">#FF1B4430</color>
+    <color name="cid_onb_mock_faint">#FF9FB3A7</color>
+
     <!-- Broadsheet neutrals -->
     <color name="cid_bg">#FFF3F2F2</color>
     <color name="cid_text">#FF201E1D</color>

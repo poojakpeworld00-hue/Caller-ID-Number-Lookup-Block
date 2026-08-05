@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Onboarding ground · the reference screens' paper. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 
-    <solid android:color="@color/onboarding_bg" />
+    <solid android:color="@color/cid_onb_paper" />
 
 </shape>

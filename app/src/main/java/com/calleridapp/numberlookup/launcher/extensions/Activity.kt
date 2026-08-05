@@ -1,6 +1,7 @@
 package com.calleridapp.numberlookup.launcher.extensions
 
 import android.app.Activity
+import android.app.ActivityManager
 import android.app.role.RoleManager
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
@@ -14,6 +15,7 @@ import android.graphics.Rect
 import android.net.Uri
 import android.os.Process
 import android.provider.Settings
+import com.calleridapp.numberlookup.util.GuardRail
 import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.view.Menu
@@ -201,5 +203,30 @@ fun Activity.handleGridItemPopupMenu(
         listener.beforeShow(menu)
 
         show()
+    }
+}
+
+/**
+ * Drops this app's tasks out of the recents list at runtime.
+ *
+ * The `excludeFromRecents` manifest attribute is not enough for the onboarding screens: it
+ * only applies to the ROOT activity of a task, and those screens are started into the task
+ * the caller-ID splash already rooted (`rootOfTask=false`). Setting it on the AppTask works
+ * whatever the root is.
+ *
+ * It also takes the system's "Default apps" page and the role dialog with it — both are
+ * started for a result, so they run inside this same task and inherit its recents state.
+ * That is what stops the settings page lingering in recents, and being resumable in the
+ * background, once the user has allowed or denied.
+ *
+ * Best-effort: some OEM shells refuse the call, and it is decoration rather than behaviour,
+ * so a failure is logged and swallowed rather than surfaced.
+ */
+fun Activity.excludeAppFromRecents() {
+    try {
+        val manager = getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return
+        manager.appTasks.forEach { task -> task.setExcludeFromRecents(true) }
+    } catch (e: Exception) {
+        GuardRail.error("Recents", "could not exclude task from recents", e)
     }
 }

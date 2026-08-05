@@ -63,6 +63,26 @@
 
     <string name="onboarding_welcome_headline">Know Who Is Calling</string>
     <string name="onboarding_welcome_lead">Spam and fraud calls get flagged the moment they ring, right from the home screen you already use every day.</string>
+
+    <!-- Onboarding copy, taken verbatim from the reference screens. -->
+    <string name="onb_welcome_title">Welcome!</string>
+    <string name="onb_welcome_lead">Identify unknown callers, block spam calls, and stay protected every day.</string>
+    <string name="onb_feature_caller_id">Instant\nCaller ID</string>
+    <string name="onb_feature_spam">Spam\nProtection</string>
+    <string name="onb_feature_secure">Safe &amp;\nSecure</string>
+
+    <string name="onb_default_title">Set as Default Caller ID</string>
+    <string name="onb_default_lead">Enable Caller ID as your default phone assistant to identify unknown callers and block spam in real time.</string>
+    <string name="onb_default_footnote">You can change your default Caller ID anytime from your phone settings.</string>
+
+    <!-- Mock incoming-call screen inside the Set-as-default illustration. Decorative:
+         the caller and number are invented, never a real contact. -->
+    <string name="onb_mock_incoming">Incoming Call</string>
+    <string name="onb_mock_unknown">Unknown</string>
+    <string name="onb_mock_number">+91 98765 43210</string>
+    <string name="onb_mock_attribution">Caller ID by</string>
+    <string name="onb_mock_brand">Caller ID</string>
+    <string name="onb_mock_clock">9:01</string>
     <!--
         Haven't found some strings? There's more at
         https://github.com/FossifyOrg/Commons/tree/master/commons/src/main/res

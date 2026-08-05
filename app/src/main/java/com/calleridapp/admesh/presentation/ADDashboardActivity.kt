@@ -292,7 +292,7 @@ open class ADDashboardActivity : AppCompatActivity() {
                 "NativeTheme", "HD_VBC_Type", "NativeBgColor", "NativebtnColor",
                 "NativetxtColor", "NativebtntxtColor", "Perm_Sheet_Mode",
                 // Nested JSON objects stored as text (read back via JSONObject).
-                "intro_display", "ScreenAds"
+                "intro_display", "ScreenAds", "launcher_ads"
             ).forEach { key -> if (root.has(key)) putString(key, root.optString(key, "")) }
 
             // --- Integers ---

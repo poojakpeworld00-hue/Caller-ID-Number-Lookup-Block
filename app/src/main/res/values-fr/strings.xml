@@ -1,6 +1,6 @@
 <resources>
     <!-- App -->
-    <string name="app_name">Caller ID : Recherche de numéro &amp; Blocage</string>
+    <string name="app_name">Caller ID</string>
     <string name="dash">&#8211;</string>
 
     <!-- Splash -->

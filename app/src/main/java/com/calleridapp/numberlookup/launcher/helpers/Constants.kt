@@ -9,6 +9,7 @@ const val REPOSITORY_NAME = "Launcher"
 const val WAS_HOME_SCREEN_INIT = "was_home_screen_init"
 const val WAS_ONBOARDING_COMPLETED = "was_onboarding_completed"
 const val WAS_SEARCH_BAR_SEEDED = "was_search_bar_seeded"
+const val WAS_CLOCK_SEEDED = "was_clock_seeded"
 const val WAS_SWIPE_HINT_SHOWN = "was_swipe_hint_shown"
 const val HOME_ROW_COUNT = "home_row_count"
 const val HOME_COLUMN_COUNT = "home_column_count"
@@ -43,6 +44,10 @@ const val ITEM_TYPE_FOLDER = 3
 const val PSEUDO_WIDGET_PREFIX = "com.calleridapp.numberlookup.launcher.pseudo."
 const val PSEUDO_WIDGET_CLOCK = "${PSEUDO_WIDGET_PREFIX}DigitalClock"
 const val PSEUDO_WIDGET_SEARCH = "${PSEUDO_WIDGET_PREFIX}SearchBar"
+
+// default home screen header: the clock sits in the top rows, the search pill right below it
+const val CLOCK_ROW_SPAN = 2
+const val SEARCH_BAR_ROW = CLOCK_ROW_SPAN
 
 const val WIDGET_HOST_ID = 12345
 const val MAX_CLICK_DURATION = 150

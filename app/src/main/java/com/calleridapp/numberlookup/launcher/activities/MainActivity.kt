@@ -3,6 +3,7 @@ package com.calleridapp.numberlookup.launcher.activities
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import com.calleridapp.admesh.domain.LauncherAdsConfig
 import android.app.WallpaperManager
 import android.app.WallpaperManager.OnColorsChangedListener
 import android.app.admin.DevicePolicyManager
@@ -25,6 +26,8 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.AlarmClock
+import android.provider.CalendarContract
 import android.provider.Telephony
 import android.telecom.TelecomManager
 import android.view.ContextThemeWrapper
@@ -86,13 +89,16 @@ import com.calleridapp.numberlookup.launcher.extensions.requestSetAsDefaultLaunc
 import com.calleridapp.numberlookup.launcher.extensions.supportsDarkText
 import com.calleridapp.numberlookup.launcher.extensions.uninstallApp
 import com.calleridapp.numberlookup.launcher.fragments.MyFragment
+import com.calleridapp.numberlookup.launcher.helpers.CLOCK_ROW_SPAN
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_FOLDER
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_ICON
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_SHORTCUT
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_WIDGET
 import com.calleridapp.numberlookup.launcher.helpers.IconCache
+import com.calleridapp.numberlookup.launcher.helpers.PSEUDO_WIDGET_CLOCK
 import com.calleridapp.numberlookup.launcher.helpers.PSEUDO_WIDGET_SEARCH
 import com.calleridapp.numberlookup.launcher.helpers.REQUEST_ALLOW_BINDING_WIDGET
+import com.calleridapp.numberlookup.launcher.helpers.SEARCH_BAR_ROW
 import com.calleridapp.numberlookup.launcher.helpers.REQUEST_CONFIGURE_WIDGET
 import com.calleridapp.numberlookup.launcher.helpers.REQUEST_CREATE_SHORTCUT
 import com.calleridapp.numberlookup.launcher.helpers.UNINSTALL_APP_REQUEST_CODE
@@ -161,7 +167,10 @@ class MainActivity : SimpleActivity(), FlingListener {
                 binding.widgetsFragment.widgetsList,
                 binding.leftPanel.panelScroll
             ),
-            padBottomSystem = listOf(binding.homeScreenGrid.root)
+            // the panel's ad is pinned below its scroll area, so it — not the scroll — is what
+            // has to clear the navigation bar. System-only, deliberately: padding it for the IME
+            // too would make it leap above the keyboard while the user is typing a search.
+            padBottomSystem = listOf(binding.homeScreenGrid.root, binding.leftPanel.adNativeFrame)
         )
 
         mDetector = GestureDetectorCompat(this, MyGestureListener(this))
@@ -682,12 +691,12 @@ class MainActivity : SimpleActivity(), FlingListener {
             ensureBackgroundThread {
                 getDefaultAppPackages(launchers)
                 config.wasHomeScreenInit = true
-                seedSearchBarIfNeeded()
+                seedHomeWidgetsIfNeeded()
                 binding.homeScreenGrid.root.fetchGridItems()
             }
-        } else if (!config.wasSearchBarSeeded) {
+        } else if (!config.wasSearchBarSeeded || !config.wasClockSeeded) {
             ensureBackgroundThread {
-                seedSearchBarIfNeeded()
+                seedHomeWidgetsIfNeeded()
                 binding.homeScreenGrid.root.fetchGridItems()
             }
         } else {
@@ -702,10 +711,60 @@ class MainActivity : SimpleActivity(), FlingListener {
 
     fun isLeftPanelExpanded() = binding.leftPanel.root.x != mScreenWidth.toFloat()
 
-    private fun showLeftPanel() = showSidePanel(binding.leftPanel.root)
+    private fun showLeftPanel() {
+        // ask for the ad before the slide starts, so it is in place by the time the panel lands
+        binding.leftPanel.root.onPanelShown()
+        showSidePanel(binding.leftPanel.root)
+    }
 
-    /** Opens the app search panel from something other than a fling (the search-bar widget). */
-    fun openAppSearch() = showLeftPanel()
+    /**
+     * Opens the app search panel from something other than a fling (the search-bar widget).
+     * Unlike the fling this is an explicit "I want to search", so the field takes focus and
+     * the keyboard comes up once the panel has finished sliding in.
+     */
+    fun openAppSearch() {
+        showLeftPanel()
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (isLeftPanelExpanded()) {
+                binding.leftPanel.root.focusSearch()
+            }
+        }, ANIMATION_DURATION)
+    }
+
+    /** Opens the clock app behind the home screen clock, falling back to the alarm list. */
+    fun openClockApp() {
+        val intents = listOf(
+            Intent(AlarmClock.ACTION_SHOW_ALARMS),
+            Intent(AlarmClock.ACTION_SET_ALARM)
+        )
+
+        startFirstResolvable(intents)
+    }
+
+    /** Opens the calendar on today, behind the home screen clock's date line. */
+    fun openCalendarApp() {
+        val todayUri = CalendarContract.CONTENT_URI.buildUpon()
+            .appendPath("time")
+            .appendPath(System.currentTimeMillis().toString())
+            .build()
+
+        val intents = listOf(
+            Intent(Intent.ACTION_VIEW, todayUri),
+            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_CALENDAR)
+        )
+
+        startFirstResolvable(intents)
+    }
+
+    private fun startFirstResolvable(intents: List<Intent>) {
+        for (intent in intents) {
+            try {
+                startActivity(intent)
+                return
+            } catch (_: ActivityNotFoundException) {
+            }
+        }
+    }
 
     fun hideLeftPanel() {
         hideSidePanel(binding.leftPanel.root, mScreenWidth.toFloat())
@@ -1184,7 +1243,10 @@ class MainActivity : SimpleActivity(), FlingListener {
         // A right fling opens the caller-ID app, whichever page we are on. Paging is still
         // available by dragging horizontally, which never reaches here.
         if (!isAllAppsFragmentExpanded() && !isWidgetsFragmentExpanded()) {
-            openCallerIdApp()
+            // Paced by launcher_ads.swipe_right; the app opens on every path regardless.
+            LauncherAdsConfig.run(this, LauncherAdsConfig.Surface.SWIPE_RIGHT) {
+                openCallerIdApp()
+            }
         } else {
             binding.homeScreenGrid.root.prevPage(redraw = true)
         }
@@ -1269,39 +1331,117 @@ class MainActivity : SimpleActivity(), FlingListener {
         return allApps
     }
 
-    // matches the reference app, which has the search pill sitting on the home screen from the
-    // start rather than requiring it to be added from the widgets picker. Kept independent of
-    // wasHomeScreenInit / getDefaultAppPackages so it also backfills installs that already ran
-    // through that one-time seeding before this pill existed.
-    private fun seedSearchBarIfNeeded() {
-        if (config.wasSearchBarSeeded) {
+    // matches the reference app, which has the clock and the search pill sitting on the home
+    // screen from the start rather than requiring them to be added from the widgets picker.
+    // Kept independent of wasHomeScreenInit / getDefaultAppPackages so it also backfills
+    // installs that already ran through that one-time seeding before these existed.
+    private fun seedHomeWidgetsIfNeeded() {
+        val needsSearchBar = !config.wasSearchBarSeeded
+        val needsClock = !config.wasClockSeeded
+        if (!needsSearchBar && !needsClock) {
             return
         }
 
+        // one shot either way, a user who removes them is not supposed to get them back
         config.wasSearchBarSeeded = true
+        config.wasClockSeeded = true
+
         try {
-            val searchBarItem = HomeScreenGridItem(
-                id = null,
-                left = 0,
-                top = 0,
-                right = min(3, config.homeColumnCount - 1),
-                bottom = 0,
-                page = 0,
-                packageName = packageName,
-                activityName = "",
-                title = getString(R.string.pseudo_widget_search_bar),
-                type = ITEM_TYPE_WIDGET,
-                className = PSEUDO_WIDGET_SEARCH,
-                widgetId = binding.homeScreenGrid.root.appWidgetHost.allocateAppWidgetId(),
-                shortcutId = "",
-                icon = null,
-                docked = false,
-                parentId = null
-            )
-            homeScreenGridItemsDB.insert(searchBarItem)
+            val lastColumn = config.homeColumnCount - 1
+            // the bottom row is the dock, the header may not eat everything above it
+            val headerFits = config.homeRowCount - 1 > SEARCH_BAR_ROW
+
+            val pageItems = homeScreenGridItemsDB.getAllItems()
+                .filter { it.page == 0 && !it.docked && it.parentId == null }
+            val searchBar = pageItems.firstOrNull { it.className == PSEUDO_WIDGET_SEARCH }
+            val clock = pageItems.firstOrNull { it.className == PSEUDO_WIDGET_CLOCK }
+            // whatever the user placed up there wins, we only seed into rows that are still empty
+            val headerRowsFree = pageItems
+                .filter { it.id != searchBar?.id && it.id != clock?.id }
+                .none { item -> (0..SEARCH_BAR_ROW).any { it in item.top..item.bottom } }
+
+            if (!headerFits || !headerRowsFree) {
+                // no room for the full header, fall back to the pill alone at the top
+                if (searchBar == null) {
+                    insertPseudoWidget(
+                        className = PSEUDO_WIDGET_SEARCH,
+                        titleRes = R.string.pseudo_widget_search_bar,
+                        left = 0,
+                        top = 0,
+                        right = min(3, lastColumn),
+                        bottom = 0
+                    )
+                }
+
+                return
+            }
+
+            if (clock == null) {
+                insertPseudoWidget(
+                    className = PSEUDO_WIDGET_CLOCK,
+                    titleRes = R.string.pseudo_widget_clock,
+                    left = 0,
+                    top = 0,
+                    right = lastColumn,
+                    bottom = CLOCK_ROW_SPAN - 1
+                )
+            }
+
+            if (searchBar == null) {
+                insertPseudoWidget(
+                    className = PSEUDO_WIDGET_SEARCH,
+                    titleRes = R.string.pseudo_widget_search_bar,
+                    left = 0,
+                    top = SEARCH_BAR_ROW,
+                    right = lastColumn,
+                    bottom = SEARCH_BAR_ROW
+                )
+            } else {
+                // an older install already has the pill in the row the clock now wants
+                homeScreenGridItemsDB.updateItemPosition(
+                    left = 0,
+                    top = SEARCH_BAR_ROW,
+                    right = lastColumn,
+                    bottom = SEARCH_BAR_ROW,
+                    page = 0,
+                    docked = false,
+                    parentId = null,
+                    id = searchBar.id!!
+                )
+            }
         } catch (e: Exception) {
-            Log.e("MainActivity", "Failed to seed default search bar", e)
+            Log.e("MainActivity", "Failed to seed default home widgets", e)
         }
+    }
+
+    private fun insertPseudoWidget(
+        className: String,
+        titleRes: Int,
+        left: Int,
+        top: Int,
+        right: Int,
+        bottom: Int,
+    ) {
+        val item = HomeScreenGridItem(
+            id = null,
+            left = left,
+            top = top,
+            right = right,
+            bottom = bottom,
+            page = 0,
+            packageName = packageName,
+            activityName = "",
+            title = getString(titleRes),
+            type = ITEM_TYPE_WIDGET,
+            className = className,
+            widgetId = binding.homeScreenGrid.root.appWidgetHost.allocateAppWidgetId(),
+            shortcutId = "",
+            icon = null,
+            docked = false,
+            parentId = null
+        )
+
+        homeScreenGridItemsDB.insert(item)
     }
 
     private fun getDefaultAppPackages(appLaunchers: ArrayList<AppLauncher>) {

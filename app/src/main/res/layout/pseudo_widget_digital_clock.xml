@@ -1,47 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<!--
+    Home screen clock: the time on top, the weekday underneath. Both are plain TextViews,
+    PseudoClockWidget fills them in and keeps them current off the system minute tick.
+
+    They hug the bottom of the cell rather than centering in it: that keeps the block
+    sitting right above the search pill and out of the way of the "set as default
+    launcher" banner, which is drawn underneath the top of the grid.
+-->
+<com.calleridapp.numberlookup.launcher.views.PseudoClockWidget xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical">
+    android:gravity="bottom|center_horizontal"
+    android:orientation="vertical"
+    android:paddingHorizontal="12dp"
+    android:paddingBottom="6dp">
 
-    <TextClock
+    <TextView
         android:id="@+id/widget_text_clock"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="3"
-        android:format12Hour="h:mm a"
-        android:format24Hour="H:mm"
-        android:gravity="center"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/nunito_extrabold"
+        android:gravity="center_horizontal|bottom"
         android:includeFontPadding="false"
+        android:letterSpacing="-0.03"
         android:maxLines="1"
-        android:shadowColor="@android:color/black"
-        android:shadowDy="1"
-        android:shadowRadius="1"
+        android:shadowColor="#66000000"
+        android:shadowDy="2"
+        android:shadowRadius="4"
         android:textColor="@android:color/white"
-        app:autoSizeMaxTextSize="300sp"
-        app:autoSizeMinTextSize="2sp"
-        app:autoSizeStepGranularity="1sp"
-        app:autoSizeTextType="uniform" />
+        android:textSize="54sp"
+        tools:text="9:41" />
 
-    <TextClock
+    <TextView
         android:id="@+id/widget_date"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:format12Hour="EEE, d MMM"
-        android:format24Hour="EEE, d MMM"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:alpha="0.9"
+        android:ellipsize="end"
+        android:fontFamily="@font/nunito_semibold"
         android:gravity="center"
         android:includeFontPadding="false"
+        android:letterSpacing="0.02"
         android:maxLines="1"
-        android:shadowColor="@android:color/black"
+        android:shadowColor="#66000000"
         android:shadowDy="1"
-        android:shadowRadius="1"
+        android:shadowRadius="3"
         android:textColor="@android:color/white"
-        app:autoSizeMaxTextSize="300sp"
-        app:autoSizeMinTextSize="2sp"
-        app:autoSizeStepGranularity="1sp"
-        app:autoSizeTextType="uniform" />
+        android:textSize="13sp"
+        tools:text="Wednesday" />
 
-</LinearLayout>
+</com.calleridapp.numberlookup.launcher.views.PseudoClockWidget>
