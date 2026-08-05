@@ -84,4 +84,30 @@
     <color name="cid_hint_bg">#2400897B</color>         <!-- ~0.14 blue tint on dark -->
     <color name="cid_shield_check">#0A0F0E</color>      <!-- dark checkmark on light-blue shield -->
     <color name="cid_toggle_off">#3A4256</color>
+
+    <!-- ===== Semantic colours that need a dark-ground counterpart =====
+         Everything else in values/colors.xml is deliberately theme-independent:
+           · black / white and the *_soft alpha tints are literals;
+           · bg and text_secondary are aliases onto background / on_surface_variant,
+             which already flip here, so they inherit correctly;
+           · splash_* is fixed brand artwork — the splash looks the same in both themes;
+           · all_app_*, panel_* and semitransparent_navigation belong to the launcher,
+             which runs Theme.Material3.Dark over the wallpaper and is always dark;
+           · fsi_*, online_green and whatsapp_green are brand marks.
+         The ones below are the surface/semantic colours that genuinely lose contrast
+         when the ground inverts, so they are lightened here. -->
+    <color name="primary">#7FBB98</color>
+    <color name="primary_dark">#5E9E7A</color>
+    <color name="on_primary">#08150D</color>
+    <color name="accent">#4FC08A</color>
+    <color name="danger">#FF6B6B</color>
+    <color name="warn">#FFB13D</color>
+    <color name="accent_purple">#A98BFF</color>
+
+    <!-- 12%% tints: on a dark ground the light versions vanish, so they are mixed
+         against dark rather than against white -->
+    <color name="success_soft">#334FC08A</color>
+    <color name="danger_soft">#33FF6B6B</color>
+    <color name="neutral_soft">#338C97AB</color>
+    <color name="accent_purple_soft">#33A98BFF</color>
 </resources>

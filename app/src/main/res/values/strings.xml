@@ -592,4 +592,67 @@
     <string name="fsi_feature_missed">Never miss an important call again</string>
     <string name="fsi_enable_now">Enable Now</string>
     <string name="fsi_not_now">Not now</string>
+
+    <!-- ===== Home-screen launcher + onboarding ===== -->
+
+
+    <string name="app_launcher_name" translatable="false">@string/app_name</string>
+    <string name="launcher_settings">Launcher Settings</string>
+    <string name="app_info">App info</string>
+    <string name="touch_hold_widget">Long press the widget and drag it on your home screen</string>
+    <string name="uninstall">Uninstall</string>
+    <string name="manage_hidden_icons">Manage hidden icons</string>
+    <string name="hidden_icons">Hidden icons</string>
+    <string name="hidden_icons_placeholder">Some apps cannot be uninstalled due to system restrictions, but you can at least hide their icons to avoid seeing them.</string>
+    <string name="app_drawer_settings">App drawer</string>
+    <string name="close_app_drawer_on_app_open">Close app drawer on opening an app</string>
+    <string name="auto_show_keyboard_in_app_drawer">Automatically show keyboard in drawer</string>
+    <string name="show_app_labels">Show app labels</string>
+    <string name="home_screen_settings">Home screen</string>
+    <string name="widget_too_big">Widget is too big for current home screen size</string>
+    <string name="double_tap_to_lock">Double tap to lock screen</string>
+    <string name="lock_device_admin_hint">To enable the double tap to lock screen feature, you need to grant admin permission. Note that the app cannot be uninstalled until this permission is removed.</string>
+    <string name="lock_device_admin_warning">Deactivating admin permission will disable the double tap to lock screen feature.</string>
+    <string name="pseudo_widget_clock">Clock</string>
+    <string name="pseudo_widget_search_bar">Search bar</string>
+    <string name="pseudo_widget_search_bar_hint">Search apps…</string>
+    <!-- shown in place of a real answer until an LLM provider is wired up -->
+    <string name="digital_clock_widget">Digital clock</string>
+    <string name="analog_clock_widget">Analog clock</string>
+    <string name="apps">Apps</string>
+    <string name="clear">Clear</string>
+    <string name="suggested_for_now">Suggested for now</string>
+    <string name="recent_apps">Recent apps</string>
+    <string name="search_in_apps">Search in apps</string>
+    <string name="see_more">See more</string>
+    <string name="see_less">See less</string>
+
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_set_default">Set as Default</string>
+    <string name="default_launcher_banner_title">Setup Required</string>
+    <string name="default_launcher_banner_body">Set this app as your home screen to identify and block calls straight from the launcher.</string>
+    <string name="swipe_right_hint">Swipe right to open Caller ID</string>
+
+
+
+    <!-- Onboarding copy, taken verbatim from the reference screens. -->
+    <string name="onb_welcome_title">Welcome!</string>
+    <string name="onb_welcome_lead">Identify unknown callers, block spam calls, and stay protected every day.</string>
+    <string name="onb_feature_caller_id">Instant\nCaller ID</string>
+    <string name="onb_feature_spam">Spam\nProtection</string>
+    <string name="onb_feature_secure">Safe &amp;\nSecure</string>
+
+    <string name="onb_default_title">Set as Default Caller ID</string>
+    <string name="onb_default_lead">Enable Caller ID as your default phone assistant to identify unknown callers and block spam in real time.</string>
+    <string name="onb_default_footnote">You can change your default Caller ID anytime from your phone settings.</string>
+
+    <!-- Mock incoming-call screen inside the Set-as-default illustration. Decorative:
+         the caller and number are invented, never a real contact. -->
+    <string name="onb_mock_incoming">Incoming Call</string>
+    <string name="onb_mock_unknown">Unknown</string>
+    <string name="onb_mock_number" translatable="false">+91 98765 43210</string>
+    <string name="onb_mock_attribution">Caller ID by</string>
+    <string name="onb_mock_brand" translatable="false">Caller ID</string>
+    <string name="onb_mock_clock" translatable="false">9:01</string>
+
 </resources>

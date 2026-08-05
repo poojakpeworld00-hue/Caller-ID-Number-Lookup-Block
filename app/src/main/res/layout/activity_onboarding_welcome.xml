@@ -145,7 +145,7 @@
                     android:contentDescription="@null"
                     android:padding="11dp"
                     android:src="@drawable/ic_cid_tick"
-                    android:tint="@color/cid_onb_on_ink" />
+                    android:tint="@color/cid_onb_on_accent" />
 
             </RelativeLayout>
 

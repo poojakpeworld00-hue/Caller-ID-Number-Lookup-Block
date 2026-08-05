@@ -35,4 +35,25 @@
     <color name="cid_neutral_400">#FF5D6660</color>
     <color name="cid_neutral_600">#FFA4ADA8</color>
     <color name="cid_neutral_700">#FFBEC7C1</color>
+
+    <!-- Onboarding, dark. Page ink and CTA invert; the shield stays a green mark and
+         the mock call screen keeps its light-on-dark call UI unchanged. -->
+    <color name="cid_onb_paper">#FF111814</color>
+    <color name="cid_onb_ink">#FFDCF2E5</color>
+    <color name="cid_onb_muted">#FF9BAAA2</color>
+
+    <color name="cid_onb_cta">#FF93D6AE</color>
+    <color name="cid_onb_on_cta">#FF08150D</color>
+
+    <color name="cid_onb_accent">#FF4E9B72</color>
+    <color name="cid_onb_on_accent">#FFFFFFFF</color>
+    <color name="cid_onb_badge_disc">#FFE8F2EC</color>
+
+    <color name="cid_onb_mark">#FF2C6547</color>
+    <color name="cid_onb_on_mark">#FFFFFFFF</color>
+
+    <color name="cid_onb_blob">#FF1A2A21</color>
+    <color name="cid_onb_card">#FF17211B</color>
+    <color name="cid_onb_card_stroke">#FF2B3B32</color>
+    <color name="cid_onb_tile">#FF223027</color>
 </resources>

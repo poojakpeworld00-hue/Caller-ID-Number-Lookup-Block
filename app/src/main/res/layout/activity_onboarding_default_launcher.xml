@@ -188,7 +188,7 @@
                         android:contentDescription="@null"
                         android:padding="10dp"
                         android:src="@drawable/ic_cid_person"
-                        android:tint="@color/cid_onb_on_ink" />
+                        android:tint="@color/cid_onb_on_mock" />
 
                     <org.fossify.commons.views.MyTextView
                         style="@style/OnbMockLabel"
@@ -223,7 +223,7 @@
                             android:contentDescription="@null"
                             android:padding="8dp"
                             android:src="@drawable/ic_cid_call_decline"
-                            android:tint="@color/cid_onb_on_ink" />
+                            android:tint="@color/cid_onb_on_mock" />
 
                         <ImageView
                             android:layout_width="34dp"
@@ -232,7 +232,7 @@
                             android:contentDescription="@null"
                             android:padding="8dp"
                             android:src="@drawable/ic_cid_call_accept"
-                            android:tint="@color/cid_onb_on_ink" />
+                            android:tint="@color/cid_onb_on_mock" />
 
                     </LinearLayout>
 
@@ -260,7 +260,7 @@
                         android:layout_marginEnd="6dp"
                         android:contentDescription="@null"
                         android:src="@drawable/ph_shield_check"
-                        android:tint="@color/cid_onb_on_ink" />
+                        android:tint="@color/cid_onb_on_mock" />
 
                     <LinearLayout
                         android:layout_width="wrap_content"

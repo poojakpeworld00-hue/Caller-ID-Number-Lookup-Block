@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Dark-theme onboarding. The cid_onb_* tokens flip in values-night, so the only thing
+    the layouts cannot express is the system-bar icon colour: on the dark ground the
+    light-icon flags have to come off, or the status and navigation icons go dark on
+    dark. A style declared here replaces the default one wholesale, so every item is
+    repeated.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="OnboardingTheme" parent="LauncherBaseTheme">
+        <item name="android:windowBackground">@drawable/bg_onboarding_screen</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+    </style>
+
+</resources>

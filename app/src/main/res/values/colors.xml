@@ -55,12 +55,8 @@
     <color name="accent_purple_soft">#1F6C3DD9</color>
 
     <!-- Dark stat card (Call Details total duration) -->
-    <color name="surface_dark">#1B2430</color>
-    <color name="on_surface_dark">#94A3B8</color>
     <color name="online_green">#22C55E</color>
     <color name="whatsapp_green">#25D366</color>
-    <color name="teal">#5B54D6</color>
-    <color name="teal_dark">#3B3596</color>
 
     <!-- ===== Splash redesign (2026) — scoped to the splash so the app-wide
          palette is untouched. Night overrides live in values-night/colors.xml,
@@ -138,4 +134,23 @@
     <color name="cid_hint_bg">#E9F5F3</color>            <!-- "next step" hint strip -->
     <color name="cid_shield_check">#FFFFFF</color>       <!-- checkmark stroke on the shield -->
     <color name="cid_toggle_off">#C2D5D1</color>        <!-- demo toggle track, off state -->
+
+    <!-- ===== Home-screen launcher ===== -->
+
+
+    <color name="semitransparent_navigation">#33000000</color>
+
+    <color name="all_app_bg">#80000000</color>
+    <color name="all_app_search_bg">#33ffffff</color>
+    <color name="panel_search_fill">#19ffffff</color>
+    <color name="panel_search_stroke">#33ffffff</color>
+    <color name="panel_divider">#dabababa</color>
+
+    <!-- Onboarding palette, converted from the design's OKLCH values (Message Launcher design
+         project). A fixed light look, regardless of the user's chosen theme. -->
+    <!-- text drawn on top of the accent, e.g. the CTA label -->
+
+
+
+
 </resources>
