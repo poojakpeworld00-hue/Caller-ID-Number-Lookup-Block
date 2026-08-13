@@ -18,11 +18,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <!-- ── Home-screen launcher ─────────────────────────────────────────────────────
-         The app drawer has to enumerate every installed launcher activity, the home
-         screen hosts app widgets, and the icon menu offers uninstall. -->
-    <uses-permission
-        android:name="android.permission.QUERY_ALL_PACKAGES"
-        tools:ignore="QueryAllPackagesPermission" />
+         The home screen hosts app widgets and the icon menu offers uninstall.
+         (Launcher-activity enumeration comes from the <queries> block below.) -->
     <uses-permission
         android:name="android.permission.BIND_APPWIDGET"
         tools:ignore="ProtectedPermissions" />
@@ -48,6 +45,28 @@
         <intent>
             <action android:name="android.intent.action.SEND" />
             <data android:mimeType="text/plain" />
+        </intent>
+    </queries>
+
+    <queries>
+        <intent>
+            <action android:name="android.telecom.action.CHANGE_PHONE_ACCOUNTS" />
+        </intent>
+    </queries>
+
+    <!-- Package visibility for the launcher: without this, queryIntentActivities for
+         MAIN/LAUNCHER returns almost nothing on API 30+ and the app drawer comes up empty. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <!-- Widget picker: AppWidgetManager.installedProviders + shortcut-style widgets. -->
+        <intent>
+            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.CREATE_SHORTCUT" />
         </intent>
     </queries>
 

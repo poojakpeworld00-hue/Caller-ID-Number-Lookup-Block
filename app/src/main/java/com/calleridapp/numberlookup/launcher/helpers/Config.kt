@@ -34,6 +34,19 @@ class Config(context: Context) : BaseConfig(context) {
         set(wasSwipeHintShown) = prefs.edit()
             .putBoolean(WAS_SWIPE_HINT_SHOWN, wasSwipeHintShown).apply()
 
+    // How far through `home_hint.swipeHints` the coach mark has got: the hints are taught one
+    // at a time, and this index only moves when the user actually performs the one on screen.
+    var swipeHintIndex: Int
+        get() = prefs.getInt(SWIPE_HINT_INDEX, 0)
+        set(swipeHintIndex) = prefs.edit().putInt(SWIPE_HINT_INDEX, swipeHintIndex).apply()
+
+    // How far the RC-ordered first-run sequence has got. Kept in prefs rather than an intent
+    // extra because the full-screen-intent screen can sit between two onboarding steps and
+    // rebuilds the intent for the one that follows, which would drop an extra.
+    var onboardingStep: Int
+        get() = prefs.getInt(ONBOARDING_STEP, 0)
+        set(onboardingStep) = prefs.edit().putInt(ONBOARDING_STEP, onboardingStep).apply()
+
     var homeColumnCount: Int
         get() = prefs.getInt(HOME_COLUMN_COUNT, COLUMN_COUNT)
         set(homeColumnCount) = prefs.edit().putInt(HOME_COLUMN_COUNT, homeColumnCount).apply()

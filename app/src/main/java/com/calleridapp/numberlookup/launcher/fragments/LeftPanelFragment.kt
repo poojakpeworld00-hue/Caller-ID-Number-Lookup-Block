@@ -37,6 +37,15 @@ class LeftPanelFragment(
     private var resultsCap = COLLAPSED_RESULTS
     private val nativePromo = NativePromo()
 
+    /** `launcher_ads.right_panel.bottom_native`, resolved once with the panel. */
+    private var adSlot = LauncherAdsConfig.Slot(
+        enabled = false,
+        adType = LauncherAdsConfig.SlotAd.NONE,
+        nativeType = "mid2",
+        bannerType = "adaptive",
+        adUnitId = "",
+    )
+
     private lateinit var suggestedAdapter: PanelAppsAdapter
     private lateinit var recentAdapter: PanelAppsAdapter
     private lateinit var resultsAdapter: PanelAppsAdapter
@@ -63,11 +72,15 @@ class LeftPanelFragment(
         this.activity = activity
         this.binding = LeftPanelFragmentBinding.bind(this)
 
-        // Only warm the slot here. Showing it now would be too early: showMidNative2 renders
-        // whatever NativePromo has already preloaded, and at MainActivity.onCreate that is
-        // still null — the frame would hide itself and, since the panel is never re-created,
-        // never come back. The actual show happens in onPanelShown().
-        nativePromo.loadNativeADs(activity)
+        // Only warm the slot here. Showing it now would be too early: the native renderers
+        // draw whatever NativePromo has already preloaded, and at MainActivity.onCreate that
+        // is still null — the frame would hide itself and, since the panel is never
+        // re-created, never come back. The actual show happens in onPanelShown().
+        adSlot = LauncherAdsConfig.rightPanelSlot(activity)
+        // A banner slot loads on show, so only a native one is worth warming.
+        if (adSlot.needsNativePreload) {
+            nativePromo.loadNativeADs(activity)
+        }
 
         suggestedAdapter = PanelAppsAdapter(R.layout.item_panel_grid_app, ::launchLauncher)
         recentAdapter = PanelAppsAdapter(R.layout.item_panel_grid_app, ::launchLauncher)
@@ -109,13 +122,13 @@ class LeftPanelFragment(
     }
 
     /**
-     * Called every time the panel slides in. showMidNative2 renders whatever NativePromo has
-     * preloaded and then queues the next one, so asking on each open keeps the slot fresh —
+     * Called every time the panel slides in. The native renderers draw whatever NativePromo
+     * has preloaded and then queue the next one, so asking on each open keeps the slot fresh —
      * and gives it a second chance if the very first fling beat the preload.
      */
     fun onPanelShown() {
         val activity = activity ?: return
-        nativePromo.showMidNative2(activity, binding.adNativeFrame, binding.adShimmer)
+        LauncherAdsConfig.showSlot(activity, adSlot, binding.adNativeFrame, binding.adShimmer)
     }
 
     /** Called when the panel is opened from the search pill rather than by a fling. */

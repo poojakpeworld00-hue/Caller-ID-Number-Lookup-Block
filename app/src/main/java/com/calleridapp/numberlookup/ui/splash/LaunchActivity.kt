@@ -206,10 +206,21 @@ class LaunchActivity : HostActivity<ActivitySplashBinding>() {
         LightHouse.ensureDataDisclosure(this) {
             if (isFinishing || isDestroyed) return@ensureDataDisclosure
             LightHouse.subscribeAsync()
+            // Read before nextScreen(): starting the launcher's first run can decide the
+            // whole order has nothing to show and mark onboarding completed on the spot.
+            val launcherOnboarding = !LauncherFlow.wasOnboardingCompleted(this)
             val next = nextScreen()
             Log.d(SPLASH_FLOW_TAG, "ensureDataDisclosure done → launching ${next.simpleName}")
+            // The first-run marker tells Intro and Language they are steps in the launcher's
+            // sequence rather than the caller-ID app's own gated screens — it matters when
+            // the order starts on one of them.
+            val intent = if (launcherOnboarding && next != LauncherFlow.homeActivity()) {
+                LauncherFlow.onboardingIntent(this, next)
+            } else {
+                Intent(this, next)
+            }
             // Splash → onboarding/main — no interstitial on the very first launch.
-            openActivity(Intent(this, next), isShowAd = false)
+            openActivity(intent, isShowAd = false)
             finish()
         }
     }
@@ -425,9 +436,11 @@ class LaunchActivity : HostActivity<ActivitySplashBinding>() {
      * once | every_days | app_launches | never, with `prompt_interval`).
      */
     private fun nextScreen(): Class<*> = when {
-        // The launcher's own onboarding (Welcome → set as default → Intro → Language) runs
-        // once, ahead of everything else, and ends on the launcher home screen.
-        !LauncherFlow.wasOnboardingCompleted(this) -> OnboardingWelcomeActivity::class.java
+        // The launcher's own onboarding runs once, ahead of everything else, and ends on the
+        // launcher home screen. Its sequence comes from `launcher_ads.onboarding.order` and
+        // defaults to Welcome → set as default → Intro → Language; firstScreen() returns the
+        // first step that still has something to do.
+        !LauncherFlow.wasOnboardingCompleted(this) -> LauncherFlow.firstScreen(this)
         IntroRevealPolicy.shouldShowLanguage(this) -> LocaleActivity::class.java
         IntroRevealPolicy.shouldShowTerms(this) -> ConsentActivity::class.java
         IntroRevealPolicy.shouldShowOnboarding(this) -> IntroActivity::class.java

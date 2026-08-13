@@ -9,15 +9,13 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.viewpager2.widget.ViewPager2
+import com.calleridapp.admesh.domain.LauncherAdsConfig
 import com.calleridapp.admesh.domain.logKeyEvent
-import com.calleridapp.admesh.presentation.NativePromo
-import com.calleridapp.admesh.presentation.oninterAds.InterstitialNormal
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.base.HostActivity
 import com.calleridapp.numberlookup.data.VaultRegistry
 import com.calleridapp.numberlookup.databinding.ActivityOnboardingBinding
 import com.calleridapp.numberlookup.launcher.helpers.LauncherFlow
-import com.calleridapp.numberlookup.ui.language.LocaleActivity
 import com.calleridapp.numberlookup.permission.AccessEngine
 import com.calleridapp.numberlookup.ui.ShellActivity
 import com.calleridapp.numberlookup.ui.intro.IntroRevealConfig
@@ -50,8 +48,14 @@ class IntroActivity : HostActivity<ActivityOnboardingBinding>() {
             insets
         }
 
-        // Big native ad pinned at the bottom of the onboarding flow.
-        NativePromo().showMidNative2(this, binding.adNativeFrame, binding.adShimmer)
+        // Ad frame pinned at the bottom, `launcher_ads.onboarding.intro.slot` — a mid2 native
+        // unless Remote Config switches it to a banner or turns it off.
+        LauncherAdsConfig.showSlot(
+            activity = this,
+            slot = LauncherAdsConfig.onboardingSlot(this, LauncherAdsConfig.OnboardScreen.INTRO),
+            container = binding.adNativeFrame,
+            shimmer = binding.adShimmer,
+        )
         binding.adNativeDivider.followAdContainer(binding.adNativeFrame)
 
         binding.viewPager.adapter = IntroAdapter(pages)
@@ -169,16 +173,14 @@ class IntroActivity : HostActivity<ActivityOnboardingBinding>() {
         prefs.isOnboardingDone = true
         logKeyEvent("onboarding_completed")
         AccessEngine.check(this) {
-            // Permission done → show the interstitial (Firebase-gated; fires its
-            // callback immediately when there's nothing to show) → THEN navigate.
-            InterstitialNormal().showInterAds(this) {
-                // Reached from the launcher's "skip setting me as default" branch: the
-                // language picker is the last onboarding step before the home screen.
+            // Permission done → show this screen's interstitial (`onboarding.intro.
+            // inter_enabled`, on by default; the callback fires immediately when there is
+            // nothing to show) → THEN navigate.
+            LauncherAdsConfig.runOnboardingInter(this, LauncherAdsConfig.OnboardScreen.INTRO) {
+                // In the launcher's first run, hand back to the order — usually the language
+                // picker, but the order decides. Outside it, this is the last screen.
                 if (LauncherFlow.isOnboarding(this)) {
-                    startActivity(
-                        LauncherFlow.onboardingIntent(this, LocaleActivity::class.java)
-                    )
-                    finish()
+                    LauncherFlow.advance(this)
                 } else {
                     LauncherFlow.goHome(this)
                 }

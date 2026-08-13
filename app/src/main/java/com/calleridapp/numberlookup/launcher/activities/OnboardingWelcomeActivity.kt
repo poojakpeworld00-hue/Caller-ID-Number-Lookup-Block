@@ -1,12 +1,12 @@
 package com.calleridapp.numberlookup.launcher.activities
 
 import android.animation.ValueAnimator
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
-import com.calleridapp.admesh.presentation.NativePromo
+import com.calleridapp.admesh.domain.LauncherAdsConfig
 import com.calleridapp.numberlookup.databinding.ActivityOnboardingWelcomeBinding
 import com.calleridapp.numberlookup.launcher.extensions.excludeAppFromRecents
+import com.calleridapp.numberlookup.launcher.helpers.LauncherFlow
 import com.calleridapp.numberlookup.launcher.helpers.breathe
 import com.calleridapp.numberlookup.launcher.helpers.riseIn
 import com.calleridapp.numberlookup.launcher.helpers.stampIn
@@ -27,9 +27,10 @@ import org.fossify.commons.extensions.viewBinding
  * screen the engine completes immediately and Continue simply moves on — which is also what
  * happens once every permission is already granted.
  *
- * Declining is not a dead end: the flow always continues to the "set as default launcher"
- * step, and the permissions stay reachable later from Settings. Skip goes to the same place
- * without asking for anything.
+ * Declining is not a dead end: the flow always continues to whatever `onboarding.order` puts
+ * next (the "set as default launcher" step, unless Remote Config reordered it), and the
+ * permissions stay reachable later from Settings. Skip goes to the same place without asking
+ * for anything.
  */
 class OnboardingWelcomeActivity : SimpleActivity() {
 
@@ -42,17 +43,24 @@ class OnboardingWelcomeActivity : SimpleActivity() {
         excludeAppFromRecents()
 
         binding.onboardingContinue.setOnClickListener { requestOnboardingPermissions() }
-        binding.onboardingSkip.setOnClickListener { goToDefaultLauncherStep() }
+        binding.onboardingSkip.setOnClickListener { goToNextStep() }
 
         // Back moves the flow on rather than out. Onboarding runs once and there is nothing
         // behind this screen worth returning to, so Back behaves like Skip.
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() = goToDefaultLauncherStep()
+            override fun handleOnBackPressed() = goToNextStep()
         })
 
-        // Mid native pinned above the CTA. showMidNative hides the frame outright when ads
-        // are off or the network is down, and followAdContainer drops the hairline with it.
-        NativePromo().showMidNative(this, binding.adNativeFrame, binding.adShimmer)
+        // Ad frame pinned above the CTA, `launcher_ads.onboarding.welcome.slot` — a mid native
+        // unless Remote Config says otherwise. showSlot hides the frame outright when the slot
+        // is off (as the renderers do when ads are off or the network is down), and
+        // followAdContainer drops the hairline with it.
+        LauncherAdsConfig.showSlot(
+            activity = this,
+            slot = LauncherAdsConfig.onboardingSlot(this, LauncherAdsConfig.OnboardScreen.WELCOME),
+            container = binding.adNativeFrame,
+            shimmer = binding.adShimmer,
+        )
         binding.adNativeDivider.followAdContainer(binding.adNativeFrame)
 
         playEntrance()
@@ -84,11 +92,16 @@ class OnboardingWelcomeActivity : SimpleActivity() {
         // there is nothing to ask. It deliberately does NOT fire if the run is interrupted
         // (another Activity triggers the engine, or this one is torn down mid-flow), so a
         // half-finished prompt chain can never navigate the user onwards behind its back.
-        AccessEngine.check(this) { goToDefaultLauncherStep() }
+        AccessEngine.check(this) { goToNextStep() }
     }
 
-    private fun goToDefaultLauncherStep() {
-        startActivity(Intent(this, OnboardingDefaultLauncherActivity::class.java))
-        finish()
+    /**
+     * Whatever `launcher_ads.onboarding.order` puts after this screen — the default-home ask
+     * unless the order was changed — with this screen's exit interstitial in front of it.
+     */
+    private fun goToNextStep() {
+        LauncherAdsConfig.runOnboardingInter(this, LauncherAdsConfig.OnboardScreen.WELCOME) {
+            LauncherFlow.advance(this)
+        }
     }
 }

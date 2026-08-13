@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+    One direction of the home-screen coach mark: a chevron trio that drifts the way the user
+    should swipe, with a caption under it. MainActivity inflates one of these per entry in
+    `launcher_ads.home_hint.swipeHints`, rotating the chevrons to point the right way.
+-->
+<!-- clipChildren=false throughout: a row rotated to point up or down draws its chevrons
+     outside the bounds the un-rotated trio measured, and would otherwise be cut off. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingVertical="14dp">
+
+    <LinearLayout
+        android:id="@+id/hint_chevrons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:importantForAccessibility="no"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:alpha="0.3"
+            android:src="@drawable/ic_chevron_right_vector"
+            android:tint="@android:color/white" />
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:alpha="0.6"
+            android:src="@drawable/ic_chevron_right_vector"
+            android:tint="@android:color/white" />
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_chevron_right_vector"
+            android:tint="@android:color/white" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/hint_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textSize="18sp" />
+</LinearLayout>

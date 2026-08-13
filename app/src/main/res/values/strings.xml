@@ -632,6 +632,9 @@
     <string name="default_launcher_banner_title">Setup Required</string>
     <string name="default_launcher_banner_body">Set this app as your home screen to identify and block calls straight from the launcher.</string>
     <string name="swipe_right_hint">Swipe right to open Caller ID</string>
+    <string name="swipe_left_hint">Swipe left to search your apps</string>
+    <string name="swipe_up_hint">Swipe up for all apps</string>
+    <string name="swipe_down_hint">Swipe down for notifications</string>
 
 
 
@@ -642,9 +645,9 @@
     <string name="onb_feature_spam">Spam\nProtection</string>
     <string name="onb_feature_secure">Safe &amp;\nSecure</string>
 
-    <string name="onb_default_title">Set as Default Caller ID</string>
-    <string name="onb_default_lead">Enable Caller ID as your default phone assistant to identify unknown callers and block spam in real time.</string>
-    <string name="onb_default_footnote">You can change your default Caller ID anytime from your phone settings.</string>
+    <string name="onb_default_title">Set as Default Home Screen</string>
+    <string name="onb_default_lead">Set this app as your default home screen to identify unknown callers and block spam calls straight from the launcher.</string>
+    <string name="onb_default_footnote">You can change your default home screen anytime from your phone settings.</string>
 
     <!-- Mock incoming-call screen inside the Set-as-default illustration. Decorative:
          the caller and number are invented, never a real contact. -->

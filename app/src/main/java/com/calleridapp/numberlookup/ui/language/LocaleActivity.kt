@@ -13,8 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.calleridapp.admesh.presentation.NativePromo
-import com.calleridapp.admesh.presentation.oninterAds.InterstitialNormal
+import com.calleridapp.admesh.domain.LauncherAdsConfig
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.base.HostActivity
 import com.calleridapp.numberlookup.data.RegionLocator
@@ -69,8 +68,14 @@ class LocaleActivity : HostActivity<ActivityLanguageBinding>() {
         val current = AppVault.language(this) ?: AppVault.LANGUAGE_DEFAULT
         viewModel.init(current)
 
-        // Mid native ad shown above the Continue button.
-        NativePromo().showBigNative(this, binding.adNativeFrame, binding.adShimmer)
+        // Ad frame above the Continue button, `launcher_ads.onboarding.language.slot` — a big
+        // native unless Remote Config switches it to a banner or turns it off.
+        LauncherAdsConfig.showSlot(
+            activity = this,
+            slot = LauncherAdsConfig.onboardingSlot(this, LauncherAdsConfig.OnboardScreen.LANGUAGE),
+            container = binding.adNativeFrame,
+            shimmer = binding.adShimmer,
+        )
         binding.adNativeDivider.followAdContainer(binding.adNativeFrame)
 
         // 1) Resolve the region FIRST, before the lists exist. The device seed is
@@ -212,7 +217,10 @@ class LocaleActivity : HostActivity<ActivityLanguageBinding>() {
             // Otherwise mirror Splash's routing — Terms and Onboarding both follow the
             // same IntroRevealPolicy frequency gate.
             val next = when {
-                LauncherFlow.isOnboarding(this) -> LauncherFlow.homeActivity()
+                // In the launcher's first run the order decides what follows — usually
+                // nothing, so this resolves to the home screen, but a reordered flow can put
+                // another step (a second default-home ask) after the language picker.
+                LauncherFlow.isOnboarding(this) -> LauncherFlow.nextActivity(this)
                 IntroRevealPolicy.shouldShowTerms(this) -> ConsentActivity::class.java
                 IntroRevealPolicy.shouldShowOnboarding(this) -> IntroActivity::class.java
                 else -> LauncherFlow.homeActivity()
@@ -225,16 +233,24 @@ class LocaleActivity : HostActivity<ActivityLanguageBinding>() {
             }
             // Conditional Full-Screen-Intent Screen: when the Remote Config gate
             // passes, it shows here (after Language) and then continues to `next`.
-            val intent = if (FullScreenAccess.shouldShowScreen(this)) {
-                FullScreenAccessActivity.newIntent(this, next)
-            } else {
-                Intent(this, next)
+            // It rebuilds the intent from a class name, so a launcher step reached
+            // through it arrives without the first-run marker — only Intro and this
+            // screen read that marker, and neither can follow the language picker.
+            val intent = when {
+                FullScreenAccess.shouldShowScreen(this) ->
+                    FullScreenAccessActivity.newIntent(this, next)
+
+                LauncherFlow.isOnboarding(this) && next != LauncherFlow.homeActivity() ->
+                    LauncherFlow.onboardingIntent(this, next)
+
+                else -> Intent(this, next)
             }
-            // Permission done → show the interstitial (Firebase-gated; fires its
-            // callback immediately when there's nothing to show) → THEN apply the
-            // locale and navigate. LocaleRegistry.apply recreates this Activity, so
-            // it must run after the ad (doing it earlier would tear the ad down).
-            InterstitialNormal().showInterAds(this) {
+            // Permission done → show this screen's interstitial (`onboarding.language.
+            // inter_enabled`, on by default; the callback fires immediately when there
+            // is nothing to show) → THEN apply the locale and navigate. LocaleRegistry
+            // .apply recreates this Activity, so it must run after the ad (doing it
+            // earlier would tear the ad down).
+            LauncherAdsConfig.runOnboardingInter(this, LauncherAdsConfig.OnboardScreen.LANGUAGE) {
                 LocaleRegistry.apply(tag) // recreates activities with the new locale
                 startActivity(intent)
                 finish()

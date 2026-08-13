@@ -39,6 +39,7 @@ import android.view.View
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.DecelerateInterpolator
+import android.widget.TextView
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
@@ -133,7 +134,10 @@ class MainActivity : SimpleActivity(), FlingListener {
             ((shortcutId: String, label: String, icon: Drawable) -> Unit)? = null
     private var wasJustPaused: Boolean = false
 
-    private var mSwipeHintAnimator: ObjectAnimator? = null
+    private val mSwipeHintAnimators = mutableListOf<ObjectAnimator>()
+    private val mSwipeHintHider = Runnable { hideSwipeHint() }
+    private var mHomeHint: LauncherAdsConfig.HomeHint? = null
+    private var mHintRunActive = false
 
     private var wallpaperColorChangeListener: OnColorsChangedListener? = null
     private var wallpaperSupportsDarkText: Boolean? = null
@@ -147,6 +151,9 @@ class MainActivity : SimpleActivity(), FlingListener {
         private const val APP_DRAWER_CLOSE_DELAY = 300L
         private const val APP_DRAWER_STATE = "app_drawer_state"
         private const val SWIPE_HINT_ANIMATION_DURATION = 900L
+        // long enough for the user to read the shade they just pulled down before the next
+        // hint appears underneath it
+        private const val SHADE_HINT_RESUME_DELAY = 2500L
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -218,25 +225,152 @@ class MainActivity : SimpleActivity(), FlingListener {
 
         setupWallpaperColorListener()
 
-        if (!config.wasSwipeHintShown) {
-            config.wasSwipeHintShown = true
-            showSwipeHint()
+        startSwipeHintRun()
+    }
+
+    /**
+     * Opens a run of the coach mark, driven by `launcher_ads.home_hint`.
+     *
+     * The gestures in `swipeHints` are taught ONE AT A TIME, in order: the first hint stays up
+     * until the user actually makes that swipe, then the next one appears the next time they
+     * are back on the bare home screen, and so on until the list is exhausted.
+     *
+     * Whether a run starts at all is decided once per launch — `isHintDue` spends a counter
+     * tick, so it must not be asked again on every resume. `once` latches on the launcher's own
+     * pref, so an install that has already been through the list never sees it again.
+     */
+    private fun startSwipeHintRun() {
+        val hint = LauncherAdsConfig.homeHint(this)
+        mHomeHint = hint
+        if (!hint.visible) {
+            return
+        }
+
+        // An interrupted `once` run picks up where it left off rather than starting over; the
+        // repeating modes always begin a fresh pass through the list.
+        val resuming = hint.mode == LauncherAdsConfig.HintMode.ONCE &&
+                config.swipeHintIndex in 1 until hint.directions.size
+
+        mHintRunActive = when {
+            resuming -> true
+            hint.mode == LauncherAdsConfig.HintMode.ALWAYS -> true
+            hint.mode == LauncherAdsConfig.HintMode.APP_LAUNCHES ->
+                LauncherAdsConfig.isHintDue(this, hint)
+
+            else -> !config.wasSwipeHintShown
+        }
+
+        if (mHintRunActive && !resuming) {
+            config.swipeHintIndex = 0
         }
     }
 
-    private fun showSwipeHint() {
-        binding.swipeHint.beVisible()
-        mSwipeHintAnimator = ObjectAnimator.ofFloat(
-            binding.swipeHintChevrons,
-            View.TRANSLATION_X,
-            0f,
-            resources.getDimension(R.dimen.swipe_hint_travel)
-        ).apply {
+    /**
+     * Shows the hint the user has not made yet, or ends the run once they all have. Called
+     * whenever the bare home screen comes back into view — a hint over an open drawer or panel
+     * would be teaching a gesture that screen does not have.
+     */
+    private fun showNextSwipeHint() {
+        val hint = mHomeHint ?: return
+        if (!mHintRunActive) {
+            return
+        }
+
+        if (config.swipeHintIndex >= hint.directions.size) {
+            mHintRunActive = false
+            config.wasSwipeHintShown = true
+            hideSwipeHint()
+            return
+        }
+
+        if (isAllAppsFragmentExpanded() || isWidgetsFragmentExpanded() || isLeftPanelExpanded()) {
+            return
+        }
+
+        showSwipeHint(hint.directions[config.swipeHintIndex], hint.autoHideSec)
+    }
+
+    /**
+     * The user made the gesture the hint was teaching, so it is learned: move to the next one.
+     * Any other gesture leaves the index alone — the hint stays until its own swipe is made.
+     */
+    private fun completeSwipeHint(direction: LauncherAdsConfig.HintDirection) {
+        if (!mHintRunActive || !binding.swipeHint.isVisible) {
+            return
+        }
+
+        if (mHomeHint?.directions?.getOrNull(config.swipeHintIndex) != direction) {
+            return
+        }
+
+        config.swipeHintIndex = config.swipeHintIndex + 1
+        hideSwipeHint()
+
+        // Swiping down only pulls the shade over us — the home screen is never left, so
+        // nothing else will come back to ask for the next hint.
+        if (direction == LauncherAdsConfig.HintDirection.DOWN) {
+            binding.swipeHint.postDelayed({ showNextSwipeHint() }, SHADE_HINT_RESUME_DELAY)
+        }
+    }
+
+    private fun showSwipeHint(direction: LauncherAdsConfig.HintDirection, autoHideSec: Int) {
+        val travel = resources.getDimension(R.dimen.swipe_hint_travel)
+
+        mSwipeHintAnimators.forEach { it.cancel() }
+        mSwipeHintAnimators.clear()
+        binding.swipeHint.removeCallbacks(mSwipeHintHider)
+        binding.swipeHint.removeAllViews()
+
+        val row = layoutInflater.inflate(R.layout.item_swipe_hint, binding.swipeHint, false)
+        val chevrons = row.findViewById<View>(R.id.hint_chevrons)
+        row.findViewById<TextView>(R.id.hint_label).setText(captionFor(direction))
+
+        // The chevrons are drawn pointing right, so each direction is that row rotated — and
+        // the drift then runs along the matching axis. Rotation happens in the row's own
+        // space; translation stays in the parent's, hence the axis switch.
+        val (property, distance) = when (direction) {
+            LauncherAdsConfig.HintDirection.RIGHT -> View.TRANSLATION_X to travel
+            LauncherAdsConfig.HintDirection.LEFT -> View.TRANSLATION_X to -travel
+            LauncherAdsConfig.HintDirection.UP -> View.TRANSLATION_Y to -travel
+            LauncherAdsConfig.HintDirection.DOWN -> View.TRANSLATION_Y to travel
+        }
+        chevrons.rotation = when (direction) {
+            LauncherAdsConfig.HintDirection.RIGHT -> 0f
+            LauncherAdsConfig.HintDirection.LEFT -> 180f
+            LauncherAdsConfig.HintDirection.UP -> 270f
+            LauncherAdsConfig.HintDirection.DOWN -> 90f
+        }
+
+        // A quarter turn leaves the trio standing three chevrons tall in a row that only
+        // measured one, so a vertical row needs the extra height reserved — otherwise it draws
+        // over its own caption.
+        if (property == View.TRANSLATION_Y) {
+            val pad = resources.getDimensionPixelSize(R.dimen.swipe_hint_vertical_pad)
+            row.setPadding(row.paddingLeft, pad, row.paddingRight, pad)
+        }
+
+        binding.swipeHint.addView(row)
+        mSwipeHintAnimators += ObjectAnimator.ofFloat(chevrons, property, 0f, distance).apply {
             duration = SWIPE_HINT_ANIMATION_DURATION
             repeatCount = ValueAnimator.INFINITE
             interpolator = AccelerateDecelerateInterpolator()
             start()
         }
+
+        binding.swipeHint.beVisible()
+
+        // Auto-hide only takes this hint off the screen; the run stays where it is, so the
+        // same one is offered again next time the home screen comes back.
+        if (autoHideSec > 0) {
+            binding.swipeHint.postDelayed(mSwipeHintHider, autoHideSec * 1000L)
+        }
+    }
+
+    private fun captionFor(direction: LauncherAdsConfig.HintDirection): Int = when (direction) {
+        LauncherAdsConfig.HintDirection.RIGHT -> R.string.swipe_right_hint
+        LauncherAdsConfig.HintDirection.LEFT -> R.string.swipe_left_hint
+        LauncherAdsConfig.HintDirection.UP -> R.string.swipe_up_hint
+        LauncherAdsConfig.HintDirection.DOWN -> R.string.swipe_down_hint
     }
 
     private fun hideSwipeHint() {
@@ -244,8 +378,9 @@ class MainActivity : SimpleActivity(), FlingListener {
             return
         }
 
-        mSwipeHintAnimator?.cancel()
-        mSwipeHintAnimator = null
+        binding.swipeHint.removeCallbacks(mSwipeHintHider)
+        mSwipeHintAnimators.forEach { it.cancel() }
+        mSwipeHintAnimators.clear()
         binding.swipeHint.beGone()
     }
 
@@ -328,6 +463,10 @@ class MainActivity : SimpleActivity(), FlingListener {
             }
         }, ANIMATION_DURATION)
 
+        // Back on the home screen — offer the next hint the user has not made yet. Covers the
+        // first show too, since onResume always follows onCreate.
+        showNextSwipeHint()
+
         with(binding.mainHolder) {
             onGlobalLayout {
                 binding.allAppsFragment.root.setupViews()
@@ -384,6 +523,11 @@ class MainActivity : SimpleActivity(), FlingListener {
             WallpaperManager.getInstance(this)
                 .removeOnColorsChangedListener(wallpaperColorChangeListener!!)
         }
+
+        // the infinite chevron animators hold hard references to the rows they drive
+        binding.swipeHint.removeCallbacks(mSwipeHintHider)
+        mSwipeHintAnimators.forEach { it.cancel() }
+        mSwipeHintAnimators.clear()
     }
 
     override fun onPause() {
@@ -771,6 +915,7 @@ class MainActivity : SimpleActivity(), FlingListener {
         // clear the query only once it is off screen, else the sections visibly swap mid slide
         Handler(Looper.getMainLooper()).postDelayed({
             binding.leftPanel.root.resetSearch()
+            showNextSwipeHint()
         }, ANIMATION_DURATION)
     }
 
@@ -879,6 +1024,8 @@ class MainActivity : SimpleActivity(), FlingListener {
                 fragment.widgetsList.scrollToPosition(0)
                 fragment.root.touchDownY = -1
             }
+            // the home screen is bare again, so the next hint can have it
+            showNextSwipeHint()
         }, animationDuration)
     }
 
@@ -1209,6 +1356,7 @@ class MainActivity : SimpleActivity(), FlingListener {
 
         if (!isWidgetsFragmentExpanded()) {
             mIgnoreUpEvent = true
+            completeSwipeHint(LauncherAdsConfig.HintDirection.UP)
             showFragment(binding.allAppsFragment)
         }
     }
@@ -1225,6 +1373,7 @@ class MainActivity : SimpleActivity(), FlingListener {
         } else if (isWidgetsFragmentExpanded()) {
             hideFragment(binding.widgetsFragment)
         } else {
+            completeSwipeHint(LauncherAdsConfig.HintDirection.DOWN)
             try {
                 Class.forName("android.app.StatusBarManager")
                     .getMethod("expandNotificationsPanel")
@@ -1243,6 +1392,7 @@ class MainActivity : SimpleActivity(), FlingListener {
         // A right fling opens the caller-ID app, whichever page we are on. Paging is still
         // available by dragging horizontally, which never reaches here.
         if (!isAllAppsFragmentExpanded() && !isWidgetsFragmentExpanded()) {
+            completeSwipeHint(LauncherAdsConfig.HintDirection.RIGHT)
             // Paced by launcher_ads.swipe_right; the app opens on every path regardless.
             LauncherAdsConfig.run(this, LauncherAdsConfig.Surface.SWIPE_RIGHT) {
                 openCallerIdApp()
@@ -1260,7 +1410,11 @@ class MainActivity : SimpleActivity(), FlingListener {
         mIgnoreUpEvent = true
         // see onFlingRight: the panel wins over paging on a fling
         if (!isAllAppsFragmentExpanded() && !isWidgetsFragmentExpanded()) {
-            showLeftPanel()
+            completeSwipeHint(LauncherAdsConfig.HintDirection.LEFT)
+            // Paced by launcher_ads.swipe_left; the panel opens on every path regardless.
+            LauncherAdsConfig.run(this, LauncherAdsConfig.Surface.SWIPE_LEFT) {
+                showLeftPanel()
+            }
         } else {
             binding.homeScreenGrid.root.nextPage(redraw = true)
         }
