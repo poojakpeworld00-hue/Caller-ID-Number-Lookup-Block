@@ -45,21 +45,21 @@
 
     <!-- Splash redesign dark overrides. Per Visual System, the hero gradient stays
          a rich Sapphire→Violet even in dark (just deepened) — not near-black. -->
-    <color name="splash_grad_start">#06584F</color>
-    <color name="splash_grad_center">#00786B</color>
-    <color name="splash_grad_end">#0E9481</color>
-    <color name="splash_card_bg">#131C1A</color>
-    <color name="splash_card_name">#F0F5F4</color>
-    <color name="splash_card_sub">#869C98</color>
-    <color name="splash_chip_bg">#1B2624</color>
-    <color name="splash_chip_fg">#869C98</color>
+    <color name="splash_grad_start">#04532B</color>
+    <color name="splash_grad_center">#0B7A31</color>
+    <color name="splash_grad_end">#1E9E3B</color>
+    <color name="splash_card_bg">#131C15</color>
+    <color name="splash_card_name">#F0F5F1</color>
+    <color name="splash_card_sub">#869C8B</color>
+    <color name="splash_chip_bg">#1B261E</color>
+    <color name="splash_chip_fg">#869C8B</color>
     <color name="splash_verdict_container">#143126</color>
     <color name="splash_verdict_on">#7BD8A8</color>
-    <!-- Phone illustration (dark navy) -->
-    <color name="splash_phone_bg">#16211F</color>
-    <color name="splash_phone_stroke">#2C3F3B</color>
-    <color name="splash_content_line">#22332F</color>
-    <color name="splash_notch">#283733</color>
+    <!-- Phone illustration (dark) -->
+    <color name="splash_phone_bg">#162118</color>
+    <color name="splash_phone_stroke">#2C3F32</color>
+    <color name="splash_content_line">#223329</color>
+    <color name="splash_notch">#28372D</color>
 
     <!-- FSI intro Activity — dark (navy) variant of the design. -->
     <color name="fsi_bg_center">#14332E</color>

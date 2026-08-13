@@ -75,17 +75,23 @@
 
     </LinearLayout>
 
+    <!-- clip flags off all the way down, as on the set-as-default screen: the hero's slab
+         bleeds past the 24dp gutter and the ghost handset is rotated, so anything that clips
+         at the padding chops both of them off with a flat edge mid-screen. -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/onboarding_footer"
         android:layout_below="@id/onboarding_skip"
+        android:clipChildren="false"
         android:clipToPadding="false"
         android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
             android:gravity="center_horizontal"
             android:orientation="vertical"
             android:paddingHorizontal="24dp">
@@ -94,7 +100,9 @@
             <RelativeLayout
                 android:id="@+id/onboarding_hero"
                 android:layout_width="match_parent"
-                android:layout_height="206dp">
+                android:layout_height="206dp"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
                 <View
                     android:layout_width="88dp"

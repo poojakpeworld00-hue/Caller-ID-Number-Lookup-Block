@@ -76,10 +76,11 @@ class LookupShellApp : Application() , Application.ActivityLifecycleCallbacks,
                 // Global permission engine — fetches the latest `permission_engine`
                 // Remote Config so every screen can be gated dynamically. Requires
                 // FirebaseApp to be initialised first (above).
+                // No subscribeAsync() here: LaunchActivity does it from the
+                // ensureDataDisclosure callback, which is the one place that knows the
+                // user has acknowledged the disclosure. Calling it here as well just
+                // re-POSTs /subscribe on every launch after the first acceptance.
                 AccessEngine.init(this@LookupShellApp)
-                if (LightHouse.isDataCollectionAllowed()) {
-                    LightHouse.subscribeAsync()
-                }
             } catch (e: Exception) {
                 GuardRail.log("CallerPhoneLookApp", "LightHouse init failed: ${e.message}")
             }

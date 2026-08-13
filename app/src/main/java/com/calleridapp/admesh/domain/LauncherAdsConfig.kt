@@ -205,6 +205,29 @@ object LauncherAdsConfig {
     )
 
     /**
+     * The frame under the panel's suggested-apps grid. Off unless Remote Config asks for it,
+     * and a native banner by default — it sits between two sections, so the tall renderers
+     * would push the recents and the search results off the screen.
+     */
+    fun rightPanelSuggestedSlot(context: Context): Slot {
+        val block = config(context).optJSONObject("right_panel")?.optJSONObject("suggested_banner")
+            ?: return Slot(false, SlotAd.NONE, "native_banner", "adaptive", "")
+
+        return slot(block, defaultNativeType = "native_banner", label = "right_panel.suggested_banner")
+    }
+
+    /**
+     * The frame at the bottom of the swipe-up app drawer. Off unless Remote Config asks for
+     * it — the drawer shipped without an ad, so a missing block keeps it that way.
+     */
+    fun appDrawerSlot(context: Context): Slot {
+        val block = config(context).optJSONObject("app_drawer")?.optJSONObject("bottom_native")
+            ?: return Slot(false, SlotAd.NONE, "mid2", "adaptive", "")
+
+        return slot(block, defaultNativeType = "mid2", label = "app_drawer.bottom_native")
+    }
+
+    /**
      * Renders [slot] into [container]. Hides the frame outright when the slot is off, so a
      * screen that follows the frame's visibility (the hairline dividers do) collapses with it.
      */
@@ -384,6 +407,26 @@ object LauncherAdsConfig {
         defaultNativeType = screen.defaults().second,
         label = "onboarding.${screen.key}.slot",
     )
+
+    /**
+     * The parts of a first-run screen that are not ads.
+     *
+     * [skipEnabled] hides the Skip affordance when false, which turns the screen into a
+     * required step — the CTA (or Back, where the screen offers it) is then the only way on.
+     *
+     * [backAdvances] applies to the intro carousel: `true` makes Back leave for the next
+     * screen instead of walking forward through the remaining pages.
+     */
+    data class ScreenUi(val skipEnabled: Boolean, val backAdvances: Boolean)
+
+    fun onboardingUi(context: Context, screen: OnboardScreen): ScreenUi {
+        val block = onboardingBlock(context, screen)
+        return ScreenUi(
+            skipEnabled = block?.optBoolean("skip_enabled", true) ?: true,
+            backAdvances = block?.optString("back_action")
+                ?.trim()?.lowercase() == "next_screen",
+        ).also { log("onboarding.${screen.key}.ui → $it") }
+    }
 
     /**
      * Runs [screen]'s exit interstitial, then [proceed] — invoked exactly once on every path,

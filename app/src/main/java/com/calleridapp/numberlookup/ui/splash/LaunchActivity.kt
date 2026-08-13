@@ -97,9 +97,11 @@ class LaunchActivity : HostActivity<ActivitySplashBinding>() {
         // `app_launches` frequency counts this launch.
         prefs.appLaunchCount = prefs.appLaunchCount + 1
 
-        // Tint the status bar to the brand color with light (white) icons to
-        // match the splash's light-on-color content.
-        window.statusBarColor = ContextCompat.getColor(this, R.color.primary)
+        // Tint the status bar to the hero gradient's own top colour — the same green the
+        // app icon is built from — with light (white) icons to match the splash's
+        // light-on-color content. Using the gradient token rather than the app-wide
+        // `primary` keeps the top edge seamless with the artwork underneath it.
+        window.statusBarColor = ContextCompat.getColor(this, R.color.splash_grad_start)
         WindowCompat.getInsetsController(window, window.decorView)
             .isAppearanceLightStatusBars = false
 

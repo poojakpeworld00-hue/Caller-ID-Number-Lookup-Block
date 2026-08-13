@@ -8,15 +8,21 @@
     android:layout_height="match_parent"
     android:paddingHorizontal="@dimen/_20sdp">
 
+    <!-- The illustration is the elastic part of the page: 210sdp when there is room,
+         less when there is not. A native ad below can take nearly half the screen, and a
+         fixed-height illustration would push the body copy off the bottom of the pager
+         and clip it mid-line. IntroAdapter scales the artwork inside to whatever height
+         this ends up with, so the composition shrinks instead of overflowing. -->
     <FrameLayout
         android:id="@+id/artContainer"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/_210sdp"
+        android:layout_height="0dp"
         android:layout_marginHorizontal="@dimen/_8sdp"
         android:clipChildren="false"
         android:clipToPadding="false"
         app:layout_constraintBottom_toTopOf="@id/tvTitle"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_max="@dimen/_210sdp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed" />

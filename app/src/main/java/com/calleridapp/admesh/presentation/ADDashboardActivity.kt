@@ -77,6 +77,7 @@ open class ADDashboardActivity : AppCompatActivity() {
     private var isSplash: Boolean? = false
     private val isMobileAdsInitialized = AtomicBoolean(false)
     private val isMobileAdsInitializeCalled = AtomicBoolean(false)
+    private val referrerHandoffDone = AtomicBoolean(false)
     private var isGoogleAdsEnabled = true
     private val backgroundExecutor: Executor = Executors.newSingleThreadExecutor()
 
@@ -86,6 +87,23 @@ open class ADDashboardActivity : AppCompatActivity() {
 
         /** One grep-able tag for the getData Remote Config → prefs ingestion path. */
         const val CONFIG_TAG = "GetDataConfig"
+
+        /**
+         * Which audience a DEBUG build runs as — flip this one line to test the other side.
+         * `true` = marketing, `false` = organic.
+         *
+         * A build installed from Studio or adb has no install referrer and no LightHouse
+         * attribution, so it always resolves to organic on its own and the `marketing` half
+         * of the config could never be exercised on a test device. Release builds ignore
+         * this entirely and keep using the real attribution.
+         */
+        const val DEBUG_AUDIENCE_MARKETING = true
+
+        /**
+         * How long the audience gate waits for LightHouse's install-referrer verdict before
+         * settling for what it has. First launch only — the SDK caches it afterwards.
+         */
+        const val ATTRIBUTION_WAIT_MS = 5_000L
     }
 
     open fun getData(
@@ -409,12 +427,29 @@ open class ADDashboardActivity : AppCompatActivity() {
 
     private fun checkInstallerRefere() {
         if (activity!!.getPreferences(MODE_PRIVATE).getBoolean("isReferrerDone", false)) {
-            funOnAdsLoad()
+            onReferrerSettled()
             return
         }
 
         val referrerClient = InstallReferrerClient.newBuilder(activity).build()
         backgroundExecutor.execute(Runnable { getInstallReferrerFromClient(referrerClient) })
+    }
+
+    /**
+     * The single exit from the install-referrer probe.
+     *
+     * Every path out of [getInstallReferrerFromClient] — resolved, unsupported, unavailable,
+     * developer/permission error, or the service dropping before it ever finished — has to end
+     * up here, because [funOnAdsLoad] is what writes the audience flag and re-ingests the right
+     * half of the config. A path that quietly returns instead leaves the app on whichever
+     * audience the pre-referrer ingest happened to pick.
+     *
+     * Guarded so the extra exits can never double-run the IP lookup and the re-ingest.
+     */
+    private fun onReferrerSettled() {
+        if (referrerHandoffDone.compareAndSet(false, true)) {
+            funOnAdsLoad()
+        }
     }
 
     private fun funOnAdsLoad() {
@@ -434,17 +469,14 @@ open class ADDashboardActivity : AppCompatActivity() {
                     }
                 }
 
-                // Marketing vs organic is decided once, then it selects WHICH
-                // country-counter flag + allow-list to apply. Marketing installs use
-                // the *_Marketing_* keys; organic installs the plain ones.
-                //
-                // The audience is sourced from LightHouse attribution
-                // (isOrganicUser) rather than raw install-referrer string matching:
-                // isOrganicUser() == true → organic → NOT marketing. Debug forces
-                // organic so test builds stay on the organic audience. The result is
-                // persisted so every other reader of OnMaketing (FSI / intro /
-                // permission audience split) sees the same value.
-                val isMarketingOn = if (BuildConfig.DEBUG) false else !LightHouse.isOrganicUser()
+                val isMarketingOn = if (BuildConfig.DEBUG) {
+                    DEBUG_AUDIENCE_MARKETING
+                } else {
+                    !LightHouse.isOrganicUser(awaitReferrerMs = ATTRIBUTION_WAIT_MS)
+                }
+                if (BuildConfig.DEBUG) {
+                    Log.d(CONFIG_TAG, "audience → ${if (isMarketingOn) "MARKETING" else "ORGANIC"}")
+                }
                 adsPreference.putBoolean("OnMaketing", isMarketingOn)
 
                 // Top-level audience split only: OnMaketing is now final (referrer
@@ -1095,26 +1127,31 @@ open class ADDashboardActivity : AppCompatActivity() {
                             // referrer string — funOnAdsLoad() now resolves it from
                             // LightHouse.isOrganicUser(). We still store the raw
                             // referrer (FinalString) and drive the flow forward.
-                            funOnAdsLoad()
+                            onReferrerSettled()
 
                             activity?.getPreferences(MODE_PRIVATE)?.edit()?.apply {
                                 putBoolean("isReferrerDone", true)
                                 apply() // Use apply() for efficiency
                             }
                         } catch (e: RemoteException) {
-                            funOnAdsLoad()
+                            onReferrerSettled()
                         } finally {
                             referrerClient.endConnection()
                         }
 
                     }
 
-                    InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED, InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE -> funOnAdsLoad()
+                    // Everything else — unsupported, unavailable, and the DEVELOPER_ERROR /
+                    // PERMISSION_ERROR codes that used to fall off the end of this when —
+                    // still has to hand off, or the audience flag is never written.
+                    else -> onReferrerSettled()
                 }
             }
 
             override fun onInstallReferrerServiceDisconnected() {
-
+                // The service can drop before setup ever finishes; without this the probe
+                // would end here and the flow would stall on the pre-referrer audience.
+                onReferrerSettled()
             }
         })
     }

@@ -46,6 +46,15 @@ class LeftPanelFragment(
         adUnitId = "",
     )
 
+    /** `launcher_ads.right_panel.suggested_banner` — the slot under the suggested grid. */
+    private var suggestedSlot = LauncherAdsConfig.Slot(
+        enabled = false,
+        adType = LauncherAdsConfig.SlotAd.NONE,
+        nativeType = "native_banner",
+        bannerType = "adaptive",
+        adUnitId = "",
+    )
+
     private lateinit var suggestedAdapter: PanelAppsAdapter
     private lateinit var recentAdapter: PanelAppsAdapter
     private lateinit var resultsAdapter: PanelAppsAdapter
@@ -77,8 +86,9 @@ class LeftPanelFragment(
         // is still null — the frame would hide itself and, since the panel is never
         // re-created, never come back. The actual show happens in onPanelShown().
         adSlot = LauncherAdsConfig.rightPanelSlot(activity)
+        suggestedSlot = LauncherAdsConfig.rightPanelSuggestedSlot(activity)
         // A banner slot loads on show, so only a native one is worth warming.
-        if (adSlot.needsNativePreload) {
+        if (adSlot.needsNativePreload || suggestedSlot.needsNativePreload) {
             nativePromo.loadNativeADs(activity)
         }
 
@@ -129,6 +139,12 @@ class LeftPanelFragment(
     fun onPanelShown() {
         val activity = activity ?: return
         LauncherAdsConfig.showSlot(activity, adSlot, binding.adNativeFrame, binding.adShimmer)
+        LauncherAdsConfig.showSlot(
+            activity = activity,
+            slot = suggestedSlot,
+            container = binding.adSuggestedFrame,
+            shimmer = binding.adSuggestedShimmer,
+        )
     }
 
     /** Called when the panel is opened from the search pill rather than by a fling. */

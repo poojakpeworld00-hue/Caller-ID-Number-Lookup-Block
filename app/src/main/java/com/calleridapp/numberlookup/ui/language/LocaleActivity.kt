@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.activity.viewModels
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -51,6 +52,12 @@ class LocaleActivity : HostActivity<ActivityLanguageBinding>() {
 
     /** One-shot guard so a back-press can't fire the forward flow twice. */
     private var forwarding = false
+
+    /**
+     * One-shot latch on the navigation itself. Back and Continue both reach it, and the ad
+     * callback can arrive late — a second pass would start the next screen twice.
+     */
+    private var navigated = false
 
     override fun initView() {
         // Count this as an intro show only in the first-run flow (not when opened
@@ -220,7 +227,8 @@ class LocaleActivity : HostActivity<ActivityLanguageBinding>() {
                 // In the launcher's first run the order decides what follows — usually
                 // nothing, so this resolves to the home screen, but a reordered flow can put
                 // another step (a second default-home ask) after the language picker.
-                LauncherFlow.isOnboarding(this) -> LauncherFlow.nextActivity(this)
+                !standalone && LauncherFlow.isOnboardingActive(this) ->
+                    LauncherFlow.nextActivity(this)
                 IntroRevealPolicy.shouldShowTerms(this) -> ConsentActivity::class.java
                 IntroRevealPolicy.shouldShowOnboarding(this) -> IntroActivity::class.java
                 else -> LauncherFlow.homeActivity()
@@ -234,13 +242,14 @@ class LocaleActivity : HostActivity<ActivityLanguageBinding>() {
             // Conditional Full-Screen-Intent Screen: when the Remote Config gate
             // passes, it shows here (after Language) and then continues to `next`.
             // It rebuilds the intent from a class name, so a launcher step reached
-            // through it arrives without the first-run marker — only Intro and this
-            // screen read that marker, and neither can follow the language picker.
+            // through it arrives without the first-run marker — which is why those
+            // screens test LauncherFlow.isOnboardingActive rather than the marker alone.
             val intent = when {
                 FullScreenAccess.shouldShowScreen(this) ->
                     FullScreenAccessActivity.newIntent(this, next)
 
-                LauncherFlow.isOnboarding(this) && next != LauncherFlow.homeActivity() ->
+                !standalone && LauncherFlow.isOnboardingActive(this) &&
+                        next != LauncherFlow.homeActivity() ->
                     LauncherFlow.onboardingIntent(this, next)
 
                 else -> Intent(this, next)
@@ -251,8 +260,22 @@ class LocaleActivity : HostActivity<ActivityLanguageBinding>() {
             // .apply recreates this Activity, so it must run after the ad (doing it
             // earlier would tear the ad down).
             LauncherAdsConfig.runOnboardingInter(this, LauncherAdsConfig.OnboardScreen.LANGUAGE) {
-                LocaleRegistry.apply(tag) // recreates activities with the new locale
+                if (navigated) {
+                    return@runOnboardingInter
+                }
+                navigated = true
+
+                // Navigate BEFORE applying the locale. Applying it restarts the app's
+                // activities, and doing that first raced the start: the system tore this
+                // screen down while the next one was still being dispatched, so the run
+                // stopped dead on the language picker — intermittently, because the ad
+                // dismissal decides where in the resume the two land. Starting first means
+                // the restart falls on the screen that is already on its way in, which is
+                // the one that should be redrawn in the new language anyway.
                 startActivity(intent)
+                if (tag != AppCompatDelegate.getApplicationLocales().toLanguageTags()) {
+                    LocaleRegistry.apply(tag)
+                }
                 finish()
             }
         }

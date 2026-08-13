@@ -50,6 +50,21 @@ object LauncherFlow {
     fun isOnboarding(activity: Activity): Boolean =
         activity.intent.getBooleanExtra(EXTRA_LAUNCHER_ONBOARDING, false)
 
+    /**
+     * Whether this screen is running as part of the launcher's first run, marker or not.
+     *
+     * The marker cannot always survive the trip: the full-screen-intent screen rebuilds the
+     * intent for whatever follows it from a class name alone, so a step reached through it
+     * arrives unmarked and would otherwise mistake itself for the caller-ID app's own copy of
+     * that screen and end the run early. Which steps that hits depends purely on the order —
+     * with `language` before `intro`, the intro carousel is the one that loses it.
+     *
+     * An unfinished first run is the honest test: until it completes, the launcher order is the
+     * only route to these screens.
+     */
+    fun isOnboardingActive(activity: Activity): Boolean =
+        isOnboarding(activity) || !wasOnboardingCompleted(activity)
+
     fun wasOnboardingCompleted(context: Context): Boolean = context.config.wasOnboardingCompleted
 
     /** Intent for the next onboarding screen, carrying the first-run marker forward. */
@@ -123,6 +138,36 @@ object LauncherFlow {
      */
     fun nextActivity(context: Context): Class<*> =
         resolveFrom(context, context.config.onboardingStep + 1)
+
+    /**
+     * Puts an interrupted first run back on screen, and says whether it did.
+     *
+     * The home screen can be reached with onboarding still unfinished, because granting the
+     * home role hands the system a new default launcher: the OS brings THIS activity up the
+     * moment the user picks us in Settings, while the onboarding task that asked for the role
+     * is still sitting behind it — never resumed, and excluded from recents, so the user has no
+     * way back to it. The run would sit at its current step forever and the remaining screens
+     * (language, welcome, intro on the paid order) would never be seen.
+     *
+     * Resolution starts AT the stored step rather than after it: the step that was interrupted
+     * is usually the default-home ask, which is exactly the entry that is now satisfied and
+     * gets stepped over. The screen is launched on top and the home is left underneath, so the
+     * eventual [goHome] lands on a home screen that is already built.
+     */
+    fun resumeIfUnfinished(activity: Activity): Boolean {
+        if (wasOnboardingCompleted(activity)) {
+            return false
+        }
+
+        val next = resolveFrom(activity, activity.config.onboardingStep)
+        if (next == homeActivity()) {
+            return false
+        }
+
+        log("home reached mid-run → resuming onboarding")
+        activity.startActivity(onboardingIntent(activity, next))
+        return true
+    }
 
     /**
      * The first screen at or after [from] that still has something to do, committing the step

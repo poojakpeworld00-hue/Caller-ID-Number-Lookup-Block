@@ -156,6 +156,28 @@
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="4" />
 
+            <!-- Second panel slot, under the suggested apps —
+                 `launcher_ads.right_panel.suggested_banner`, off unless Remote Config asks
+                 for it. It scrolls with the panel content; the frame at the bottom of the
+                 panel is the pinned one. -->
+            <FrameLayout
+                android:id="@+id/ad_suggested_frame"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:visibility="gone">
+
+                <com.facebook.shimmer.ShimmerFrameLayout
+                    android:id="@+id/ad_suggested_shimmer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#ccc">
+
+                    <include layout="@layout/googlenativebanner" />
+
+                </com.facebook.shimmer.ShimmerFrameLayout>
+            </FrameLayout>
+
             <TextView
                 android:id="@+id/panel_recent_header"
                 android:layout_width="match_parent"

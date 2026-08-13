@@ -18,6 +18,7 @@ import com.calleridapp.numberlookup.launcher.helpers.riseIn
 import com.calleridapp.numberlookup.launcher.helpers.stampIn
 import com.calleridapp.numberlookup.launcher.helpers.twinkle
 import com.calleridapp.numberlookup.util.followAdContainer
+import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.viewBinding
 import org.fossify.commons.helpers.isQPlus
 
@@ -72,6 +73,11 @@ class OnboardingDefaultLauncherActivity : SimpleActivity() {
 
         binding.onboardingSetDefault.setOnClickListener { openHomeSettings() }
         binding.onboardingSkip.setOnClickListener { goToNextStep() }
+
+        // `onboarding.set_default.skip_enabled: false` takes the opt-out away: the CTA is the
+        // only button left, and Back still falls through to the role dialog below.
+        val ui = LauncherAdsConfig.onboardingUi(this, LauncherAdsConfig.OnboardScreen.SET_DEFAULT)
+        binding.onboardingSkip.beVisibleIf(ui.skipEnabled)
 
         // Back gets one last ask: the role dialog, the cheapest version of the request. It is
         // the same stage 2 the CTA reaches after the settings page, so cancelling it lands in

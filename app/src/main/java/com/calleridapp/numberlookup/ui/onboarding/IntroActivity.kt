@@ -21,6 +21,7 @@ import com.calleridapp.numberlookup.ui.ShellActivity
 import com.calleridapp.numberlookup.ui.intro.IntroRevealConfig
 import com.calleridapp.numberlookup.ui.intro.IntroRevealPolicy
 import com.calleridapp.numberlookup.util.followAdContainer
+import org.fossify.commons.extensions.beVisibleIf
 
 class IntroActivity : HostActivity<ActivityOnboardingBinding>() {
 
@@ -75,6 +76,11 @@ class IntroActivity : HostActivity<ActivityOnboardingBinding>() {
             override fun onPageSelected(position: Int) = updateDots(position)
         })
 
+        // `onboarding.intro.skip_enabled: false` hides Skip, so the carousel has to be paged
+        // through to its end (Back still moves forward, see below).
+        val ui = LauncherAdsConfig.onboardingUi(this, LauncherAdsConfig.OnboardScreen.INTRO)
+        binding.btnSkip.beVisibleIf(ui.skipEnabled)
+
         binding.btnSkip.setOnClickListener { finishOnboarding() }
         binding.btnNext.setOnClickListener {
             val current = binding.viewPager.currentItem
@@ -88,12 +94,14 @@ class IntroActivity : HostActivity<ActivityOnboardingBinding>() {
         // Back walks FORWARD through the pages (1 → 2 → 3) with the pager's smooth
         // scroll, so every page is seen before the user can leave. Only once the
         // last page is showing does back skip out — same path as the Skip button.
+        // `back_action: "next_screen"` overrides that: any Back leaves for the next
+        // screen straight away, wherever the carousel has got to.
         // The callback stays enabled so back never falls through to HostActivity's
         // exit handler; `forwarding` blocks a double finish.
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 val current = binding.viewPager.currentItem
-                if (current < pages.lastIndex) {
+                if (!ui.backAdvances && current < pages.lastIndex) {
                     binding.viewPager.setCurrentItem(current + 1, true)
                 } else if (!forwarding) {
                     forwarding = true
@@ -179,7 +187,7 @@ class IntroActivity : HostActivity<ActivityOnboardingBinding>() {
             LauncherAdsConfig.runOnboardingInter(this, LauncherAdsConfig.OnboardScreen.INTRO) {
                 // In the launcher's first run, hand back to the order — usually the language
                 // picker, but the order decides. Outside it, this is the last screen.
-                if (LauncherFlow.isOnboarding(this)) {
+                if (LauncherFlow.isOnboardingActive(this)) {
                     LauncherFlow.advance(this)
                 } else {
                     LauncherFlow.goHome(this)

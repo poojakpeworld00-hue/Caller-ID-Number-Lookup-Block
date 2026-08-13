@@ -194,6 +194,26 @@ The screens shown on first run, in this order. Names: `welcome`, `set_default`, 
   (`default_home_screen.enabled: false`) or by `intro_display` cadence is skipped even when
   listed here.
 
+### `right_panel.suggested_banner` — the slot under the panel's suggested apps
+
+Same shape as `bottom_native`, **off unless the block is present**, and a `native_banner` by
+default — it sits between two sections, so a tall renderer would push the recents and the
+search results off the screen. It scrolls with the panel; `bottom_native` is the pinned one.
+
+```json
+"right_panel": {
+  "bottom_native":     { "enabled": true, "ad_type": "native", "native_type": "mid2", "banner_type": "adaptive", "ad_unit_id": "" },
+  "suggested_banner":  { "enabled": true, "ad_type": "native", "native_type": "native_banner", "banner_type": "adaptive", "ad_unit_id": "" }
+}
+```
+
+### `app_drawer.bottom_native` — the slot at the bottom of the swipe-up drawer
+
+Same shape as `right_panel.bottom_native`, but **off unless the block is present** — the drawer
+shipped without an ad, so a config that says nothing leaves it that way. The frame rides the
+app list as row 0, so it scrolls away with the apps rather than holding a strip of the drawer;
+it spans the full grid width and the fast-scroller keeps working over it.
+
 ### `onboarding.<screen>` — per-screen ads on the first-run screens
 
 Screens: `welcome`, `set_default`, `intro`, `language`.
@@ -202,6 +222,8 @@ Screens: `welcome`, `set_default`, `intro`, `language`.
 |---|---|---|
 | `inter_enabled` | bool | interstitial on that screen's continue/skip action, per screen. |
 | `ads_counter` | int | skip-then-show pacing for that screen's interstitial, own counter. |
+| `skip_enabled` | bool | show the Skip button. `false` makes the screen a required step — the CTA is the only way forward (Back still behaves as it did). Default `true`. |
+| `back_action` | `next_page` \| `next_screen` | `intro` only. `next_page` (default) = Back walks forward through the carousel, so every page is seen. `next_screen` = any Back leaves for the next screen straight away. |
 | `slot.enabled` | bool | the on-screen ad frame (the mid native above the CTA today). |
 | `slot.ad_type` | `native` \| `banner` \| `none` | native or banner in that frame. |
 | `slot.native_type` | `mid` \| `mid2` \| `big` \| `native_banner` | which native renderer. |
@@ -218,6 +240,79 @@ Screens: `welcome`, `set_default`, `intro`, `language`.
 - In DEBUG every resolution is logged under `LauncherAdsConfig`, including which variant
   (`defaultHome` / `notDefaultHome`) was merged; the first-run routing logs under
   `LauncherFlow`.
+
+## The two audience flows
+
+`launcher_ads` sits inside the `marketing` / `organic` split of the getData response (see
+`ADDashboardActivity.audienceRoot`), so the paid and organic funnels are just two copies of the
+block. Paste each into its own audience.
+
+### Organic
+
+Welcome → set as default → Home. No language picker, no intro carousel.
+
+```json
+"launcher_ads": {
+  "app_click":   { "enabled": false },
+  "swipe_right": { "enabled": true, "ad_type": "inter", "ads_counter": 10, "fallback_link_enabled": false, "fallback_link": "" },
+  "swipe_left":  { "enabled": true, "ad_type": "inter", "ads_counter": 10, "fallback_link_enabled": false, "fallback_link": "" },
+  "home_hint":   { "enabled": true, "swipeHints": ["right", "left", "up"], "show_mode": "once", "interval": 0, "auto_hide_sec": 0 },
+  "right_panel": { "bottom_native": { "enabled": true,  "ad_type": "native", "native_type": "mid2", "banner_type": "adaptive", "ad_unit_id": "" } },
+  "app_drawer":  { "bottom_native": { "enabled": false, "ad_type": "none",   "native_type": "mid2", "banner_type": "adaptive", "ad_unit_id": "" } },
+  "default_home_screen": { "enabled": true, "skip_if_default": true, "skip_rest_on_grant": true },
+  "onboarding": {
+    "order": ["welcome", "set_default"],
+    "welcome":     { "inter_enabled": false, "ads_counter": 0, "skip_enabled": true,
+                     "slot": { "enabled": true,  "ad_type": "banner", "native_type": "mid", "banner_type": "adaptive", "ad_unit_id": "" } },
+    "set_default": { "inter_enabled": false, "ads_counter": 0, "skip_enabled": true,
+                     "slot": { "enabled": false, "ad_type": "none",  "native_type": "mid", "banner_type": "adaptive", "ad_unit_id": "" } }
+  }
+}
+```
+
+### Paid
+
+Set as default → language → welcome → intro → Home, and the flow continues whether or not the
+role is granted (`skip_rest_on_grant: false`).
+
+```json
+"launcher_ads": {
+  "app_click":   { "enabled": true, "ad_type": "inter", "ads_counter": 6, "fallback_link_enabled": false, "fallback_link": "" },
+  "swipe_right": { "enabled": true, "ad_type": "inter", "ads_counter": 3, "fallback_link_enabled": false, "fallback_link": "" },
+  "swipe_left":  { "enabled": true, "ad_type": "inter", "ads_counter": 3, "fallback_link_enabled": false, "fallback_link": "" },
+  "home_hint":   { "enabled": true, "swipeHints": ["right", "left", "up"], "show_mode": "once", "interval": 0, "auto_hide_sec": 0 },
+  "right_panel": { "bottom_native": { "enabled": true, "ad_type": "native", "native_type": "mid2", "banner_type": "adaptive", "ad_unit_id": "" } },
+  "app_drawer":  { "bottom_native": { "enabled": true, "ad_type": "native", "native_type": "mid2", "banner_type": "adaptive", "ad_unit_id": "" } },
+  "default_home_screen": { "enabled": true, "skip_if_default": true, "skip_rest_on_grant": false },
+  "onboarding": {
+    "order": ["set_default", "language", "welcome", "intro"],
+    "set_default": { "inter_enabled": false, "ads_counter": 0, "skip_enabled": false,
+                     "slot": { "enabled": true, "ad_type": "banner", "native_type": "mid", "banner_type": "adaptive", "ad_unit_id": "" } },
+    "language":    { "inter_enabled": false, "ads_counter": 0,
+                     "slot": { "enabled": true, "ad_type": "native", "native_type": "big", "banner_type": "adaptive", "ad_unit_id": "" } },
+    "welcome":     { "inter_enabled": true,  "ads_counter": 0, "skip_enabled": true,
+                     "slot": { "enabled": true, "ad_type": "banner", "native_type": "mid", "banner_type": "adaptive", "ad_unit_id": "" } },
+    "intro":       { "inter_enabled": false, "ads_counter": 0, "skip_enabled": true, "back_action": "next_screen",
+                     "slot": { "enabled": true, "ad_type": "native", "native_type": "big", "banner_type": "adaptive", "ad_unit_id": "" } }
+  }
+}
+```
+
+### The rest of each flow
+
+Two things in these funnels live outside `launcher_ads`:
+
+- **Splash ads** — `is_splash_ads` / `is_splash_inter_show`, both `false` for "Splash >> No Ads".
+- **Permissions** — the `permission_engine` block, which is audience-split too. Each rule's
+  `activities` list names the screens that ask for it:
+
+  | flow | notification | phone state |
+  |---|---|---|
+  | organic | `["OnboardingWelcomeActivity"]` | `["OnboardingWelcomeActivity"]` |
+  | paid | `["OnboardingWelcomeActivity"]` | `["OnboardingWelcomeActivity"]` |
+
+  Dropping `LocaleActivity` from both lists is what makes the language picker
+  permission-free; the intro carousel and the default-home screen never ask.
 
 ## Where it is implemented
 

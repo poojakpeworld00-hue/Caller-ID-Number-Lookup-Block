@@ -94,6 +94,7 @@ import com.calleridapp.numberlookup.launcher.helpers.CLOCK_ROW_SPAN
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_FOLDER
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_ICON
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_SHORTCUT
+import com.calleridapp.numberlookup.launcher.helpers.LauncherFlow
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_WIDGET
 import com.calleridapp.numberlookup.launcher.helpers.IconCache
 import com.calleridapp.numberlookup.launcher.helpers.PSEUDO_WIDGET_CLOCK
@@ -225,6 +226,14 @@ class MainActivity : SimpleActivity(), FlingListener {
 
         setupWallpaperColorListener()
 
+        // Granting the home role makes the system open us immediately, over an onboarding task
+        // that is still mid-run — so the home screen can be the first thing a user sees while
+        // steps are still pending. Hand the run back its screen (it opens on top of this one)
+        // and leave the coach mark for the launch that really is the end of onboarding.
+        if (LauncherFlow.resumeIfUnfinished(this)) {
+            return
+        }
+
         startSwipeHintRun()
     }
 
@@ -313,8 +322,25 @@ class MainActivity : SimpleActivity(), FlingListener {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun showSwipeHint(direction: LauncherAdsConfig.HintDirection, autoHideSec: Int) {
         val travel = resources.getDimension(R.dimen.swipe_hint_travel)
+
+        // The overlay has to swallow the touches it covers: it is only a background, so without
+        // this a tap falls through to the home screen underneath and opens whatever is behind
+        // the hint — the search pill, or an app icon. The gesture detector is still fed, so
+        // both routes work: the taught swipe as usual, and a tap anywhere doing the same thing
+        // (see homeScreenClicked → performHintAction).
+        binding.swipeHint.setOnTouchListener { _, event ->
+            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                // the Activity's own ACTION_DOWN bookkeeping never runs for these events
+                mIgnoreXMoveEvents = false
+                mIgnoreYMoveEvents = false
+                mIgnoreUpEvent = false
+            }
+            runCatching { mDetector.onTouchEvent(event) }
+            true
+        }
 
         mSwipeHintAnimators.forEach { it.cancel() }
         mSwipeHintAnimators.clear()
@@ -366,6 +392,21 @@ class MainActivity : SimpleActivity(), FlingListener {
         }
     }
 
+    /**
+     * Runs the gesture the visible hint is teaching, as if the user had made it — the fling
+     * handlers own the ad pacing and mark the hint done, so a tap and a swipe land in exactly
+     * the same place.
+     */
+    private fun performHintAction() {
+        when (mHomeHint?.directions?.getOrNull(config.swipeHintIndex)) {
+            LauncherAdsConfig.HintDirection.RIGHT -> onFlingRight()
+            LauncherAdsConfig.HintDirection.LEFT -> onFlingLeft()
+            LauncherAdsConfig.HintDirection.UP -> onFlingUp()
+            LauncherAdsConfig.HintDirection.DOWN -> onFlingDown()
+            null -> hideSwipeHint()
+        }
+    }
+
     private fun captionFor(direction: LauncherAdsConfig.HintDirection): Int = when (direction) {
         LauncherAdsConfig.HintDirection.RIGHT -> R.string.swipe_right_hint
         LauncherAdsConfig.HintDirection.LEFT -> R.string.swipe_left_hint
@@ -379,6 +420,7 @@ class MainActivity : SimpleActivity(), FlingListener {
         }
 
         binding.swipeHint.removeCallbacks(mSwipeHintHider)
+        binding.swipeHint.setOnTouchListener(null)
         mSwipeHintAnimators.forEach { it.cancel() }
         mSwipeHintAnimators.clear()
         binding.swipeHint.beGone()
@@ -418,6 +460,14 @@ class MainActivity : SimpleActivity(), FlingListener {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+
+        // Same as onCreate: a home intent can land here with the first run still pending, once
+        // this activity already exists. It is only reachable that way after the role changed
+        // under us, so the run has a screen owing.
+        if (LauncherFlow.resumeIfUnfinished(this)) {
+            return
+        }
+
         val wasAnyFragmentOpen = isAllAppsFragmentExpanded() || isWidgetsFragmentExpanded()
         if (wasJustPaused) {
             if (isAllAppsFragmentExpanded()) {
@@ -982,13 +1032,15 @@ class MainActivity : SimpleActivity(), FlingListener {
             null
         )
 
-        if (
-            fragment is AllAppsFragmentBinding
-            && config.showSearchBar
-            && config.autoShowKeyboardInAppDrawer
-        ) {
-            fragment.root.post {
-                showKeyboard(fragment.searchBar.binding.topToolbarSearch)
+        if (fragment is AllAppsFragmentBinding) {
+            // asked on every open so the slot renders whatever has been preloaded since the
+            // last one, the same way the side panel refreshes itself
+            fragment.root.onDrawerShown()
+
+            if (config.showSearchBar && config.autoShowKeyboardInAppDrawer) {
+                fragment.root.post {
+                    showKeyboard(fragment.searchBar.binding.topToolbarSearch)
+                }
             }
         }
 
@@ -1030,7 +1082,7 @@ class MainActivity : SimpleActivity(), FlingListener {
     }
 
     fun homeScreenLongPressed(eventX: Float, eventY: Float) {
-        if (isAllAppsFragmentExpanded() || isWidgetsFragmentExpanded()) {
+        if (isAllAppsFragmentExpanded() || isWidgetsFragmentExpanded() || binding.swipeHint.isVisible) {
             return
         }
 
@@ -1047,6 +1099,14 @@ class MainActivity : SimpleActivity(), FlingListener {
     }
 
     fun homeScreenClicked(eventX: Float, eventY: Float) {
+        // While the coach mark is up a tap belongs to it, not to the icon underneath: it does
+        // whatever the hint is teaching, so the panel (or the drawer, or the caller-ID app)
+        // opens by tap just as it does by swipe.
+        if (binding.swipeHint.isVisible) {
+            performHintAction()
+            return
+        }
+
         binding.homeScreenGrid.root.hideResizeLines()
         val (x, y) = binding.homeScreenGrid.root.intoViewSpaceCoords(eventX, eventY)
         val clickedGridItem = binding.homeScreenGrid.root.isClickingGridItem(x.toInt(), y.toInt())
@@ -1059,6 +1119,10 @@ class MainActivity : SimpleActivity(), FlingListener {
     }
 
     fun homeScreenDoubleTapped(eventX: Float, eventY: Float) {
+        if (binding.swipeHint.isVisible) {
+            return
+        }
+
         val (x, y) = binding.homeScreenGrid.root.intoViewSpaceCoords(eventX, eventY)
         val clickedGridItem = binding.homeScreenGrid.root.isClickingGridItem(x.toInt(), y.toInt())
         if (clickedGridItem != null) {

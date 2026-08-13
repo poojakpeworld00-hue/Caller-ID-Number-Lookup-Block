@@ -30,6 +30,7 @@ import com.calleridapp.admesh.domain.logPermissionResult
 import com.calleridapp.admesh.presentation.ADDashboardActivity
 import com.calleridapp.admesh.presentation.oninterAds.InterstitialBack
 import com.calleridapp.admesh.presentation.oninterAds.InterstitialNormal
+import com.calleridapp.numberlookup.data.LocaleRegistry
 import com.calleridapp.numberlookup.data.VaultRegistry
 import com.calleridapp.numberlookup.util.AppVault
 import com.calleridapp.numberlookup.util.followAdContainer
@@ -225,9 +226,10 @@ abstract class HostActivity<DB : ViewDataBinding> : ADDashboardActivity() {
         val current = resources.configuration.locales[0].language
 
         if (normalizedLang != current) {
-            AppCompatDelegate.setApplicationLocales(
-                LocaleListCompat.forLanguageTags(normalizedLang)
-            )
+            // Through LocaleRegistry, not AppCompat directly: the framework throws when the
+            // restart it wants would touch the home task, and this runs before super.onCreate
+            // on every screen — an escape here takes the whole activity down.
+            LocaleRegistry.apply(normalizedLang)
         }
     }
 

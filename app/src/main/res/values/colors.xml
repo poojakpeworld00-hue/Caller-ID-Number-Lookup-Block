@@ -60,28 +60,32 @@
 
     <!-- ===== Splash redesign (2026) — scoped to the splash so the app-wide
          palette is untouched. Night overrides live in values-night/colors.xml,
-         so the hero gradient + card flip light/dark automatically. ===== -->
-    <color name="splash_grad_start">#00897B</color>
-    <color name="splash_grad_center">#00A392</color>
-    <color name="splash_grad_end">#0FBFA4</color>
-    <color name="splash_accent">#00897B</color>
-    <color name="splash_accent_2">#0FBFA4</color>
+         so the hero gradient + card flip light/dark automatically.
+
+         The greens are sampled straight out of mipmap/ic_launcher.png so the splash
+         and the app icon are the same brand colour: #047439 (icon's darkest, bottom
+         right) → #15A73D (mid) → #37C747 (lightest, top right). ===== -->
+    <color name="splash_grad_start">#047439</color>
+    <color name="splash_grad_center">#15A73D</color>
+    <color name="splash_grad_end">#37C747</color>
+    <color name="splash_accent">#0E9A3C</color>
+    <color name="splash_accent_2">#37C747</color>
     <color name="splash_ring">#47FFFFFF</color>
-    <color name="splash_field_bg">#F0F6F5</color>
+    <color name="splash_field_bg">#F0F7F1</color>
     <color name="splash_field_text">#0F1917</color>
     <color name="splash_card_bg">#FFFFFF</color>
     <color name="splash_card_name">#0F1917</color>
-    <color name="splash_card_sub">#5F7370</color>
-    <color name="splash_chip_bg">#E9F1EF</color>
+    <color name="splash_card_sub">#5F7365</color>
+    <color name="splash_chip_bg">#E9F2EA</color>
     <color name="splash_chip_fg">#47605C</color>
     <color name="splash_verdict_container">#DDF2E7</color>
     <color name="splash_verdict_on">#14663F</color>
     <color name="splash_verified">#1E8E5A</color>
     <!-- Phone illustration -->
     <color name="splash_phone_bg">#FFFFFF</color>
-    <color name="splash_phone_stroke">#DCEDEA</color>
-    <color name="splash_content_line">#D2E7E3</color>
-    <color name="splash_notch">#C2DAD5</color>
+    <color name="splash_phone_stroke">#DCEEDF</color>
+    <color name="splash_content_line">#D3E9D8</color>
+    <color name="splash_notch">#C4DCC8</color>
 
     <!-- ===== Splash "Caller Information" redesign (2026) — white-on-gradient
          tokens shared by light & dark (both hero gradients are deep blue/purple,
@@ -93,11 +97,11 @@
     <color name="splash_scan">#F2FFFFFF</color>          <!-- bright AI-scan arc -->
     <color name="splash_scan_faint">#40FFFFFF</color>    <!-- faint scan ring track -->
     <color name="splash_icon_tile_top">#FFFFFF</color>   <!-- app-icon tile gradient -->
-    <color name="splash_icon_tile_bottom">#E2F4F1</color>
+    <color name="splash_icon_tile_bottom">#E4F5E7</color>
     <color name="splash_pill_bg">#F7FFFFFF</color>       <!-- white verdict pills -->
     <color name="splash_pill_fg">#0F1917</color>
-    <color name="splash_incoming_dot">#D3EEEA</color>    <!-- dot behind incoming glyph -->
-    <color name="splash_incoming_icon">#00695C</color>
+    <color name="splash_incoming_dot">#D6EFDA</color>    <!-- dot behind incoming glyph -->
+    <color name="splash_incoming_icon">#046B32</color>
     <color name="splash_fraud_fg">#A32626</color>        <!-- "Fraud blocked" text -->
     <color name="splash_fraud_icon">#D93B3B</color>      <!-- circle-slash icon -->
     <color name="splash_bar_bg">#40FFFFFF</color>        <!-- progress track -->

@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -30,20 +31,53 @@ class LaunchersAdapter(
     val activity: SimpleActivity,
     val allAppsListener: AllAppsListener,
     val itemClick: (Any) -> Unit
-) : ListAdapter<AppLauncher, LaunchersAdapter.ViewHolder>(AppLauncherDiffCallback()),
+) : ListAdapter<AppLauncher, RecyclerView.ViewHolder>(AppLauncherDiffCallback()),
     RecyclerViewFastScroller.OnPopupTextUpdate {
 
     // the drawer is translucent black over the wallpaper, labels are always white on it
     private var textColor = Color.WHITE
     private var iconPadding = 0
 
+    /**
+     * The ad frame, carried as row 0 so it scrolls away with the apps instead of holding a
+     * strip of the drawer permanently. It is one long-lived view owned by the fragment — the
+     * holder re-parents it on bind rather than re-rendering it, so scrolling the header out of
+     * view and back does not re-show (and re-count) the ad.
+     */
+    private var adHeader: View? = null
+
+    /** Row 0 is the ad; every launcher position is shifted by this. */
+    private val headerCount: Int get() = if (adHeader != null) 1 else 0
+
     init {
         setHasStableIds(true)
         calculateIconWidth()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
+    fun setAdHeader(view: View?) {
+        if (adHeader === view) {
+            return
+        }
+
+        adHeader = view
+        notifyDataSetChanged()
+    }
+
+    /** True when [position] is the ad row rather than an app. */
+    fun isAdHeader(position: Int): Boolean = headerCount == 1 && position == 0
+
+    override fun getItemCount(): Int = super.getItemCount() + headerCount
+
+    override fun getItemViewType(position: Int): Int =
+        if (isAdHeader(position)) VIEW_TYPE_AD else VIEW_TYPE_LAUNCHER
+
     override fun getItemId(position: Int): Long {
-        return getItem(position).getLauncherIdentifier().hashCode().toLong()
+        if (isAdHeader(position)) {
+            return AD_HEADER_ID
+        }
+
+        return getItem(position - headerCount).getLauncherIdentifier().hashCode().toLong()
     }
 
     fun launchFirstApp(): Boolean {
@@ -52,15 +86,28 @@ class LaunchersAdapter(
         return true
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        if (viewType == VIEW_TYPE_AD) {
+            val host = FrameLayout(parent.context).apply {
+                layoutParams = RecyclerView.LayoutParams(
+                    RecyclerView.LayoutParams.MATCH_PARENT,
+                    RecyclerView.LayoutParams.WRAP_CONTENT
+                )
+            }
+            return AdViewHolder(host)
+        }
+
         val binding = ItemLauncherLabelBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
         return ViewHolder(binding.root)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bindView(getItem(position))
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (holder) {
+            is AdViewHolder -> holder.attach(adHeader)
+            is ViewHolder -> holder.bindView(getItem(position - headerCount))
+        }
     }
 
     override fun submitList(list: MutableList<AppLauncher>?) {
@@ -79,6 +126,28 @@ class LaunchersAdapter(
         if (newTextColor != textColor) {
             textColor = newTextColor
             notifyDataSetChanged()
+        }
+    }
+
+    /**
+     * Holds the shared ad frame. Binding moves the one instance in, detaching it from the
+     * holder it was last in — recycling must not leave it parented to a dead row.
+     */
+    class AdViewHolder(private val host: FrameLayout) : RecyclerView.ViewHolder(host) {
+        fun attach(adView: View?) {
+            if (adView == null || adView.parent === host) {
+                return
+            }
+
+            (adView.parent as? ViewGroup)?.removeView(adView)
+            host.removeAllViews()
+            host.addView(
+                adView,
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT
+                )
+            )
         }
     }
 
@@ -155,9 +224,16 @@ class LaunchersAdapter(
         }
     }
 
-    override fun onChange(position: Int) = currentList.getOrNull(position)?.getBubbleText() ?: ""
+    override fun onChange(position: Int) =
+        currentList.getOrNull(position - headerCount)?.getBubbleText() ?: ""
 
     companion object {
+        const val VIEW_TYPE_LAUNCHER = 0
+        const val VIEW_TYPE_AD = 1
+
+        /** Stable ids are on, so the ad row needs one of its own that no launcher can collide with. */
+        private const val AD_HEADER_ID = Long.MIN_VALUE
+
         private const val LAUNCHER_SCALE_NORMAL = 1f
         private const val LAUNCHER_SCALE_PRESSED = 1.15f
         private const val LAUNCHER_SCALE_UP_DURATION = 100L

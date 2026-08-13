@@ -12,6 +12,7 @@ import com.calleridapp.numberlookup.launcher.helpers.riseIn
 import com.calleridapp.numberlookup.launcher.helpers.stampIn
 import com.calleridapp.numberlookup.permission.AccessEngine
 import com.calleridapp.numberlookup.util.followAdContainer
+import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.viewBinding
 
 /**
@@ -44,6 +45,11 @@ class OnboardingWelcomeActivity : SimpleActivity() {
 
         binding.onboardingContinue.setOnClickListener { requestOnboardingPermissions() }
         binding.onboardingSkip.setOnClickListener { goToNextStep() }
+
+        // `onboarding.welcome.skip_enabled: false` makes the screen a required step —
+        // Continue (and Back, which behaves like Skip) are then the only ways on.
+        val ui = LauncherAdsConfig.onboardingUi(this, LauncherAdsConfig.OnboardScreen.WELCOME)
+        binding.onboardingSkip.beVisibleIf(ui.skipEnabled)
 
         // Back moves the flow on rather than out. Onboarding runs once and there is nothing
         // behind this screen worth returning to, so Back behaves like Skip.
