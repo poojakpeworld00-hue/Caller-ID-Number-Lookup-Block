@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Process
 import android.util.Log
+import com.calleridapp.numberlookup.launcher.extensions.isDefaultLauncher
 import com.calleridapp.numberlookup.ui.splash.LaunchActivity
 
 /**
@@ -103,7 +104,33 @@ object CrashGuard {
         return previous != 0L && now - previous in 0..LOOP_WINDOW_MS
     }
 
+    /**
+     * Restarts the app at the right entry point for what it currently is.
+     *
+     * When this app holds the HOME role it *is* the device home screen, so it comes back through
+     * the home screen rather than the splash — and it gets there by firing the real HOME intent
+     * rather than starting the Activity directly. Two reasons:
+     *
+     *  - The system re-establishes the home task itself, with the right activity type. Starting a
+     *    default-affinity Activity into that task by hand is the trap that stopped the post-call
+     *    screen from ever appearing (see `taskAffinity=""` in the manifest).
+     *  - `LaunchActivity` also carries the package's default affinity, so `CLEAR_TASK` on it would
+     *    clear the *home* task and leave the splash rooted in it.
+     *
+     * A generic HOME intent normally risks handing the user to whichever launcher is default —
+     * the reason [com.calleridapp.numberlookup.ui.ShellActivity] deliberately avoids it — but in
+     * this branch we are that launcher, so it can only land here.
+     */
     private fun relaunch(app: Application) {
+        if (runCatching { app.isDefaultLauncher() }.getOrDefault(false)) {
+            app.startActivity(
+                Intent(Intent.ACTION_MAIN)
+                    .addCategory(Intent.CATEGORY_HOME)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+            return
+        }
+
         app.startActivity(
             Intent(app, LaunchActivity::class.java).addFlags(
                 Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
