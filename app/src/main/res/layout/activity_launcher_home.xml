@@ -32,6 +32,12 @@
         layout="@layout/left_panel_fragment"
         android:visibility="gone" />
 
+    <!-- The "−1" panel: the caller-ID app's own home UI, slid in on a fling RIGHT -->
+    <include
+        android:id="@+id/caller_panel"
+        layout="@layout/caller_panel_fragment"
+        android:visibility="gone" />
+
     <!-- one item_swipe_hint row per direction in `launcher_ads.home_hint.swipeHints`,
          inflated by MainActivity.showSwipeHint -->
     <LinearLayout

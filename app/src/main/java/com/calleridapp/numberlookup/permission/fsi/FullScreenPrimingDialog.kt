@@ -12,7 +12,7 @@ import android.widget.TextView
 import com.calleridapp.admesh.domain.logKeyEvent
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.permission.AccessEngine
-import com.calleridapp.numberlookup.ui.ShellActivity
+import com.calleridapp.numberlookup.ui.home.HomeShellHost
 
 /**
  * The ShellActivity Full-Screen-Intent priming dialog. Same visual language as the
@@ -61,12 +61,12 @@ object FullScreenPrimingDialog {
         view.findViewById<TextView>(R.id.fsDialogButton).setOnClickListener {
             activity.logKeyEvent("FSI_Dialog_Enable")
             // Close the dialog first, then ask notification (targeted request), and
-            // only after that launch FSI settings in-task via ShellActivity's
-            // launcher. The watcher + ShellActivity.onResume handle the return.
+            // only after that launch FSI settings in-task via the shell controller's
+            // launcher. The watcher + the host's onResume handle the return.
             enableTapped = true
             dialog.dismiss()
             AccessEngine.request(activity, "notification") {
-                (activity as? ShellActivity)?.openFsiSettings()
+                (activity as? HomeShellHost)?.homeShellController?.openFsiSettings()
             }
         }
         view.findViewById<TextView>(R.id.fsDialogLater).setOnClickListener {

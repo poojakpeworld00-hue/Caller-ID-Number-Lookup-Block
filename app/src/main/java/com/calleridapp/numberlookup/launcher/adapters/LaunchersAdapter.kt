@@ -39,15 +39,32 @@ class LaunchersAdapter(
     private var iconPadding = 0
 
     /**
-     * The ad frame, carried as row 0 so it scrolls away with the apps instead of holding a
-     * strip of the drawer permanently. It is one long-lived view owned by the fragment — the
-     * holder re-parents it on bind rather than re-rendering it, so scrolling the header out of
+     * The ad frame, carried as a row of the app list so it scrolls away with the apps instead of
+     * holding a strip of the drawer permanently. It is one long-lived view owned by the fragment
+     * — the holder re-parents it on bind rather than re-rendering it, so scrolling it out of
      * view and back does not re-show (and re-count) the ad.
      */
     private var adHeader: View? = null
 
-    /** Row 0 is the ad; every launcher position is shifted by this. */
+    /** Which row of the grid the ad occupies — `app_drawer.bottom_native.position` in RC. */
+    private var adRow = 0
+
+    /** One extra item in the list when the ad is present. */
     private val headerCount: Int get() = if (adHeader != null) 1 else 0
+
+    /**
+     * Flat adapter index of the ad, or -1 when there is no ad.
+     *
+     * Derived rather than stored: it depends on the live column count (the user can change it in
+     * launcher settings) and on the list length, and both move underneath us. Clamped to the end
+     * of the list, so a row past the last app puts the ad last instead of dropping it.
+     */
+    private val adPosition: Int
+        get() {
+            if (adHeader == null) return -1
+            val columns = activity.config.drawerColumnCount.coerceAtLeast(1)
+            return (adRow * columns).coerceAtMost(currentList.size)
+        }
 
     init {
         setHasStableIds(true)
@@ -55,29 +72,40 @@ class LaunchersAdapter(
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun setAdHeader(view: View?) {
-        if (adHeader === view) {
+    fun setAdSlot(view: View?, row: Int) {
+        val newRow = row.coerceAtLeast(0)
+        if (adHeader === view && adRow == newRow) {
             return
         }
 
         adHeader = view
+        adRow = newRow
         notifyDataSetChanged()
     }
 
     /** True when [position] is the ad row rather than an app. */
-    fun isAdHeader(position: Int): Boolean = headerCount == 1 && position == 0
+    fun isAdRow(position: Int): Boolean = position == adPosition
+
+    /**
+     * Maps an adapter position onto its index in the launcher list — everything after the ad row
+     * is shifted by one.
+     */
+    private fun launcherIndex(position: Int): Int {
+        val ad = adPosition
+        return if (ad in 0 until position) position - 1 else position
+    }
 
     override fun getItemCount(): Int = super.getItemCount() + headerCount
 
     override fun getItemViewType(position: Int): Int =
-        if (isAdHeader(position)) VIEW_TYPE_AD else VIEW_TYPE_LAUNCHER
+        if (isAdRow(position)) VIEW_TYPE_AD else VIEW_TYPE_LAUNCHER
 
     override fun getItemId(position: Int): Long {
-        if (isAdHeader(position)) {
+        if (isAdRow(position)) {
             return AD_HEADER_ID
         }
 
-        return getItem(position - headerCount).getLauncherIdentifier().hashCode().toLong()
+        return getItem(launcherIndex(position)).getLauncherIdentifier().hashCode().toLong()
     }
 
     fun launchFirstApp(): Boolean {
@@ -106,7 +134,7 @@ class LaunchersAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is AdViewHolder -> holder.attach(adHeader)
-            is ViewHolder -> holder.bindView(getItem(position - headerCount))
+            is ViewHolder -> holder.bindView(getItem(launcherIndex(position)))
         }
     }
 
@@ -225,7 +253,7 @@ class LaunchersAdapter(
     }
 
     override fun onChange(position: Int) =
-        currentList.getOrNull(position - headerCount)?.getBubbleText() ?: ""
+        currentList.getOrNull(launcherIndex(position))?.getBubbleText() ?: ""
 
     companion object {
         const val VIEW_TYPE_LAUNCHER = 0

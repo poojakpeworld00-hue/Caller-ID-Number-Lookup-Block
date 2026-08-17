@@ -25,7 +25,7 @@ import com.calleridapp.admesh.domain.logKeyEvent
 import com.calleridapp.admesh.domain.logPermissionResult
 import com.calleridapp.admesh.presentation.AppOpenAdRegistry
 import com.calleridapp.numberlookup.R
-import com.calleridapp.numberlookup.ui.ShellActivity
+import com.calleridapp.numberlookup.ui.home.HomeShellHost
 import com.calleridapp.numberlookup.ui.intro.IntroRevealConfig
 import com.calleridapp.numberlookup.ui.intro.IntroRevealPolicy
 import com.calleridapp.numberlookup.ui.terms.FloatKit
@@ -284,20 +284,20 @@ class AccessSheetDialog : BottomSheetDialogFragment() {
     }
 
     private fun launchOverlay(finishAfter: Boolean) {
-        // Reuse ShellActivity's overlay flow — it opens the system page with the
-        // NO_HISTORY/EXCLUDE_FROM_RECENTS intent, watches the grant via
-        // FloatWatchService, auto-returns the app, and drops the Settings page.
-        // The sheet's own launcher had none of that (no auto-back, page lingered).
-        val host = activity as? ShellActivity
-        if (host != null) {
-            host.startOverlayPermissionFlow()
+        // Reuse the home shell's overlay flow — it opens the system page with the
+        // NO_HISTORY/EXCLUDE_FROM_RECENTS intent, watches the grant with an in-activity
+        // poll, auto-returns the app, and drops the Settings page. The sheet's own
+        // launcher had none of that (no auto-back, page lingered).
+        val controller = (activity as? HomeShellHost)?.homeShellController
+        if (controller != null) {
+            controller.startOverlayPermissionFlow()
             // Continue's last step closes the sheet; the single-row Allow keeps it
             // open so onResume can hide the overlay row once granted.
             if (finishAfter) finishFlow()
             return
         }
 
-        // Fallback (not hosted by ShellActivity): own launcher, no auto-back, but
+        // Fallback (not hosted by a home shell): own launcher, no auto-back, but
         // still the flagged intent so the Settings page doesn't linger.
         finishAfterOverlay = finishAfter
         AppOpenAdRegistry.skipNextAppOpenAd = true

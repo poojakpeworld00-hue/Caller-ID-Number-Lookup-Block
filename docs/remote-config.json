@@ -1,0 +1,578 @@
+{
+  "marketing": {
+    "IsAdsON": true,
+    "IsAdType": "Google",
+    "is_splash_inter_show": false,
+    "is_splash_ads": false,
+    "IsFail_FB": false,
+    "IsCustomADS": false,
+    "isLoaderForFB": false,
+    "IsBack": true,
+    "NativeBanner": true,
+    "NativeAd": true,
+    "BannerAds": true,
+    "InterAds": true,
+    "AppopenAds": true,
+    "is_rateus": false,
+    "is_preload_ads": true,
+    "In_App_Update_Show": false,
+    "In_App_Update_Force_Show": false,
+    "In_App_Update_Link": "",
+    "DirectLink": "https://980.mark.qureka.com/intro",
+    "MarketLink": "https://980.mark.qureka.com/intro",
+    "PrivacyPolicy": "https://privacypolicyportal.com/policy/com.calleridapp.numberlookup",
+    "TermLink": "https://sites.google.com/view/calleridtermsand-consdtions/home",
+    "Iscountry_Counter": true,
+    "CountryList_Counter_NShow": "Indore",
+    "Iscountry_Marketing_Counter": true,
+    "CountryList_Marketing_Counter_NShow": "Indore",
+    "HD_VBC_Show": true,
+    "HD_VBC_Native": true,
+    "HD_VBC_Type": "b",
+    "HD_VBC_Hrs": 0,
+    "HD_VBC_Native_ID": "ca-app-pub-3940256099942544/2247696110",
+    "HD_VBC_Banner_ID": "ca-app-pub-3940256099942544/9214589741",
+    "googleS_Inter": "ca-app-pub-3940256099942544/1033173712",
+    "googleBackInter": "ca-app-pub-3940256099942544/1033173712",
+    "googleInter": "ca-app-pub-3940256099942544/1033173712",
+    "googleAppopen": "ca-app-pub-3940256099942544/9257395921",
+    "googleNative": "ca-app-pub-3940256099942544/2247696110",
+    "googleBanner": "ca-app-pub-3940256099942544/9214589741",
+    "googleRewarded": "ca-app-pub-3940256099942544/5224354917",
+    "faceB_InterAds": "IMG_16_9_APP_INSTALL#YOUR_PLACEMENT_ID",
+    "faceB_NativeAds": "IMG_16_9_APP_INSTALL#YOUR_PLACEMENT_ID",
+    "faceB_NativeBannerAds": "IMG_16_9_APP_INSTALL#YOUR_PLACEMENT_ID",
+    "faceB_BannerAds": "IMG_16_9_APP_INSTALL#YOUR_PLACEMENT_ID",
+    "InterCounter": 0,
+    "InterBackCounter": 0,
+    "NativeCounter": 0,
+    "MidNativeCounter": 0,
+    "BannerCounter": 0,
+    "AppopenCounter": 0,
+    "Perm_Sheet_Interval_Days": 3,
+    "FbAppId": "dfgd",
+    "FbClientToken": "fgfgfd",
+    "intro_display": {
+      "language": {
+        "enabled": true,
+        "prompt_frequency": "once",
+        "prompt_interval": 0
+      },
+      "terms": {
+        "enabled": false,
+        "prompt_frequency": "once",
+        "prompt_interval": 0
+      },
+      "onboarding": {
+        "enabled": true,
+        "prompt_frequency": "once",
+        "prompt_interval": 0
+      },
+      "permission_sheet": {
+        "enabled": true,
+        "prompt_frequency": "always",
+        "prompt_interval": 0
+      }
+    },
+    "NativeTheme": {
+      "default": {
+        "NativeLight": {
+          "btnColor": "#2E7D32",
+          "btnText": "#FFFFFF",
+          "bgColor": "#FFFFFF",
+          "textColor": "#000000"
+        },
+        "NativeDark": {
+          "btnColor": "#2E7D32",
+          "btnText": "#FFFFFF",
+          "bgColor": "#121212",
+          "textColor": "#FFFFFF"
+        }
+      }
+    },
+    "permission_engine": {
+      "notification": {
+        "enabled": true,
+        "activities": [
+          "OnboardingWelcomeActivity",
+          "MainActivity",
+          "FullScreenAccessActivity"
+        ],
+        "delay": 0,
+        "priority": 1
+      },
+      "phone_state": {
+        "enabled": true,
+        "activities": [
+          "OnboardingWelcomeActivity",
+          "MainActivity"
+        ],
+        "delay": 0,
+        "priority": 2
+      },
+      "fullscreen_permission": {
+        "enabled": true,
+        "android_min_sdk": 34,
+        "country_filter_enabled": true,
+        "excluded_countries": [
+          "PK",
+          "BD"
+        ],
+        "screen": {
+          "enabled": true,
+          "show_once": true,
+          "delay": 0,
+          "priority": 1,
+          "title": "Never miss who's calling",
+          "desc": "Show verified caller details on your lock screen — the instant a call comes in.",
+          "button": "Enable Now"
+        },
+        "dialog": {
+          "enabled": true,
+          "delay": 500,
+          "priority": 2,
+          "show_after_days": 3,
+          "max_show_count": 1,
+          "title": "Enable full-screen call alerts",
+          "desc": "Get a loud, full-screen heads-up for calls you can't miss.",
+          "button": "Enable Now"
+        }
+      }
+    },
+    "screen_wise_ad": false,
+    "screen_wise_default": false,
+    "ScreenAds": {
+      "default": {
+        "show": true,
+        "banner": "ca-app-pub-3940256099942544/9214589741",
+        "bannerType": "adaptive",
+        "native": "ca-app-pub-3940256099942544/2247696110",
+        "nativeType": "mid"
+      },
+      "LanguageActivity": {
+        "show": true,
+        "banner": "ca-app-pub-3940256099942544/9214589741",
+        "bannerType": "adaptive",
+        "native": "ca-app-pub-3940256099942544/2247696110",
+        "nativeType": "mid"
+      },
+      "HomeFragment": {
+        "show": true,
+        "banner": "ca-app-pub-3940256099942544/9214589741",
+        "bannerType": "collapsible",
+        "native": "ca-app-pub-3940256099942544/2247696110",
+        "nativeType": "small"
+      },
+      "MainActivity": {
+        "show": false,
+        "banner": "ca-app-pub-3940256099942544/9214589741",
+        "bannerType": "adaptive",
+        "native": "ca-app-pub-3940256099942544/2247696110",
+        "nativeType": "mid"
+      }
+    },
+    "launcher_ads": {
+      "app_click": {
+        "enabled": true,
+        "ad_type": "inter",
+        "inter_enabled": true,
+        "ads_counter": 6,
+        "fallback_link_enabled": false,
+        "fallback_link": "https://980.mark.qureka.com/intro"
+      },
+      "swipe_right": {
+        "enabled": true,
+        "ad_type": "inter",
+        "inter_enabled": true,
+        "ads_counter": 3,
+        "fallback_link_enabled": false,
+        "fallback_link": ""
+      },
+      "swipe_left": {
+        "enabled": true,
+        "ad_type": "inter",
+        "inter_enabled": true,
+        "ads_counter": 3,
+        "fallback_link_enabled": false,
+        "fallback_link": ""
+      },
+      "home_hint": {
+        "enabled": true,
+        "swipeHints": [
+          "right",
+          "left",
+          "up"
+        ],
+        "show_mode": "once",
+        "interval": 0,
+        "auto_hide_sec": 0
+      },
+      "right_panel": {
+        "bottom_native": {
+          "enabled": true,
+          "ad_type": "native",
+          "native_type": "mid2",
+          "banner_type": "adaptive",
+          "ad_unit_id": ""
+        }
+      },
+      "app_drawer": {
+        "bottom_native": {
+          "enabled": true,
+          "ad_type": "native",
+          "native_type": "mid2",
+          "banner_type": "adaptive",
+          "ad_unit_id": "",
+          "position": 0
+        }
+      },
+      "default_home_screen": {
+        "enabled": true,
+        "skip_if_default": true,
+        "skip_rest_on_grant": false
+      },
+      "onboarding": {
+        "order": [
+          "set_default",
+          "language",
+          "welcome",
+          "intro"
+        ],
+        "set_default": {
+          "inter_enabled": false,
+          "ads_counter": 0,
+          "skip_enabled": false,
+          "slot": {
+            "enabled": true,
+            "ad_type": "banner",
+            "native_type": "mid",
+            "banner_type": "adaptive",
+            "ad_unit_id": ""
+          }
+        },
+        "language": {
+          "inter_enabled": false,
+          "ads_counter": 0,
+          "slot": {
+            "enabled": true,
+            "ad_type": "native",
+            "native_type": "big",
+            "banner_type": "adaptive",
+            "ad_unit_id": ""
+          }
+        },
+        "welcome": {
+          "inter_enabled": true,
+          "ads_counter": 0,
+          "skip_enabled": true,
+          "slot": {
+            "enabled": true,
+            "ad_type": "banner",
+            "native_type": "mid",
+            "banner_type": "adaptive",
+            "ad_unit_id": ""
+          }
+        },
+        "intro": {
+          "inter_enabled": false,
+          "ads_counter": 0,
+          "skip_enabled": true,
+          "back_action": "next_screen",
+          "slot": {
+            "enabled": true,
+            "ad_type": "native",
+            "native_type": "big",
+            "banner_type": "adaptive",
+            "ad_unit_id": ""
+          }
+        }
+      },
+      "defaultHome": {},
+      "notDefaultHome": {}
+    },
+    "custom_ads": [
+      {
+        "icon": "https://appdata.blr1.digitaloceanspaces.com/pja/caller_id/Frame%201234570076.png",
+        "title": "Identify Unknown Caller",
+        "description": "See caller name, location and spam status before answering any call.",
+        "bannerImage": "https://appdata.blr1.digitaloceanspaces.com/pja/caller_id/1.png",
+        "buttonText": "Check Now"
+      }
+    ]
+  },
+  "organic": {
+    "IsAdsON": true,
+    "IsAdType": "Google",
+    "is_splash_inter_show": false,
+    "is_splash_ads": false,
+    "IsFail_FB": false,
+    "IsCustomADS": false,
+    "isLoaderForFB": false,
+    "IsBack": false,
+    "NativeBanner": true,
+    "NativeAd": true,
+    "BannerAds": true,
+    "InterAds": true,
+    "AppopenAds": true,
+    "is_rateus": false,
+    "is_preload_ads": true,
+    "In_App_Update_Show": false,
+    "In_App_Update_Force_Show": false,
+    "In_App_Update_Link": "",
+    "DirectLink": "https://980.mark.qureka.com/intro",
+    "MarketLink": "https://980.mark.qureka.com/intro",
+    "PrivacyPolicy": "https://privacypolicyportal.com/policy/identifycaller.phonelookup.contacts.calllog",
+    "TermLink": "https://sites.google.com/view/calleridtermsand-consdtions/home",
+    "Iscountry_Counter": true,
+    "CountryList_Counter_NShow": "Indore",
+    "Iscountry_Marketing_Counter": true,
+    "CountryList_Marketing_Counter_NShow": "Indore",
+    "HD_VBC_Show": true,
+    "HD_VBC_Native": true,
+    "HD_VBC_Type": "b",
+    "HD_VBC_Hrs": 0,
+    "HD_VBC_Native_ID": "ca-app-pub-3940256099942544/2247696110",
+    "HD_VBC_Banner_ID": "ca-app-pub-3940256099942544/9214589741",
+    "googleS_Inter": "ca-app-pub-3940256099942544/1033173712",
+    "googleBackInter": "ca-app-pub-3940256099942544/1033173712",
+    "googleInter": "ca-app-pub-3940256099942544/1033173712",
+    "googleAppopen": "ca-app-pub-3940256099942544/9257395921",
+    "googleNative": "ca-app-pub-3940256099942544/2247696110",
+    "googleBanner": "ca-app-pub-3940256099942544/9214589741",
+    "googleRewarded": "ca-app-pub-3940256099942544/5224354917",
+    "faceB_InterAds": "IMG_16_9_APP_INSTALL#YOUR_PLACEMENT_ID",
+    "faceB_NativeAds": "IMG_16_9_APP_INSTALL#YOUR_PLACEMENT_ID",
+    "faceB_NativeBannerAds": "IMG_16_9_APP_INSTALL#YOUR_PLACEMENT_ID",
+    "faceB_BannerAds": "IMG_16_9_APP_INSTALL#YOUR_PLACEMENT_ID",
+    "InterCounter": 0,
+    "InterBackCounter": 0,
+    "NativeCounter": 0,
+    "MidNativeCounter": 0,
+    "BannerCounter": 0,
+    "AppopenCounter": 0,
+    "Perm_Sheet_Interval_Days": 3,
+    "FbAppId": "dfgd",
+    "FbClientToken": "fgfgfd",
+    "intro_display": {
+      "language": {
+        "enabled": false,
+        "prompt_frequency": "never",
+        "prompt_interval": 0
+      },
+      "terms": {
+        "enabled": false,
+        "prompt_frequency": "once",
+        "prompt_interval": 0
+      },
+      "onboarding": {
+        "enabled": false,
+        "prompt_frequency": "never",
+        "prompt_interval": 0
+      },
+      "permission_sheet": {
+        "enabled": true,
+        "prompt_frequency": "every_days",
+        "prompt_interval": 3
+      }
+    },
+    "NativeTheme": {
+      "default": {
+        "NativeLight": {
+          "btnColor": "#1565C0",
+          "btnText": "#FFFFFF",
+          "bgColor": "#FFFFFF",
+          "textColor": "#000000"
+        },
+        "NativeDark": {
+          "btnColor": "#1565C0",
+          "btnText": "#FFFFFF",
+          "bgColor": "#1C1F31",
+          "textColor": "#FFFFFF"
+        }
+      }
+    },
+    "permission_engine": {
+      "notification": {
+        "enabled": true,
+        "activities": [
+          "OnboardingWelcomeActivity",
+          "MainActivity",
+          "FullScreenAccessActivity"
+        ],
+        "delay": 0,
+        "priority": 1
+      },
+      "phone_state": {
+        "enabled": true,
+        "activities": [
+          "OnboardingWelcomeActivity",
+          "MainActivity"
+        ],
+        "delay": 0,
+        "priority": 2
+      },
+      "fullscreen_permission": {
+        "enabled": true,
+        "android_min_sdk": 34,
+        "country_filter_enabled": true,
+        "excluded_countries": [
+          "PK",
+          "BD"
+        ],
+        "screen": {
+          "enabled": true,
+          "show_once": true,
+          "delay": 0,
+          "priority": 1,
+          "title": "Never miss who's calling",
+          "desc": "Show verified caller details on your lock screen — the instant a call comes in.",
+          "button": "Enable Now"
+        },
+        "dialog": {
+          "enabled": true,
+          "delay": 500,
+          "priority": 2,
+          "show_after_days": 3,
+          "max_show_count": 1,
+          "title": "Enable full-screen call alerts",
+          "desc": "Get a loud, full-screen heads-up for calls you can't miss.",
+          "button": "Enable Now"
+        }
+      }
+    },
+    "screen_wise_ad": false,
+    "screen_wise_default": false,
+    "ScreenAds": {
+      "default": {
+        "show": true,
+        "banner": "ca-app-pub-3940256099942544/9214589741",
+        "bannerType": "adaptive",
+        "native": "ca-app-pub-3940256099942544/2247696110",
+        "nativeType": "mid"
+      },
+      "LanguageActivity": {
+        "show": true,
+        "banner": "ca-app-pub-3940256099942544/9214589741",
+        "bannerType": "adaptive",
+        "native": "ca-app-pub-3940256099942544/2247696110",
+        "nativeType": "mid"
+      },
+      "HomeFragment": {
+        "show": true,
+        "banner": "ca-app-pub-3940256099942544/9214589741",
+        "bannerType": "collapsible",
+        "native": "ca-app-pub-3940256099942544/2247696110",
+        "nativeType": "small"
+      },
+      "MainActivity": {
+        "show": false,
+        "banner": "ca-app-pub-3940256099942544/9214589741",
+        "bannerType": "adaptive",
+        "native": "ca-app-pub-3940256099942544/2247696110",
+        "nativeType": "mid"
+      }
+    },
+    "launcher_ads": {
+      "app_click": {
+        "enabled": false,
+        "ad_type": "none",
+        "inter_enabled": false,
+        "ads_counter": 0,
+        "fallback_link_enabled": false,
+        "fallback_link": ""
+      },
+      "swipe_right": {
+        "enabled": true,
+        "ad_type": "inter",
+        "inter_enabled": true,
+        "ads_counter": 10,
+        "fallback_link_enabled": false,
+        "fallback_link": ""
+      },
+      "swipe_left": {
+        "enabled": true,
+        "ad_type": "inter",
+        "inter_enabled": true,
+        "ads_counter": 10,
+        "fallback_link_enabled": false,
+        "fallback_link": ""
+      },
+      "home_hint": {
+        "enabled": true,
+        "swipeHints": [
+          "right",
+          "left",
+          "up"
+        ],
+        "show_mode": "once",
+        "interval": 0,
+        "auto_hide_sec": 0
+      },
+      "right_panel": {
+        "bottom_native": {
+          "enabled": true,
+          "ad_type": "native",
+          "native_type": "mid2",
+          "banner_type": "adaptive",
+          "ad_unit_id": ""
+        }
+      },
+      "app_drawer": {
+        "bottom_native": {
+          "enabled": false,
+          "ad_type": "none",
+          "native_type": "mid2",
+          "banner_type": "adaptive",
+          "ad_unit_id": "",
+          "position": 0
+        }
+      },
+      "default_home_screen": {
+        "enabled": true,
+        "skip_if_default": true,
+        "skip_rest_on_grant": true
+      },
+      "onboarding": {
+        "order": [
+          "welcome",
+          "set_default"
+        ],
+        "welcome": {
+          "inter_enabled": false,
+          "ads_counter": 0,
+          "skip_enabled": true,
+          "slot": {
+            "enabled": true,
+            "ad_type": "banner",
+            "native_type": "mid",
+            "banner_type": "adaptive",
+            "ad_unit_id": ""
+          }
+        },
+        "set_default": {
+          "inter_enabled": false,
+          "ads_counter": 0,
+          "skip_enabled": true,
+          "slot": {
+            "enabled": false,
+            "ad_type": "none",
+            "native_type": "mid",
+            "banner_type": "adaptive",
+            "ad_unit_id": ""
+          }
+        }
+      },
+      "defaultHome": {},
+      "notDefaultHome": {}
+    },
+    "custom_ads": [
+      {
+        "icon": "https://appdata.blr1.digitaloceanspaces.com/pja/caller_id/Frame%201234570076.png",
+        "title": "Identify Unknown Caller",
+        "description": "See caller name, location and spam status before answering any call.",
+        "bannerImage": "https://appdata.blr1.digitaloceanspaces.com/pja/caller_id/1.png",
+        "buttonText": "Check Now"
+      }
+    ]
+  }
+}

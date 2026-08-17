@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     The launcher's "−1" side panel. Parked at x = -screenWidth and slid in on a fling RIGHT
+     over the home grid, Discover-style. Its whole content is the caller-ID app's own four-tab
+     home UI, committed into callerPanelContainer as a HomeShellFragment — the same fragment
+     ShellActivity hosts, so the panel and the standalone home can never drift apart.
+
+     The bottom banner mirrors ShellActivity's: same include, same ScreenAds key, loaded by
+     CallerPanelFragment on first open (the launcher is not a HostActivity, so nothing loads
+     it automatically here).
+-->
+<com.calleridapp.numberlookup.launcher.fragments.CallerPanelFragment
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/caller_panel_holder"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Bottom banner (loaded on first open, type from ScreenAds config). -->
+    <include
+        android:id="@+id/bannerSlot"
+        layout="@layout/view_bottom_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
+
+    <!-- Full-bleed hairline separating app content from the ad below -->
+    <View
+        android:id="@+id/callerAdBannerDivider"
+        style="@style/AdDivider"
+        android:layout_above="@id/bannerSlot" />
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/callerPanelContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/callerAdBannerDivider" />
+
+</com.calleridapp.numberlookup.launcher.fragments.CallerPanelFragment>

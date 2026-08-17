@@ -72,7 +72,6 @@ import org.fossify.commons.helpers.isOreoMr1Plus
 import com.calleridapp.numberlookup.BuildConfig
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.databinding.ActivityLauncherHomeBinding
-import com.calleridapp.numberlookup.ui.ShellActivity
 import com.calleridapp.numberlookup.databinding.AllAppsFragmentBinding
 import com.calleridapp.numberlookup.databinding.WidgetsFragmentBinding
 import com.calleridapp.numberlookup.launcher.dialogs.RenameItemDialog
@@ -113,8 +112,40 @@ import com.calleridapp.numberlookup.launcher.receivers.LockDeviceAdminReceiver
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import androidx.appcompat.app.AppCompatActivity
+import com.calleridapp.numberlookup.data.LocaleRegistry
+import com.calleridapp.numberlookup.ui.home.HomeShellController
+import com.calleridapp.numberlookup.ui.home.HomeShellHost
+import com.calleridapp.numberlookup.util.applyNativeAdTheme
 
-class MainActivity : SimpleActivity(), FlingListener {
+class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
+
+    override val hostActivity: AppCompatActivity get() = this
+
+    // Not `by lazy`: constructing this registers result launchers, which must happen before
+    // the Activity is STARTED. The caller panel's shell is committed much later than that,
+    // which is exactly why the Activity-bound half lives out here.
+    override val homeShellController = HomeShellController(this)
+
+    /** Back inside the caller panel with its own tab history exhausted just closes it. */
+    override fun onShellBackExhausted() {
+        hideCallerPanel()
+    }
+
+    /**
+     * Pull the launcher back to the front after a system-Settings round trip started from
+     * inside the panel. The panel is a view in this Activity, so it is still open when we
+     * land — the user returns to the tab they left.
+     */
+    override fun bringHostToFront() {
+        runCatching {
+            startActivity(
+                Intent(this, MainActivity::class.java)
+                    .addFlags(HomeShellController.REORDER_FLAGS)
+            )
+        }
+    }
+
     private var mTouchDownX = -1
     private var mTouchDownY = -1
     private var mAllAppsFragmentY = 0
@@ -160,9 +191,21 @@ class MainActivity : SimpleActivity(), FlingListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         useDynamicTheme = false
 
+        // Before super.onCreate, so the grid and both side panels inflate with the chosen
+        // language's resources. HostActivity does this for every other screen; this one does
+        // not extend it, and it hosts the app's own home UI in the caller panel — without this
+        // a language picked during onboarding would not reach either.
+        LocaleRegistry.applySaved(this)
+
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         appLaunched(BuildConfig.APPLICATION_ID)
+        // This is the device HOME, so it can be the first screen after a reboot — and the
+        // native-ad palette keys are global, only ever written by HostActivity, which this is
+        // not. Without this the natives in the app-search panel, the app drawer and the caller
+        // panel's Home tab keep whatever mode some earlier screen left behind, or none at all on
+        // a cold boot straight to home: dark text on a dark card, effectively invisible.
+        applyNativeAdTheme()
         setupEdgeToEdge(
             padTopSystem = listOf(
                 binding.allAppsFragment.root,
@@ -204,6 +247,20 @@ class MainActivity : SimpleActivity(), FlingListener {
             setupFragment(this@MainActivity)
             x = mScreenWidth.toFloat()
             beVisible()
+        }
+
+        // The caller panel comes in from the opposite edge, so it parks on the other side.
+        binding.callerPanel.root.apply {
+            setupFragment(this@MainActivity)
+            x = -mScreenWidth.toFloat()
+            beVisible()
+        }
+
+        // Registration only (update launcher, contact upload, FSI watcher) — nothing visible.
+        // Gated on onboarding being done, because `onCreate` on a HOME activity is not a
+        // "the user opened the app" signal. The visible priming waits for the panel to open.
+        if (LauncherFlow.wasOnboardingCompleted(this)) {
+            homeShellController.onHostCreated()
         }
 
         handleIntentAction(intent)
@@ -504,6 +561,11 @@ class MainActivity : SimpleActivity(), FlingListener {
     override fun onResume() {
         super.onResume()
         wasJustPaused = false
+        // Catches a language picked while we were in the background (the app's Settings and the
+        // onboarding picker both live in other Activities). Same call HostActivity makes here.
+        LocaleRegistry.applySaved(this)
+        // Picks up an overlay / full-screen-intent grant made from inside the caller panel.
+        homeShellController.onHostResume()
         refreshWallpaperSupportsDarkText()
         Handler(Looper.getMainLooper()).postDelayed({
             if (isAllAppsFragmentExpanded() || isWidgetsFragmentExpanded()) {
@@ -578,6 +640,8 @@ class MainActivity : SimpleActivity(), FlingListener {
         binding.swipeHint.removeCallbacks(mSwipeHintHider)
         mSwipeHintAnimators.forEach { it.cancel() }
         mSwipeHintAnimators.clear()
+
+        homeShellController.onHostDestroy()
     }
 
     override fun onPause() {
@@ -591,6 +655,15 @@ class MainActivity : SimpleActivity(), FlingListener {
                 binding.leftPanel.root.resetSearch()
             } else {
                 hideLeftPanel()
+            }
+            true
+        } else if (isCallerPanelExpanded()) {
+            // Let the shell retrace its own tab history first — same contract as the app
+            // drawer below. This handler runs *before* the shell's OnBackPressedCallback (the
+            // Fossify base registers its callback after ours), so without asking, one back
+            // press would close the panel from whichever tab the user was on.
+            if (binding.callerPanel.root.shell()?.onBackPressed() != true) {
+                hideCallerPanel()
             }
             true
         } else if (isAllAppsFragmentExpanded()) {
@@ -970,6 +1043,10 @@ class MainActivity : SimpleActivity(), FlingListener {
     }
 
     private fun showSidePanel(panel: View) {
+        // Re-apply here, not just in onCreate: on a cold boot straight to this home screen
+        // onCreate runs before the Remote Config fetch lands, so there is no palette to copy
+        // yet. By the time a panel is opened there is. See [applyNativeAdTheme].
+        applyNativeAdTheme()
         hideSwipeHint()
         animateSidePanelTo(panel, 0f)
         window.navigationBarColor = resources.getColor(R.color.semitransparent_navigation)
@@ -1016,6 +1093,9 @@ class MainActivity : SimpleActivity(), FlingListener {
     }
 
     private fun showFragment(fragment: ViewBinding, animationDuration: Long = ANIMATION_DURATION) {
+        // The app drawer carries its own native slot — same cold-boot reasoning as
+        // [showSidePanel].
+        applyNativeAdTheme()
         ObjectAnimator.ofFloat(fragment.root, "y", 0f).apply {
             duration = animationDuration
             interpolator = DecelerateInterpolator()
@@ -1453,13 +1533,13 @@ class MainActivity : SimpleActivity(), FlingListener {
         }
 
         mIgnoreUpEvent = true
-        // A right fling opens the caller-ID app, whichever page we are on. Paging is still
+        // A right fling opens the caller-ID panel, whichever page we are on. Paging is still
         // available by dragging horizontally, which never reaches here.
         if (!isAllAppsFragmentExpanded() && !isWidgetsFragmentExpanded()) {
             completeSwipeHint(LauncherAdsConfig.HintDirection.RIGHT)
-            // Paced by launcher_ads.swipe_right; the app opens on every path regardless.
+            // Paced by launcher_ads.swipe_right; the panel opens on every path regardless.
             LauncherAdsConfig.run(this, LauncherAdsConfig.Surface.SWIPE_RIGHT) {
-                openCallerIdApp()
+                showCallerPanel()
             }
         } else {
             binding.homeScreenGrid.root.prevPage(redraw = true)
@@ -1484,16 +1564,37 @@ class MainActivity : SimpleActivity(), FlingListener {
         }
     }
 
+    fun isCallerPanelExpanded() = binding.callerPanel.root.x != -mScreenWidth.toFloat()
+
+    /** Opens the caller panel from outside the fling gesture (deep links, widgets). */
+    fun showCallerPanelExternally() = showCallerPanel()
+
     /**
-     * Swipe right hands off to the caller-ID app's own home screen. It is a separate task from
-     * the launcher (which is `singleTask` and excluded from recents), so pressing Back or Home
-     * from there returns to this home screen rather than unwinding into the launcher's stack.
+     * Swipe right slides the caller-ID app's own home UI in over the grid. It is a panel in
+     * this Activity rather than a separate task, so Back closes it and Home never has to
+     * unwind another task — and the shell keeps its tab and scroll position between opens.
      */
-    private fun openCallerIdApp() {
-        hideSwipeHint()
-        startActivity(Intent(this, ShellActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        })
+    private fun showCallerPanel() {
+        showSidePanel(binding.callerPanel.root)
+        // Everything the panel shows *over itself* waits for the slide to finish — fired at
+        // the start it would land over the home grid the panel is still covering.
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (!isCallerPanelExpanded()) return@postDelayed
+            binding.callerPanel.root.onPanelOpened()
+            binding.callerPanel.root.shell()?.setPanelVisible(true)
+            if (LauncherFlow.wasOnboardingCompleted(this)) {
+                homeShellController.startFirstRunPriming()
+            }
+        }, ANIMATION_DURATION)
+    }
+
+    fun hideCallerPanel() {
+        // Disabling the shell's back callback before the slide keeps it from swallowing the
+        // next back press — the drawer and the grid own those again once the panel is gone.
+        binding.callerPanel.root.shell()?.setPanelVisible(false)
+        hideSidePanel(binding.callerPanel.root, -mScreenWidth.toFloat())
+        // Back on the grid: offer the next gesture the user has not been taught yet.
+        Handler(Looper.getMainLooper()).postDelayed({ showNextSwipeHint() }, ANIMATION_DURATION)
     }
 
     @SuppressLint("WrongConstant")

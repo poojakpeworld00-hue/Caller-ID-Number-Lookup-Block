@@ -20,6 +20,7 @@ import com.calleridapp.numberlookup.launcher.activities.MainActivity as Launcher
 import com.calleridapp.numberlookup.launcher.extensions.config
 import com.calleridapp.numberlookup.permission.AccessEngine
 import com.calleridapp.numberlookup.ui.splash.LaunchActivity
+import com.calleridapp.numberlookup.util.CrashGuard
 import com.calleridapp.numberlookup.util.GuardRail
 import io.lighthouse.push.LightHouse
 import io.lighthouse.push.LightHouseConfig
@@ -95,6 +96,11 @@ class LookupShellApp : Application() , Application.ActivityLifecycleCallbacks,
             }
         )
 
+        // Last, and after registerActivityLifecycleCallbacks: it wraps whichever
+        // UncaughtExceptionHandler is already installed (Crashlytics', via Firebase's init
+        // provider — which runs before this method) and it reads [currentActivity] to tell a
+        // foreground crash from a background one.
+        CrashGuard.install(this) { currentActivity }
     }
 
     // ---------------- APP FOREGROUND ----------------

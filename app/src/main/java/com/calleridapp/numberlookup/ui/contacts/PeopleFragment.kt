@@ -28,9 +28,9 @@ import com.calleridapp.admesh.presentation.NativePromoBanner
 import com.calleridapp.numberlookup.base.HostFragment
 import com.calleridapp.numberlookup.util.openActivity
 import com.calleridapp.numberlookup.databinding.FragmentContactsBinding
-import com.calleridapp.numberlookup.ui.ShellActivity
 import com.calleridapp.numberlookup.ui.detail.CallInsightActivity
 import com.calleridapp.numberlookup.util.followAdContainer
+import com.calleridapp.numberlookup.ui.home.homeShellController
 
 class PeopleFragment : HostFragment<FragmentContactsBinding>() {
 
@@ -85,7 +85,7 @@ class PeopleFragment : HostFragment<FragmentContactsBinding>() {
                 listOf(Manifest.permission.READ_CONTACTS)
             ) {
                 if (hasContactsPermission()) onPermissionGranted() else showPermissionState()
-                (activity as? ShellActivity)?.startOverlayPermissionFlow()
+                homeShellController?.startOverlayPermissionFlow()
             }
         }
 

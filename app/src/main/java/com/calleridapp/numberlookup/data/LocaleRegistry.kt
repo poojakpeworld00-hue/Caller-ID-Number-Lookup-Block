@@ -1,9 +1,11 @@
 package com.calleridapp.numberlookup.data
 
+import android.content.Context
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.calleridapp.numberlookup.BuildConfig
+import com.calleridapp.numberlookup.util.AppVault
 
 /**
  * Applies a per-app language using the AndroidX AppCompat locale APIs.
@@ -38,6 +40,28 @@ object LocaleRegistry {
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.w(TAG, "locale '$languageTag' failed: ${e.message}")
         }
+    }
+
+    /**
+     * Applies the saved app language ([AppVault.selectedLanguage]) when the active
+     * configuration is not already on it. No-op when nothing has been chosen yet.
+     *
+     * Call it **before** `super.onCreate`, so the views inflate with the right resources.
+     *
+     * Shared by [com.calleridapp.numberlookup.base.HostActivity] and the launcher home —
+     * which does not extend it, so without its own call a language chosen during onboarding
+     * would not reach the launcher (or the caller panel's tabs inside it) until the Activity
+     * was recreated for some other reason.
+     */
+    fun applySaved(context: Context) {
+        val savedLang = AppVault.selectedLanguage(context)
+        if (savedLang.isEmpty()) return
+
+        val normalizedLang = if (savedLang == "in") "id" else savedLang
+        val current = context.resources.configuration.locales[0].language
+        if (normalizedLang == current) return
+
+        apply(normalizedLang)
     }
 
 }

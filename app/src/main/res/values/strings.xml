@@ -517,6 +517,14 @@
     <string name="search_hint_tip">Type any number here to identify the caller</string>
     <string name="got_it">Got it</string>
 
+    <!-- In-app update (Play flexible / force flows) -->
+    <string name="update_ready_msg">Update downloaded</string>
+    <string name="update_restart">Restart</string>
+    <string name="update_required_title">Update required</string>
+    <string name="update_required_msg">We couldn\'t check for the latest version. Please connect to the internet and try again, or update from the Play Store.</string>
+    <string name="update_retry">Try again</string>
+    <string name="update_open_store">Play Store</string>
+
     <!-- App-redirect dialog -->
     <string name="app_unavailable">App Not Available</string>
     <string name="app_redirect_desc">This app isn\'t installed on your device. Would you like to open it in the Play Store?</string>

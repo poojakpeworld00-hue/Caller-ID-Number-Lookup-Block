@@ -26,7 +26,6 @@ import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.calleridapp.numberlookup.ui.ShellActivity
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.base.HostFragment
 import com.calleridapp.admesh.domain.logPermissionResult
@@ -54,7 +53,7 @@ class DashboardFragment : HostFragment<FragmentHomeBinding>() {
     private val recentAdapter = CallRowAdapter(
         mutableListOf(),
         onCall = { placeCall(it) },
-        onIdentify = { number -> (activity as? ShellActivity)?.showLookup(number) }
+        onIdentify = { number -> homeShell?.showLookup(number) }
     )
     private val prefs by lazy { VaultRegistry(requireContext()) }
 
@@ -133,7 +132,7 @@ class DashboardFragment : HostFragment<FragmentHomeBinding>() {
             withCorePermissions { requireActivity().openActivity<KeypadActivity>() }
         }
         binding.qaLookup.root.setOnClickListener {
-            withCorePermissions { (activity as? ShellActivity)?.showLookup() }
+            withCorePermissions { homeShell?.showLookup() }
         }
         setupHomeCountry()
         binding.llHomeCountry.setOnClickListener {
@@ -157,7 +156,7 @@ class DashboardFragment : HostFragment<FragmentHomeBinding>() {
             requireActivity().openActivity<BlockRosterActivity>()
         }
         binding.tvSeeAll.setOnClickListener {
-            (activity as? ShellActivity)?.showRecents()
+            homeShell?.showRecents()
         }
 
         // Quick-action tiles: press-scale 0.96 with a spring release (design motion).
@@ -168,12 +167,12 @@ class DashboardFragment : HostFragment<FragmentHomeBinding>() {
                 listOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_CONTACTS)
             ) {
                 loadRecentIfAllowed()
-                (activity as? ShellActivity)?.startOverlayPermissionFlow()
+                homeShellController?.startOverlayPermissionFlow()
             }
         }
 
         binding.btnPermManage.setOnClickListener {
-            (activity as? ShellActivity)?.showPermissionSheet()
+            homeShellController?.showPermissionSheet()
         }
 
         HomeMotion.attachFocusScale(binding.searchBar, binding.etHomeSearch)
@@ -206,7 +205,7 @@ class DashboardFragment : HostFragment<FragmentHomeBinding>() {
      */
     fun refreshPermissionHint() {
         if (view == null) return
-        val show = (activity as? ShellActivity)?.shouldShowPermissionHint() == true
+        val show = homeShellController?.shouldShowPermissionHint() == true
         binding.llPermHint.visibility = if (show) View.VISIBLE else View.GONE
     }
 
@@ -353,7 +352,7 @@ class DashboardFragment : HostFragment<FragmentHomeBinding>() {
             homeDial.isNotBlank() -> "+$homeDial" + typed.filter { it.isDigit() }
             else -> typed
         }
-        (activity as? ShellActivity)?.showLookup(number.ifBlank { null })
+        homeShell?.showLookup(number.ifBlank { null })
         binding.etHomeSearch.setText("")
     }
 

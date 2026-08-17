@@ -23,10 +23,11 @@ import com.calleridapp.admesh.presentation.NativePromoBanner
 import com.calleridapp.numberlookup.base.HostFragment
 import com.calleridapp.numberlookup.util.openActivity
 import com.calleridapp.numberlookup.databinding.FragmentRecentsBinding
-import com.calleridapp.numberlookup.ui.ShellActivity
 import com.calleridapp.numberlookup.ui.detail.CallInsightActivity
 import com.calleridapp.numberlookup.ui.dialer.KeypadActivity
 import com.calleridapp.numberlookup.util.followAdContainer
+import com.calleridapp.numberlookup.ui.home.homeShellController
+import com.calleridapp.numberlookup.ui.home.homeShell
 
 class TimelineFragment : HostFragment<FragmentRecentsBinding>() {
 
@@ -34,7 +35,7 @@ class TimelineFragment : HostFragment<FragmentRecentsBinding>() {
     private val adapter = TimelineAdapter(
         ::dialNumber,
         ::openDetail,
-        onIdentify = { number -> (activity as? ShellActivity)?.showLookup(number) }
+        onIdentify = { number -> homeShell?.showLookup(number) }
     )
 
     override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
@@ -70,7 +71,7 @@ class TimelineFragment : HostFragment<FragmentRecentsBinding>() {
                 listOf(Manifest.permission.READ_CALL_LOG)
             ) {
                 if (hasCallLogPermission()) onPermissionGranted() else showPermissionState()
-                (activity as? ShellActivity)?.startOverlayPermissionFlow()
+                homeShellController?.startOverlayPermissionFlow()
             }
         }
 

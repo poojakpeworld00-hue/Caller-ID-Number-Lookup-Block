@@ -3,11 +3,9 @@ package com.calleridapp.numberlookup.base
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
@@ -24,7 +22,6 @@ import androidx.databinding.ViewDataBinding
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.calleridapp.admesh.domain.ScreenPromoConfig
 import com.calleridapp.numberlookup.R
-import com.calleridapp.admesh.domain.AdsVault
 import com.calleridapp.admesh.domain.logKeyEvent
 import com.calleridapp.admesh.domain.logPermissionResult
 import com.calleridapp.admesh.presentation.ADDashboardActivity
@@ -33,13 +30,12 @@ import com.calleridapp.admesh.presentation.oninterAds.InterstitialNormal
 import com.calleridapp.numberlookup.data.LocaleRegistry
 import com.calleridapp.numberlookup.data.VaultRegistry
 import com.calleridapp.numberlookup.util.AppVault
+import com.calleridapp.numberlookup.util.applyNativeAdTheme
 import com.calleridapp.numberlookup.util.followAdContainer
 import com.calleridapp.numberlookup.util.AppVault.THEME_DARK
 import com.calleridapp.numberlookup.util.AppVault.THEME_LIGHT
 import com.calleridapp.numberlookup.util.AppVault.THEME_SYSTEM
-import org.json.JSONObject
 import java.util.Locale
-import kotlin.and
 import kotlin.sequences.ifEmpty
 
 /**
@@ -74,8 +70,9 @@ abstract class HostActivity<DB : ViewDataBinding> : ADDashboardActivity() {
         logKeyEvent("screen_${this::class.java.simpleName.lowercase(Locale.ROOT)}")
         binding.lifecycleOwner = this
 
-        // Keep native-ad colors in sync with the active light/dark mode.
-        updateNativeAdTheme(AdsVault.getInstance(this), AppVault.selectedTheme(this).ifEmpty { THEME_SYSTEM })
+        // Keep native-ad colors in sync with the active light/dark mode. Shared with the
+        // launcher home, which needs it too but does not extend this class.
+        applyNativeAdTheme()
 
         // Whole-app back-press → back interstitial, then finish. Registered here
         // (before initView) so any custom OnBackPressedCallback a subclass adds
@@ -217,21 +214,15 @@ abstract class HostActivity<DB : ViewDataBinding> : ADDashboardActivity() {
         // NOTE: no LightHouse.syncPermissionsAsync() here — the SDK syncs
         // permissions internally (≥0.6.4), so an explicit call is redundant.
     }
-    /** Applies the saved app language ([VaultRegistry.languageTag]) via AppCompat. */
-    protected fun applyLocale() {
-        val savedLang = AppVault.selectedLanguage(this)
-        if (savedLang.isEmpty()) return
-
-        val normalizedLang = if (savedLang == "in") "id" else savedLang
-        val current = resources.configuration.locales[0].language
-
-        if (normalizedLang != current) {
-            // Through LocaleRegistry, not AppCompat directly: the framework throws when the
-            // restart it wants would touch the home task, and this runs before super.onCreate
-            // on every screen — an escape here takes the whole activity down.
-            LocaleRegistry.apply(normalizedLang)
-        }
-    }
+    /**
+     * Applies the saved app language ([VaultRegistry.languageTag]) via AppCompat.
+     *
+     * Through [LocaleRegistry], not AppCompat directly: the framework throws when the restart
+     * it wants would touch the home task, and this runs before super.onCreate on every screen —
+     * an escape here takes the whole activity down. Shared with the launcher home, which needs
+     * it too but does not extend this class.
+     */
+    protected fun applyLocale() = LocaleRegistry.applySaved(this)
 
     /** Applies the saved night-mode ([VaultRegistry.themeMode]) app-wide. */
     protected open fun applyTheme(theme: String) {
@@ -241,42 +232,4 @@ abstract class HostActivity<DB : ViewDataBinding> : ADDashboardActivity() {
             THEME_SYSTEM -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         }
     }
-    private fun updateNativeAdTheme(adsPref: AdsVault, theme: String) {
-        val modeKey = when (theme) {
-            THEME_LIGHT -> "NativeLight"
-            THEME_DARK -> "NativeDark"
-            THEME_SYSTEM -> {
-                val isSystemDark =
-                    (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
-                            Configuration.UI_MODE_NIGHT_YES
-                if (isSystemDark) "NativeDark" else "NativeLight"
-            }
-
-            else -> "NativeLight"
-        }
-
-        try {
-            // Load saved marketing and default theme JSONs
-            val marketingJson = JSONObject(adsPref.getString("NativeTheme_marketing", "{}"))
-            val defaultJson = JSONObject(adsPref.getString("NativeTheme_default", "{}"))
-
-            // Choose which theme to apply (marketing preferred if enabled)
-            val themeJson = if (adsPref.getBoolean("OnMaketing") && marketingJson.has(modeKey))
-                marketingJson.optJSONObject(modeKey)
-            else
-                defaultJson.optJSONObject(modeKey)
-
-            themeJson?.let {
-                adsPref.putString("NativebtnColor", it.optString("btnColor"))
-                adsPref.putString("NativebtntxtColor", it.optString("btnText"))
-                adsPref.putString("NativeBgColor", it.optString("bgColor"))
-                adsPref.putString("NativetxtColor", it.optString("textColor"))
-            }
-
-            Log.d("NativeTheme", "Applied $modeKey theme to ads dynamically")
-        } catch (e: Exception) {
-            Log.e("NativeTheme", "Error applying native theme dynamically", e)
-        }
-    }
-
 }

@@ -191,6 +191,18 @@ object LauncherAdsConfig {
         val nativeType: String,
         val bannerType: String,
         val adUnitId: String,
+        /**
+         * Where the slot sits in a *list* that carries it, counted in *rows* from the top.
+         *
+         * Only the app drawer reads this — its grid scrolls the ad along with the apps, so the
+         * ad needs a place in the list rather than a fixed edge. `0` is the top of the list and
+         * the behaviour that shipped before this field existed; a row past the end of the list
+         * clamps to the end, so a deliberately large number reads as "last".
+         *
+         * Rows, not item indexes: the drawer is a grid, and dropping a full-width ad between
+         * two icons of the same row would leave a hole in it.
+         */
+        val position: Int = 0,
     ) {
         val visible: Boolean get() = enabled && adType != SlotAd.NONE
         /** True when the slot needs the native pool warmed before it can render. */
@@ -305,6 +317,8 @@ object LauncherAdsConfig {
             nativeType = block.optString("native_type").ifBlank { defaultNativeType },
             bannerType = block.optString("banner_type").ifBlank { "adaptive" },
             adUnitId = block.optString("ad_unit_id", ""),
+            // Negative values would push the ad off the front of the list — floor at the top.
+            position = block.optInt("position", 0).coerceAtLeast(0),
         ).also { log("$label → $it") }
     }
 

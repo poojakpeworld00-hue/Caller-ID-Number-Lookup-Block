@@ -79,7 +79,7 @@ class AllAppsFragment(
         (binding.adNativeFrame.parent as? ViewGroup)?.removeView(binding.adNativeFrame)
     }
 
-    /** The ad frame the adapter carries as row 0 — null when the slot is switched off. */
+    /** The ad frame the adapter carries as a list row — null when the slot is switched off. */
     private fun adHeaderView(): View? = binding.adNativeFrame.takeIf { adSlot.visible }
 
     /** Called every time the drawer is flung open. */
@@ -192,7 +192,7 @@ class AllAppsFragment(
                     if (host == null) openApp()
                     else LauncherAdsConfig.run(host, LauncherAdsConfig.Surface.APP_CLICK) { openApp() }
                 }.apply {
-                    setAdHeader(adHeaderView())
+                    setAdSlot(adHeaderView(), adSlot.position)
                     binding.allAppsGrid.itemAnimator = null
                     binding.allAppsGrid.adapter = this
                 }
@@ -201,7 +201,7 @@ class AllAppsFragment(
             // The ad row is full width; without this it would be squeezed into one grid cell.
             layoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                 override fun getSpanSize(position: Int): Int =
-                    if (getAdapter()?.isAdHeader(position) == true) layoutManager.spanCount else 1
+                    if (getAdapter()?.isAdRow(position) == true) layoutManager.spanCount else 1
             }
 
             submitList(launchers.toMutableList())
