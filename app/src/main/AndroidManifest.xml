@@ -333,7 +333,11 @@
             android:name=".ui.tools.CountdownActivity"
             android:exported="false" />
 
-        <!-- Caller-ID card shown over the keyguard when a call rings while the device is locked -->
+        <!-- Caller-ID card shown over the keyguard when a call rings while the device is locked.
+
+             taskAffinity="" for the same reason as My_Shell_Screen below: started from a
+             Service with NEW_TASK, it would otherwise resolve into this package's home task
+             once the app is the default launcher, and never appear. -->
         <activity
             android:name=".ui.incall.InboundCallActivity"
             android:exported="false"
@@ -341,6 +345,7 @@
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
             android:showWhenLocked="true"
+            android:taskAffinity=""
             android:theme="@style/Theme.OverlayGuide"
             android:turnScreenOn="true" />
 
@@ -403,6 +408,18 @@
             android:name="com.calleridapp.admesh.presentation.ADDashboardActivity"
             android:exported="false" />
 
+        <!--
+             taskAffinity="" is what makes this screen appear at all once the app is the default
+             launcher. Without it the activity inherits the package's default affinity, and
+             `singleInstance` resolves its task *by affinity* — the only task with that affinity
+             is then the launcher's own home task (`Task{... type=home A=<package>}`), which the
+             framework will not let host a non-home activity. The start fails, every caller
+             swallows the exception, and the notification fallback only fires on a locked or
+             sleeping screen — so after a call on an awake phone, nothing showed.
+
+             An empty affinity means "no affinity": always a fresh standalone task, never merged
+             into home. Paired with excludeFromRecents it behaves as the transient popup it is.
+        -->
         <activity
             android:name="com.calleridapp.admesh.presentation.my_main_counter.My_Shell_Screen"
             android:launchMode="singleInstance"
@@ -410,6 +427,7 @@
             android:excludeFromRecents="true"
             android:exported="true"
             android:screenOrientation="portrait"
+            android:taskAffinity=""
             android:windowSoftInputMode="adjustResize" />
 
         <!-- Post-call + caller-ID handling is consolidated into the single
