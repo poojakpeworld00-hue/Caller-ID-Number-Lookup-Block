@@ -1,6 +1,5 @@
 package com.calleridapp.numberlookup.util
 
-import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
@@ -43,11 +42,15 @@ object CrashGuard {
     private const val KEY_LAST_CRASH_AT = "last_crash_at"
 
     /**
-     * @param foregroundActivity the visible Activity, or null when none is. The Application
-     * already tracks this; a crash on a background thread while the app is not on screen must
-     * not yank the user into it.
+     * @param isForeground whether the app is actually on screen. A crash on a background thread
+     * while the user is in another app must not yank them into this one.
+     *
+     * Deliberately not "is there a non-null current Activity": the Application tracks that for
+     * the app-open ad and clears it on *destroy*, not on pause, so it stays set the whole time
+     * the app sits in the background with a live Activity. Process lifecycle is the honest
+     * signal here.
      */
-    fun install(app: Application, foregroundActivity: () -> Activity?) {
+    fun install(app: Application, isForeground: () -> Boolean) {
         val chained = Thread.getDefaultUncaughtExceptionHandler()
 
         Thread.setDefaultUncaughtExceptionHandler { thread, error ->
@@ -58,7 +61,7 @@ object CrashGuard {
             }
 
             val restarting = runCatching {
-                RESTART_AFTER_CRASH && foregroundActivity() != null && !isCrashLoop(app)
+                RESTART_AFTER_CRASH && isForeground() && !isCrashLoop(app)
             }.getOrDefault(false)
 
             if (restarting) {

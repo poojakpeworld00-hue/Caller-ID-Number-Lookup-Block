@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.ViewTreeObserver
 import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -96,11 +97,14 @@ class LookupShellApp : Application() , Application.ActivityLifecycleCallbacks,
             }
         )
 
-        // Last, and after registerActivityLifecycleCallbacks: it wraps whichever
-        // UncaughtExceptionHandler is already installed (Crashlytics', via Firebase's init
-        // provider — which runs before this method) and it reads [currentActivity] to tell a
-        // foreground crash from a background one.
-        CrashGuard.install(this) { currentActivity }
+        // Last: it wraps whichever UncaughtExceptionHandler is already installed (Crashlytics',
+        // via Firebase's init provider — content providers are created before this method).
+        // Process lifecycle, not currentActivity, is the foreground signal: currentActivity is
+        // kept for the app-open ad and is only cleared on destroy, so it stays set while the app
+        // sits in the background.
+        CrashGuard.install(this) {
+            ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+        }
     }
 
     // ---------------- APP FOREGROUND ----------------
