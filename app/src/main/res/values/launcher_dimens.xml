@@ -9,10 +9,13 @@
     <dimen name="icon_side_margin">10dp</dimen>
     <dimen name="resize_frame_dot_radius">8dp</dimen>
     <dimen name="move_gesture_threshold">20dp</dimen>
-    <dimen name="swipe_hint_travel">40dp</dimen>
+    <!-- Coach-mark sizes are scaled (sdp/ssp), like the rest of the app's resources: fixed dp
+         made the chevron trio span a third of the screen on a small phone. -->
+    <dimen name="swipe_hint_chevron">@dimen/_28sdp</dimen>
+    <dimen name="swipe_hint_travel">@dimen/_26sdp</dimen>
     <!-- an up/down row is the chevron trio rotated a quarter turn, so it stands 3 chevrons
          tall where the row only measured one — this is the room it needs above and below -->
-    <dimen name="swipe_hint_vertical_pad">44dp</dimen>
+    <dimen name="swipe_hint_vertical_pad">@dimen/_30sdp</dimen>
     <dimen name="page_indicator_dot_radius">6dp</dimen>
     <dimen name="page_indicator_stroke_width">1dp</dimen>
     <dimen name="page_indicator_margin">6dp</dimen>

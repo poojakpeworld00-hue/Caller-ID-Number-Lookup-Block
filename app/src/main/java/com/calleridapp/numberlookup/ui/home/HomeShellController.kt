@@ -314,6 +314,11 @@ class HomeShellController(private val host: HomeShellHost) {
         }.isSuccess
         if (!launched) return
 
+        // On top of the page we just opened — see FloatKit.showGuide. Deliberately outside
+        // the runCatching above: the guide is a hint, and losing it must not be read as
+        // "Settings never opened" and skip the grant poll.
+        FloatKit.showGuide(activity)
+
         startOverlayGrantPoll()
     }
 

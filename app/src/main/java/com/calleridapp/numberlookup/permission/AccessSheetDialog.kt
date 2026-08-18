@@ -303,6 +303,9 @@ class AccessSheetDialog : BottomSheetDialogFragment() {
         AppOpenAdRegistry.skipNextAppOpenAd = true
         runCatching {
             overlayLauncher.launch(FloatKit.buildOverlayIntent(requireContext().packageName))
+        }.onSuccess {
+            // The coach-mark goes on top of the page we just opened; see FloatKit.showGuide.
+            FloatKit.showGuide(requireActivity())
         }.onFailure {
             GuardRail.error("PermissionSheet", "Failed to open overlay settings", it)
             if (finishAfter) finishFlow()

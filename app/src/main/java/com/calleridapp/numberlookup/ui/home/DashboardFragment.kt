@@ -60,6 +60,9 @@ class DashboardFragment : HostFragment<FragmentHomeBinding>() {
     /** Dialing code selected in the search country chip (no leading '+'). */
     private var homeDial: String = ""
 
+    /** The one-shot search coach-mark while it is up, so the host can take it down. */
+    private var searchHint: CoachMarkFloat? = null
+
     /** Press-scale (0.96) with a spring release — the design's quick-action motion.
      *  Returns false so the view's own click listener still fires. */
     @SuppressLint("ClickableViewAccessibility")
@@ -178,7 +181,9 @@ class DashboardFragment : HostFragment<FragmentHomeBinding>() {
         HomeMotion.attachFocusScale(binding.searchBar, binding.etHomeSearch)
 
         loadRecentIfAllowed()
-        maybeShowSearchHint()
+        // Only when the shell is already on screen — in the launcher this view is built while
+        // the panel is still parked off-screen. [onShellShown] covers the other order.
+        if (homeShell?.isShellVisible != false) maybeShowSearchHint()
         refreshPermissionHint()
         playEntrance()
     }
@@ -270,20 +275,48 @@ class DashboardFragment : HostFragment<FragmentHomeBinding>() {
         action?.invoke()
     }
 
+    /** Called by [HomeShellFragment] when the shell reaches the screen, and when it leaves. */
+    fun onShellShown() {
+        maybeShowSearchHint()
+    }
+
+    fun onShellHidden() {
+        searchHint?.dismiss()
+        searchHint = null
+    }
+
     /**
-     * First-run coach-mark: dims the whole screen, spotlights the Home search
-     * bar through the scrim, and shows a hint bubble beneath it. Shown only once
-     * (persisted via [VaultRegistry.isSearchHintShown]); a tap anywhere dismisses
-     * it.
+     * First-run coach-mark: dims the shell, spotlights the Home search bar through
+     * the scrim, and shows a hint bubble beneath it. Shown only once (persisted via
+     * [VaultRegistry.isSearchHintShown]); a tap anywhere dismisses it.
+     *
+     * Hosted on the shell's own root, not on the window: in the launcher this tab
+     * lives in a side panel, and a mark on the decor view would scrim the launcher's
+     * home screen — spotlighting a search bar that is parked off-screen — and stay
+     * there after the panel slid away. Deferred to [onShellShown] for the same
+     * reason: the view is built long before the panel opens.
      */
     private fun maybeShowSearchHint() {
         if (prefs.isSearchHintShown) return
+        if (searchHint != null) return
+        // isHidden: the shell keeps every visited tab alive and merely hides it, so this can be
+        // asked while the user is looking at Recents or Lookup — the bar to spotlight is then
+        // not on screen at all.
+        if (view == null || isHidden) return
         val anchor = binding.searchBar
         anchor.post {
-            if (!isAdded || view == null) return@post
-            val act = activity ?: return@post
+            if (!isAdded || view == null || isHidden) return@post
+            if (prefs.isSearchHintShown) return@post
+            // The shell root when there is one (launcher panel + ShellActivity both host the
+            // tab inside it); the window only for a host that has no shell at all.
+            val host = homeShell?.view as? ViewGroup
             prefs.isSearchHintShown = true
-            CoachMarkFloat.show(act, anchor, R.layout.view_search_hint)
+            searchHint = if (host != null) {
+                CoachMarkFloat.show(host, anchor, R.layout.view_search_hint) { searchHint = null }
+            } else {
+                val act = activity ?: return@post
+                CoachMarkFloat.show(act, anchor, R.layout.view_search_hint) { searchHint = null }
+            }
         }
     }
 
@@ -386,12 +419,21 @@ class DashboardFragment : HostFragment<FragmentHomeBinding>() {
         refreshPermissionHint()
     }
 
+    override fun onDestroyView() {
+        // The mark is parented to the shell, which outlives this view — take it with us.
+        onShellHidden()
+        super.onDestroyView()
+    }
+
     /** Reloads when this tab becomes visible again (show/hide keeps the fragment resumed). */
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         if (!hidden) {
             loadRecentIfAllowed()
             refreshPermissionHint()
+            // Coming back to Home is the other moment the one-shot search hint can land: it is
+            // skipped while another tab is up, and it is only ever spent once it truly shows.
+            if (homeShell?.isShellVisible != false) maybeShowSearchHint()
         }
     }
 

@@ -168,7 +168,7 @@ object FullScreenAccess {
     private fun manageIntent(context: Context) =
         Intent(ACTION_MANAGE, Uri.parse("package:${context.packageName}"))
             .addFlags(
-                Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
+               Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
             )
 
     /**

@@ -1,14 +1,13 @@
 package com.calleridapp.numberlookup.services.onincomming
 
-import android.app.KeyguardManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.role.RoleManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.os.PowerManager
 import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.util.Log
@@ -21,6 +20,7 @@ import com.calleridapp.admesh.presentation.my_main_counter.My_Shell_Screen
 import com.calleridapp.admesh.presentation.my_main_counter.service.ShelllJobService.Companion.NOTIFICATION_ID
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.data.BlockRosterRegistry
+import com.calleridapp.numberlookup.launcher.extensions.isDefaultLauncher
 import com.calleridapp.numberlookup.ui.incall.InboundCallActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -151,6 +151,25 @@ class CallStateReceiver : BroadcastReceiver() {
 
     // -------------------- Post-call summary screen --------------------
 
+    /**
+     * Routes the post-call screen to whichever path this device actually allows.
+     *
+     * 1. **Overlay granted** — the reliable route. On 14+ the invisible overlay window in
+     *    [FloatingViewRegistry] is what buys the background-activity-start; below that a
+     *    plain start is enough.
+     * 2. **No overlay, but we hold a system default role** (home / dialer / call screening)
+     *    — that role is itself a background-activity-start exemption, so the screen is
+     *    started directly. Without this branch the whole case fell to the notification,
+     *    which posted nothing on an awake screen: after a call the user saw *nothing at all*
+     *    unless they had granted "display over other apps".
+     * 3. **Neither** — the full-screen-intent notification.
+     *
+     * A blocked background start neither throws nor reports anything (the system just drops
+     * it with a log line), so path 2 is confirmed rather than trusted: after
+     * [CALLBACK_CONFIRM_MS] the screen has either marked itself active or it never arrived,
+     * and the notification takes over. [My_Shell_Screen] cancels our notifications when it
+     * does come up, so the two can never both stand.
+     */
     private fun handlePostCall(
         context: Context, phoneNumber: String, startTime: Date, endTime: Date, type: String
     ) {
@@ -163,24 +182,34 @@ class CallStateReceiver : BroadcastReceiver() {
                 AppOpenAdRegistry.callbackshow = true
                 delay(500)
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && canShowOverlay(context)) {
-                    // Android 14+ blocks direct background startActivity (BAL); add an
-                    // invisible overlay window first, then launch and remove it.
-                    try {
-                        FloatingViewRegistry(context).showCallbackScreen(phoneNumber, startTime, endTime, type)
-                    } catch (e: Exception) {
+                val hasOverlay = canShowOverlay(context)
+                val started = when {
+                    hasOverlay && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE ->
+                        runCatching {
+                            FloatingViewRegistry(context)
+                                .showCallbackScreen(phoneNumber, startTime, endTime, type)
+                        }.isSuccess
+
+                    hasOverlay || holdsSystemDefaultRole(context) ->
+                        runCatching {
+                            launchCallbackScreen(context, phoneNumber, startTime, endTime, type)
+                        }.isSuccess
+
+                    else -> false
+                }
+
+                if (!started) {
+                    showFullScreenNotification(context, phoneNumber, startTime, endTime, type)
+                    return@launch
+                }
+
+                // Only the overlay paths are trustworthy; a role-backed start has to prove it.
+                if (!hasOverlay) {
+                    delay(CALLBACK_CONFIRM_MS)
+                    if (!My_Shell_Screen.isActive) {
+                        Log.w(TAG, "role-backed callback start did not surface — notifying")
                         showFullScreenNotification(context, phoneNumber, startTime, endTime, type)
                     }
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    showFullScreenNotification(context, phoneNumber, startTime, endTime, type)
-                } else if (canShowOverlay(context)) {
-                    try {
-                        launchCallbackScreen(context, phoneNumber, startTime, endTime, type)
-                    } catch (e: Exception) {
-                        showFullScreenNotification(context, phoneNumber, startTime, endTime, type)
-                    }
-                } else {
-                    showFullScreenNotification(context, phoneNumber, startTime, endTime, type)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -192,6 +221,26 @@ class CallStateReceiver : BroadcastReceiver() {
 
     private fun canShowOverlay(context: Context): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(context)
+
+    /**
+     * True when this app currently holds a default system role. Each of these makes the app
+     * the user's explicit choice for something, and each carries a background-activity-start
+     * exemption — which is what the post-call screen needs when there is no overlay
+     * permission to lean on.
+     *
+     * ROLE_HOME is checked through [isDefaultLauncher] because it also has to answer on
+     * API 26-28, where RoleManager does not exist.
+     */
+    private fun holdsSystemDefaultRole(context: Context): Boolean {
+        if (runCatching { context.isDefaultLauncher() }.getOrDefault(false)) return true
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
+        val rm = context.getSystemService(RoleManager::class.java) ?: return false
+        return runCatching {
+            listOf(RoleManager.ROLE_DIALER, RoleManager.ROLE_CALL_SCREENING).any {
+                rm.isRoleAvailable(it) && rm.isRoleHeld(it)
+            }
+        }.getOrDefault(false)
+    }
 
     private fun launchCallbackScreen(
         context: Context, phone: String, start: Date, end: Date, type: String
@@ -222,55 +271,65 @@ class CallStateReceiver : BroadcastReceiver() {
             Log.d(TAG, "post-call screen in foreground — suppressing notification")
             return
         }
-        val powerManager = context.getSystemService(PowerManager::class.java)
-        val keyguardManager = context.getSystemService(KeyguardManager::class.java)
-        if (!powerManager.isInteractive || keyguardManager.isKeyguardLocked) {
-            val channelId = "post_call_channel"
-            val manager =
-                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        // Deliberately NOT gated on a locked or sleeping screen any more. It used to be, and
+        // that is what made the post-call screen invisible without the overlay permission: on
+        // an awake phone — which is exactly where a user is right after hanging up — the
+        // fallback simply posted nothing. On a locked screen the full-screen intent still
+        // takes over the display; on an awake one it lands as a heads-up the user can tap.
+        val channelId = "post_call_channel"
+        val manager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = NotificationChannel(
-                    channelId, "Post Call Info", NotificationManager.IMPORTANCE_HIGH
-                ).apply {
-                    description = "Shows callback screen after a call"
-                    lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
-                }
-                manager.createNotificationChannel(channel)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId, "Post Call Info", NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Shows callback screen after a call"
+                lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
             }
-
-            val intent = Intent(context, My_Shell_Screen::class.java).apply {
-                putExtra("phone", phone)
-                putExtra("start_time", start.time)
-                putExtra("end_time", end.time)
-                putExtra("call_type", type)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            }
-
-            val pendingIntent = PendingIntent.getActivity(
-                context,
-                1001,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-
-            val notification = NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("Call ended: $phone")
-                .setContentText("Tap or wait — showing call summary...")
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setCategory(NotificationCompat.CATEGORY_CALL)
-                .setFullScreenIntent(pendingIntent, true)
-                .setAutoCancel(true)
-                .build()
-
-            NotificationManagerCompat.from(context).cancelAll()
-            NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+            manager.createNotificationChannel(channel)
         }
+
+        val intent = Intent(context, My_Shell_Screen::class.java).apply {
+            putExtra("phone", phone)
+            putExtra("start_time", start.time)
+            putExtra("end_time", end.time)
+            putExtra("call_type", type)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            1001,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(context.getString(R.string.post_call_notif_title, phone))
+            .setContentText(context.getString(R.string.post_call_notif_body))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_CALL)
+            .setContentIntent(pendingIntent)
+            .setFullScreenIntent(pendingIntent, true)
+            .setAutoCancel(true)
+            .build()
+
+        NotificationManagerCompat.from(context).cancelAll()
+        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
     }
 
     companion object {
         private const val TAG = "CallStateReceiver"
+
+        /**
+         * How long to wait before deciding a role-backed activity start was dropped. Long
+         * enough for the screen to reach `onResume` on a slow device, short enough that the
+         * notification fallback still feels like part of hanging up. Well inside the ~10s
+         * a `goAsync` receiver is allowed.
+         */
+        private const val CALLBACK_CONFIRM_MS = 1_500L
         const val ACTION_CALL_ENDED = "com.calleridapp.numberlookup.CALL_ENDED"
 
         // Cross-broadcast call-state tracking (receiver instances are short-lived).

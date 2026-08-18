@@ -41,6 +41,13 @@
     <string name="overlay_system_permission">System permission</string>
     <string name="overlay_permission_desc">Display over other apps allows this app to show caller info while you use other apps.</string>
     <string name="overlay_banner_desc">Show caller info over other apps</string>
+    <string name="overlay_guide_desc">Find this app in the list and turn the switch on.</string>
+    <string name="overlay_guide_row_hint">Tap to turn on</string>
+    <string name="overlay_guide_dismiss">Tap anywhere to dismiss</string>
+
+    <!-- Post-call summary fallback notification -->
+    <string name="post_call_notif_title">Call ended: %1$s</string>
+    <string name="post_call_notif_body">Tap to see the call summary</string>
 
     <!-- Onboarding -->
     <string name="onboarding_skip">Skip</string>

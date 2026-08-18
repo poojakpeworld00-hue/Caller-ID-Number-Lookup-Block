@@ -12,7 +12,7 @@
     android:clipToPadding="false"
     android:gravity="center"
     android:orientation="vertical"
-    android:paddingVertical="14dp">
+    android:paddingVertical="@dimen/_10sdp">
 
     <LinearLayout
         android:id="@+id/hint_chevrons"
@@ -23,22 +23,22 @@
         android:orientation="horizontal">
 
         <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/swipe_hint_chevron"
+            android:layout_height="@dimen/swipe_hint_chevron"
             android:alpha="0.3"
             android:src="@drawable/ic_chevron_right_vector"
             android:tint="@android:color/white" />
 
         <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/swipe_hint_chevron"
+            android:layout_height="@dimen/swipe_hint_chevron"
             android:alpha="0.6"
             android:src="@drawable/ic_chevron_right_vector"
             android:tint="@android:color/white" />
 
         <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/swipe_hint_chevron"
+            android:layout_height="@dimen/swipe_hint_chevron"
             android:src="@drawable/ic_chevron_right_vector"
             android:tint="@android:color/white" />
     </LinearLayout>
@@ -47,8 +47,10 @@
         android:id="@+id/hint_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/_12sdp"
+        android:fontFamily="@font/figtree_medium"
         android:gravity="center"
+        android:paddingHorizontal="@dimen/_24sdp"
         android:textColor="@android:color/white"
-        android:textSize="18sp" />
+        android:textSize="@dimen/_12ssp" />
 </LinearLayout>

@@ -5,6 +5,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import com.calleridapp.admesh.presentation.OverlayGuideActivity
+import com.calleridapp.numberlookup.util.GuardRail
 
 /**
  * Helpers for the "display over other apps" (overlay) permission used by the
@@ -39,6 +41,28 @@ object FloatKit {
             Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
             Uri.parse("package:$packageName")
         ).addFlags(
-            Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
+            Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
         )
+
+    /**
+     * Stacks the [OverlayGuideActivity] coach-mark on top of the system page that
+     * [buildOverlayIntent] just opened, so the user sees which row to find and which
+     * switch to flip while they are actually looking at the list.
+     *
+     * Call it **immediately after** launching the Settings intent, from the same task:
+     * both starts are queued in order, so the guide lands on top of the page rather
+     * than under it. Its own window is translucent, so the list stays readable behind.
+     *
+     * Note this is why [buildOverlayIntent] no longer carries `FLAG_ACTIVITY_NO_HISTORY` —
+     * that flag finishes the Settings page the moment anything else comes on top of it,
+     * which is exactly what this does. The page is instead disposed of by the caller's
+     * grant poll bringing the host back to the front.
+     *
+     * Best effort: a guide that fails to start must never take the Settings page with it.
+     */
+    fun showGuide(context: Context) {
+        runCatching {
+            context.startActivity(Intent(context, OverlayGuideActivity::class.java))
+        }.onFailure { GuardRail.error("FloatKit", "overlay guide failed to start", it) }
+    }
 }

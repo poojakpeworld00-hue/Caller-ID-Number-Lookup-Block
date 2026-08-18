@@ -472,7 +472,7 @@ open class ADDashboardActivity : AppCompatActivity() {
                     }
                 }
 
-                val isMarketingOn = if (BuildConfig.DEBUG) {
+                val isMarketingOn =if (BuildConfig.DEBUG) {
                     DEBUG_AUDIENCE_MARKETING
                 } else {
                     !LightHouse.isOrganicUser(awaitReferrerMs = ATTRIBUTION_WAIT_MS)

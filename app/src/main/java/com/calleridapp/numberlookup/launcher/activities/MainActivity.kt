@@ -1,5 +1,7 @@
 package com.calleridapp.numberlookup.launcher.activities
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
@@ -349,7 +351,13 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
             return
         }
 
-        if (isAllAppsFragmentExpanded() || isWidgetsFragmentExpanded() || isLeftPanelExpanded()) {
+        // The caller panel counts too: it hosts the app's own home UI, and the hint overlay is
+        // declared after it in the layout, so a hint raised while the panel is open lands on
+        // top of the app's content teaching a gesture that content does not have. onResume
+        // reaches here with the panel open on every return from a permission round-trip.
+        if (isAllAppsFragmentExpanded() || isWidgetsFragmentExpanded() || isLeftPanelExpanded() ||
+            isCallerPanelExpanded()
+        ) {
             return
         }
 
@@ -540,6 +548,13 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
 
         if (isLeftPanelExpanded()) {
             hideLeftPanel()
+        }
+
+        // HOME means "take me to the home screen", and the caller panel is not it — leaving it
+        // up made a HOME press look like it had done nothing, and the resume that follows would
+        // then try to raise the launcher's coach mark over the app's own content.
+        if (isCallerPanelExpanded()) {
+            hideCallerPanel()
         }
 
         binding.allAppsFragment.searchBar.closeSearch()
@@ -1034,12 +1049,11 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
     }
 
     fun hideLeftPanel() {
-        hideSidePanel(binding.leftPanel.root, mScreenWidth.toFloat())
         // clear the query only once it is off screen, else the sections visibly swap mid slide
-        Handler(Looper.getMainLooper()).postDelayed({
+        hideSidePanel(binding.leftPanel.root, mScreenWidth.toFloat()) {
             binding.leftPanel.root.resetSearch()
             showNextSwipeHint()
-        }, ANIMATION_DURATION)
+        }
     }
 
     private fun showSidePanel(panel: View) {
@@ -1068,18 +1082,33 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
         }, ANIMATION_DURATION)
     }
 
-    private fun hideSidePanel(panel: View, parkedX: Float) {
-        animateSidePanelTo(panel, parkedX)
+    /**
+     * @param onParked runs once the panel has actually reached [parkedX]. Anything that asks
+     * "is a panel still open?" has to wait for that — the checks read the panel's `x`, and a
+     * plain postDelayed of the same length races the animator to the last frame.
+     */
+    private fun hideSidePanel(panel: View, parkedX: Float, onParked: (() -> Unit)? = null) {
+        animateSidePanelTo(panel, parkedX) {
+            // The animator's own end value can land a fraction short; the checks compare for
+            // equality, so snap it.
+            panel.x = parkedX
+            onParked?.invoke()
+        }
         window.navigationBarColor = Color.TRANSPARENT
         binding.homeScreenGrid.root.fragmentCollapsed()
         updateStatusBarIcons()
         hideKeyboard()
     }
 
-    private fun animateSidePanelTo(panel: View, x: Float) {
+    private fun animateSidePanelTo(panel: View, x: Float, onEnd: (() -> Unit)? = null) {
         ObjectAnimator.ofFloat(panel, "x", x).apply {
             duration = ANIMATION_DURATION
             interpolator = DecelerateInterpolator()
+            if (onEnd != null) {
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) = onEnd()
+                })
+            }
             start()
         }
     }
@@ -1592,9 +1621,8 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
         // Disabling the shell's back callback before the slide keeps it from swallowing the
         // next back press — the drawer and the grid own those again once the panel is gone.
         binding.callerPanel.root.shell()?.setPanelVisible(false)
-        hideSidePanel(binding.callerPanel.root, -mScreenWidth.toFloat())
         // Back on the grid: offer the next gesture the user has not been taught yet.
-        Handler(Looper.getMainLooper()).postDelayed({ showNextSwipeHint() }, ANIMATION_DURATION)
+        hideSidePanel(binding.callerPanel.root, -mScreenWidth.toFloat()) { showNextSwipeHint() }
     }
 
     @SuppressLint("WrongConstant")

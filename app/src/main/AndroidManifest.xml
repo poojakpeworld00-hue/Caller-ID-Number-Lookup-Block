@@ -110,6 +110,14 @@
             android:exported="false"
             android:theme="@style/Theme.OverlayGuide" />
 
+        <!-- Redesigned overlay-permission coach-mark (the sheet-style card). Same transparent
+             host as FloatAccessActivity above, which it is meant to replace. -->
+        <activity
+            android:screenOrientation="portrait"
+            android:name="com.calleridapp.admesh.presentation.OverlayGuideActivity"
+            android:exported="false"
+            android:theme="@style/Theme.OverlayGuide" />
+
         <activity
             android:screenOrientation="portrait"
             android:name=".ui.onboarding.IntroActivity"

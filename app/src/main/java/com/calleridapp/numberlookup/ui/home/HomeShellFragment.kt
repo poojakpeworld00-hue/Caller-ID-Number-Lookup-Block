@@ -62,6 +62,15 @@ class HomeShellFragment : HostFragment<FragmentHomeShellBinding>() {
     /** Blocking "update required" dialog shown when a *force* update check fails. */
     private var forceUpdateDialog: AlertDialog? = null
 
+    /**
+     * Whether the shell is actually on screen — see [setPanelVisible]. Tabs read it before
+     * putting anything *over* themselves: in the launcher the shell is committed during the
+     * home screen's `onCreate` and then parked off-screen, so "my view exists" says nothing
+     * about whether the user can see it.
+     */
+    var isShellVisible: Boolean = false
+        private set
+
     private val controller: HomeShellController? get() = homeShellController
 
     override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
@@ -141,8 +150,20 @@ class HomeShellFragment : HostFragment<FragmentHomeShellBinding>() {
      * are two different moments and anything the user should actually see waits for this.
      */
     fun setPanelVisible(visible: Boolean) {
-        if (visible) updateOverlayBanner()
+        isShellVisible = visible
+        // Can arrive before initView (the fragment is found by id as soon as its transaction
+        // has run); the tab reads [isShellVisible] itself in that case.
+        if (!::tabs.isInitialized) return
+        if (visible) {
+            updateOverlayBanner()
+            dashboardTab()?.onShellShown()
+        } else {
+            dashboardTab()?.onShellHidden()
+        }
     }
+
+    private fun dashboardTab(): DashboardFragment? =
+        tabs.firstOrNull { it.fragment is DashboardFragment }?.fragment as? DashboardFragment
 
     /** Routes a number into the Lookup tab from outside the shell (deep link / panel host). */
     fun requestLookup(number: String?) {
@@ -314,8 +335,7 @@ class HomeShellFragment : HostFragment<FragmentHomeShellBinding>() {
 
     /** Nudges Home to (re)evaluate its "Manage permissions" hint. */
     fun refreshHomePermissionHint() {
-        (tabs.firstOrNull { it.fragment is DashboardFragment }?.fragment as? DashboardFragment)
-            ?.refreshPermissionHint()
+        dashboardTab()?.refreshPermissionHint()
     }
 
     // ─────────────────────────── In-app update surfaces ───────────────────────────
