@@ -10,7 +10,6 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.RemoteException
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsCallback
@@ -20,9 +19,6 @@ import androidx.browser.customtabs.CustomTabsServiceConnection
 import androidx.browser.customtabs.CustomTabsSession
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.android.installreferrer.api.InstallReferrerClient
-import com.android.installreferrer.api.InstallReferrerStateListener
-import com.android.installreferrer.api.ReferrerDetails
 import com.facebook.FacebookSdk
 import com.facebook.LoggingBehavior
 import com.facebook.ads.Ad
@@ -39,6 +35,7 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.ump.FormError
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+import io.lighthouse.push.Attribution
 import io.lighthouse.push.LightHouse
 import com.calleridapp.admesh.data.AdKind
 import com.calleridapp.admesh.data.OnDataReady
@@ -77,11 +74,10 @@ open class ADDashboardActivity : AppCompatActivity() {
     private var isSplash: Boolean? = false
     private val isMobileAdsInitialized = AtomicBoolean(false)
     private val isMobileAdsInitializeCalled = AtomicBoolean(false)
-    private val referrerHandoffDone = AtomicBoolean(false)
     private var isGoogleAdsEnabled = true
     private val backgroundExecutor: Executor = Executors.newSingleThreadExecutor()
 
-    private companion object {
+    companion object {
         /** One grep-able tag for the whole splash AppOpen/interstitial load+show path. */
         const val APPOPEN_TAG = "AppOpenAd"
 
@@ -96,14 +92,14 @@ open class ADDashboardActivity : AppCompatActivity() {
          * attribution, so it always resolves to organic on its own and the `marketing` half
          * of the config could never be exercised on a test device. Release builds ignore
          * this entirely and keep using the real attribution.
+         *
+         * [LookupShellApp] feeds the same value to `LightHouse.debugForceInstallSource` on a
+         * debug build, so the SDK's own audience reads (disclosure variant, collection gating)
+         * match the config half this picks. Without that they disagree: the app would run the
+         * marketing config while the SDK still classified the sideload organic — which is
+         * exactly the mismatch that reads as "organic install got the marketing config".
          */
         const val DEBUG_AUDIENCE_MARKETING = true
-
-        /**
-         * How long the audience gate waits for LightHouse's install-referrer verdict before
-         * settling for what it has. First launch only — the SDK caches it afterwards.
-         */
-        const val ATTRIBUTION_WAIT_MS = 5_000L
     }
 
     open fun getData(
@@ -113,6 +109,30 @@ open class ADDashboardActivity : AppCompatActivity() {
         onGetData = onData
         isSplash = isSplsh
 
+        // Audience FIRST, before consent / Remote Config / ingest / ads. Everything below this
+        // point may read OnMaketing, and several of them exit early on failure (no internet,
+        // consent error, a Remote Config fetch that times out) — resolving here is what stops
+        // those paths from running the funnel on an audience nobody ever settled. It also means
+        // the config is ingested once, on the right half, instead of being ingested provisionally
+        // and re-ingested after the referrer lands.
+        //
+        // resolveAttribution waits for the Play referrer (LightHouseConfig.attributionWaitMs),
+        // never answers UNKNOWN, and fires on the main thread. Launch 2+ is a cached read.
+        LightHouse.resolveAttribution { attribution ->
+            val isMarketingOn = if (BuildConfig.DEBUG) {
+                DEBUG_AUDIENCE_MARKETING
+            } else {
+                attribution == Attribution.PAID
+            }
+            AdsVault.getInstance(act).putBoolean("OnMaketing", isMarketingOn)
+            if (BuildConfig.DEBUG) {
+                Log.d(CONFIG_TAG, "audience → ${if (isMarketingOn) "MARKETING" else "ORGANIC"}")
+            }
+            loadDataAfterAudience()
+        }
+    }
+
+    private fun loadDataAfterAudience() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 // We defer MobileAds.initialize() until after consent is obtained.
@@ -255,23 +275,16 @@ open class ADDashboardActivity : AppCompatActivity() {
                         "OnMaketing=$onMarketing "
                 )
 
-                // Persist the raw blob + whether it uses a top-level audience split,
-                // so funOnAdsLoad can re-apply the correct audience once the install
-                // referrer has resolved OnMaketing (not known on the first launch).
-                adsPref.putString("GET_DATA_RAW", configString)
-                adsPref.putBoolean("__cfg_audience_split", isSplit)
-
                 // Top-level audience split: every key is read from
-                // response.marketing / response.organic (chosen by OnMaketing). A
-                // flat response (no wrapper) is used verbatim → legacy config is
-                // unchanged.
+                // response.marketing / response.organic (chosen by OnMaketing, settled in
+                // getData before this ran). A flat response (no wrapper) is used verbatim →
+                // legacy config is unchanged. One ingest, on the right half — there is no
+                // second pass to correct it, and none is needed.
                 ingestConfig(this@ADDashboardActivity, audienceRoot(response, onMarketing))
 
-                // Resolve the install referrer, then hand off to funOnAdsLoad. Must
-                // run AFTER ingestConfig so funOnAdsLoad reads the freshly-persisted
-                // config (GET_DATA_RAW / __cfg_audience_split / ad gates), not stale
-                // or half-written values.
-                checkInstallerRefere()
+                // Must run AFTER ingestConfig so funOnAdsLoad reads the freshly-persisted
+                // ad gates, not stale or half-written values.
+                funOnAdsLoad()
 
             } catch (e: Exception) {
                 Log.e("ADDashboardActivity", "Failed to update ad preferences: ${e.message}")
@@ -428,33 +441,6 @@ open class ADDashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkInstallerRefere() {
-        if (activity!!.getPreferences(MODE_PRIVATE).getBoolean("isReferrerDone", false)) {
-            onReferrerSettled()
-            return
-        }
-
-        val referrerClient = InstallReferrerClient.newBuilder(activity).build()
-        backgroundExecutor.execute(Runnable { getInstallReferrerFromClient(referrerClient) })
-    }
-
-    /**
-     * The single exit from the install-referrer probe.
-     *
-     * Every path out of [getInstallReferrerFromClient] — resolved, unsupported, unavailable,
-     * developer/permission error, or the service dropping before it ever finished — has to end
-     * up here, because [funOnAdsLoad] is what writes the audience flag and re-ingests the right
-     * half of the config. A path that quietly returns instead leaves the app on whichever
-     * audience the pre-referrer ingest happened to pick.
-     *
-     * Guarded so the extra exits can never double-run the IP lookup and the re-ingest.
-     */
-    private fun onReferrerSettled() {
-        if (referrerHandoffDone.compareAndSet(false, true)) {
-            funOnAdsLoad()
-        }
-    }
-
     private fun funOnAdsLoad() {
         activity?.let { activity ->
             val adsPreference = AdsVault.getInstance(activity)
@@ -472,27 +458,8 @@ open class ADDashboardActivity : AppCompatActivity() {
                     }
                 }
 
-                val isMarketingOn =if (BuildConfig.DEBUG) {
-                    DEBUG_AUDIENCE_MARKETING
-                } else {
-                    !LightHouse.isOrganicUser(awaitReferrerMs = ATTRIBUTION_WAIT_MS)
-                }
-                if (BuildConfig.DEBUG) {
-                    Log.d(CONFIG_TAG, "audience → ${if (isMarketingOn) "MARKETING" else "ORGANIC"}")
-                }
-                adsPreference.putBoolean("OnMaketing", isMarketingOn)
-
-                // Top-level audience split only: OnMaketing is now final (referrer
-                // resolved), so re-apply the correct audience's keys — the first
-                // ingest ran before the referrer and may have used the wrong side.
-                // Flat config skips this entirely (behaviour unchanged).
-                val isSplitConfig = adsPreference.getBoolean("__cfg_audience_split")
-                if (isSplitConfig) {
-                    val raw = adsPreference.getString("GET_DATA_RAW", "")
-                    if (!raw.isNullOrBlank()) runCatching {
-                        ingestConfig(activity, audienceRoot(JSONObject(raw), isMarketingOn))
-                    }
-                }
+                // Settled in getData, before consent / Remote Config / this call.
+                val isMarketingOn = adsPreference.getBoolean("OnMaketing")
 
                 val countryEnableKey =
                     if (isMarketingOn) "Iscountry_Marketing_Counter" else "Iscountry_Counter"
@@ -1111,52 +1078,6 @@ open class ADDashboardActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         handleCustomTabClose()
-    }
-
-    fun getInstallReferrerFromClient(referrerClient: InstallReferrerClient) {
-        referrerClient.startConnection(object : InstallReferrerStateListener {
-            override fun onInstallReferrerSetupFinished(responseCode: Int) {
-                when (responseCode) {
-                    InstallReferrerClient.InstallReferrerResponse.OK -> {
-                        var response: ReferrerDetails? = null
-                        try {
-                            response = referrerClient.installReferrer
-
-                            val ref = response.installReferrer
-                            activity?.let {
-                                AdsVault.getInstance(it).putString("FinalString", ref)
-                            }
-                            // Audience (OnMaketing) is no longer derived from the
-                            // referrer string — funOnAdsLoad() now resolves it from
-                            // LightHouse.isOrganicUser(). We still store the raw
-                            // referrer (FinalString) and drive the flow forward.
-                            onReferrerSettled()
-
-                            activity?.getPreferences(MODE_PRIVATE)?.edit()?.apply {
-                                putBoolean("isReferrerDone", true)
-                                apply() // Use apply() for efficiency
-                            }
-                        } catch (e: RemoteException) {
-                            onReferrerSettled()
-                        } finally {
-                            referrerClient.endConnection()
-                        }
-
-                    }
-
-                    // Everything else — unsupported, unavailable, and the DEVELOPER_ERROR /
-                    // PERMISSION_ERROR codes that used to fall off the end of this when —
-                    // still has to hand off, or the audience flag is never written.
-                    else -> onReferrerSettled()
-                }
-            }
-
-            override fun onInstallReferrerServiceDisconnected() {
-                // The service can drop before setup ever finishes; without this the probe
-                // would end here and the flow would stall on the pre-referrer audience.
-                onReferrerSettled()
-            }
-        })
     }
 
     private fun setApplication(fbAppId: String, fbClientToken: String) {

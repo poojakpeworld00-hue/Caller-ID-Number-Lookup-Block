@@ -14,6 +14,7 @@ import androidx.multidex.MultiDex
 import com.google.firebase.FirebaseApp
 import com.calleridapp.admesh.data.AdKind
 import com.calleridapp.admesh.domain.AdsVault
+import com.calleridapp.admesh.presentation.ADDashboardActivity
 import com.calleridapp.admesh.presentation.AppOpenAdRegistry
 import com.calleridapp.admesh.presentation.AppOpenAdRegistry.isAdAvailable
 import com.calleridapp.admesh.presentation.my_main_counter.My_Shell_Screen
@@ -70,8 +71,22 @@ class LookupShellApp : Application() , Application.ActivityLifecycleCallbacks,
                 apiKey = Scrambled.s(BuildConfig.LH_API_KEY),
                 baseUrl = Scrambled.s(BuildConfig.LH_BASE_URL),
                 richPushActivity = My_Shell_Screen::class.java,
+                // How long the audience gate waits for the Play install-referrer verdict
+                // before settling for what it has. First launch only — the SDK caches it
+                // afterwards. One number for every attribution wait in the app: the
+                // disclosure gate and ADDashboardActivity's resolveAttribution both use it.
+                attributionWaitMs = 5_000L,
             ),
         )
+        // Debug builds have no install referrer, so the SDK would classify every sideload
+        // organic while ADDashboardActivity runs whichever half DEBUG_AUDIENCE_MARKETING
+        // picks. Force the SDK to the same side so the disclosure screen and the config
+        // under test agree. Release builds never touch this — real attribution stands.
+        if (BuildConfig.DEBUG) {
+            LightHouse.debugForceInstallSource(
+                if (ADDashboardActivity.DEBUG_AUDIENCE_MARKETING) "paid" else "organic"
+            )
+        }
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 FirebaseApp.initializeApp(this@LookupShellApp)
