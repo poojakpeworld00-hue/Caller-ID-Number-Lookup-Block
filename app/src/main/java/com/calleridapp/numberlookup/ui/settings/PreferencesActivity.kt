@@ -165,15 +165,28 @@ class PreferencesActivity : HostActivity<ActivitySettingsBinding>() {
 
     // ── Call Screening (Android 10+ CallScreening role) ───────────────────
 
+    /**
+     * Shows or hides the call-screening card **together with its section heading**.
+     *
+     * The heading is a sibling view, not part of the card, so hiding the card alone
+     * left the "Calls" title stranded over nothing — the card is the only thing in
+     * that section.
+     */
+    private fun setCallScreeningVisible(visible: Boolean) {
+        val visibility = if (visible) View.VISIBLE else View.GONE
+        binding.labelCallSection.visibility = visibility
+        binding.cardCallScreening.visibility = visibility
+    }
+
     /** Wires the switch, hiding the whole card where the role isn't available. */
     private fun setupCallScreening() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            binding.cardCallScreening.visibility = View.GONE
+            setCallScreeningVisible(false)
             return
         }
         val rm = getSystemService(RoleManager::class.java)
         if (rm == null || !rm.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING)) {
-            binding.cardCallScreening.visibility = View.GONE
+            setCallScreeningVisible(false)
             return
         }
         refreshCallScreeningCard()
@@ -221,11 +234,11 @@ class PreferencesActivity : HostActivity<ActivitySettingsBinding>() {
      */
     private fun refreshCallScreeningCard() {
         if (!IdentIdRegistry.isRoleAvailable(this)) {
-            binding.cardCallScreening.visibility = View.GONE
+            setCallScreeningVisible(false)
             return
         }
         val enabled = IdentIdRegistry.isCallerIdEnabled(this)
-        binding.cardCallScreening.visibility = if (enabled) View.GONE else View.VISIBLE
+        setCallScreeningVisible(!enabled)
         isProgrammatic = true
         binding.switchCallScreening.isChecked = enabled
         isProgrammatic = false

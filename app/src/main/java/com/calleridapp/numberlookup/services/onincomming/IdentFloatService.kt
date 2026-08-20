@@ -41,7 +41,6 @@ import kotlinx.coroutines.withContext
  */
 class IdentFloatService : Service() {
 
-    private val TAG = "CallerOverlay"
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     private var windowManager: WindowManager? = null
@@ -159,16 +158,62 @@ class IdentFloatService : Service() {
     }
 
     companion object {
+        private const val TAG = "CallerOverlay"
         const val EXTRA_NUMBER = "extra_number"
 
+        /**
+         * How long a start for one number suppresses a second start for the same number.
+         *
+         * The card has two triggers: [ScreenerService.onScreenCall], which fires before the
+         * phone rings whenever we hold the CallScreening role, and [CallStateReceiver]'s
+         * RINGING broadcast, which is the only trigger without the role. When we do hold it
+         * both fire for the same call, milliseconds apart — this window swallows the second.
+         *
+         * It has to be a plain timestamp rather than an "is the service running" flag: on a
+         * locked device the service hands off to [InboundCallActivity] and immediately stops
+         * itself, so by the time the broadcast lands there is no service left to check and
+         * the hand-off would happen twice.
+         */
+        private const val DEDUPE_WINDOW_MS = 5_000L
+
+        private var lastStartedNumber: String? = null
+        private var lastStartedAt = 0L
+
         fun start(context: Context, number: String) {
+            if (isDuplicateStart(number)) {
+                Log.d(TAG, "card already raised for $number — duplicate start ignored")
+                return
+            }
+            lastStartedNumber = number
+            lastStartedAt = System.currentTimeMillis()
+
             val intent = Intent(context, IdentFloatService::class.java)
                 .putExtra(EXTRA_NUMBER, number)
             runCatching { context.startService(intent) }
+                .onFailure { Log.w(TAG, "startService refused — no card this call", it) }
         }
 
         fun stop(context: Context) {
+            // The call is over, so the next start for this number is a new call, not a duplicate.
+            lastStartedNumber = null
+            lastStartedAt = 0L
             runCatching { context.stopService(Intent(context, IdentFloatService::class.java)) }
+        }
+
+        private fun isDuplicateStart(number: String): Boolean {
+            val previous = lastStartedNumber ?: return false
+            if (System.currentTimeMillis() - lastStartedAt > DEDUPE_WINDOW_MS) return false
+            return sameNumber(previous, number)
+        }
+
+        /**
+         * Compares on the last 10 digits: the screening service reports the raw SIP/tel
+         * handle ("+917016414568") while the broadcast can carry a locally formatted one,
+         * and a strict equals would let the duplicate through.
+         */
+        private fun sameNumber(a: String, b: String): Boolean {
+            val x = a.filter(Char::isDigit).takeLast(10)
+            return x.isNotEmpty() && x == b.filter(Char::isDigit).takeLast(10)
         }
     }
 }

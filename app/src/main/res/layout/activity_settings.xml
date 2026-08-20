@@ -129,7 +129,10 @@
                         android:layout_weight="1" />
                 </LinearLayout>
                 <!-- PREFERENCES -->
+                <!-- Hidden together with cardCallScreening below: it heads that one card,
+                     so on its own it is an empty section. -->
                 <TextView
+                    android:id="@+id/labelCallSection"
                     style="@style/SettingsSection"
                     android:layout_marginTop="@dimen/_10sdp"
                     android:text="@string/settings_section_call" />

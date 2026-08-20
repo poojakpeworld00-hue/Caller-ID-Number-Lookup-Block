@@ -34,6 +34,9 @@ import java.util.Date
  *
  *  - **Caller-ID card** — RINGING (+ number + overlay) → show [IdentFloatService];
  *    OFFHOOK / IDLE → dismiss it (stop the service, finish any [InboundCallActivity]).
+ *    Raising the card is shared with [ScreenerService], which gets there first whenever
+ *    we hold the CallScreening role; dismissing it is this receiver's alone, because a
+ *    screening service gets no call-end callback.
  *  - **Post-call summary** — on IDLE, determine the call type and show
  *    [My_Shell_Screen] (overlay/FGS path) or a full-screen notification fallback.
  *
@@ -66,6 +69,10 @@ class CallStateReceiver : BroadcastReceiver() {
                 }
 
                 // Caller-ID card needs a number AND the overlay permission.
+                // When we hold the CallScreening role, [ScreenerService] has already raised
+                // the card before this broadcast arrived; IdentFloatService.start() drops
+                // this call as a duplicate. This branch is what covers pre-Android-10 and
+                // any device where another app owns the role.
                 if (!number.isNullOrBlank() && Settings.canDrawOverlays(context)) {
                     IdentFloatService.start(context, number)
                 } else if (number.isNullOrBlank()) {

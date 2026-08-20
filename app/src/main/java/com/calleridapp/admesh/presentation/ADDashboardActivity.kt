@@ -99,7 +99,7 @@ open class ADDashboardActivity : AppCompatActivity() {
          * marketing config while the SDK still classified the sideload organic — which is
          * exactly the mismatch that reads as "organic install got the marketing config".
          */
-        const val DEBUG_AUDIENCE_MARKETING = true
+        const val DEBUG_AUDIENCE_MARKETING = false
     }
 
     open fun getData(
@@ -284,7 +284,7 @@ open class ADDashboardActivity : AppCompatActivity() {
 
                 // Must run AFTER ingestConfig so funOnAdsLoad reads the freshly-persisted
                 // ad gates, not stale or half-written values.
-                funOnAdsLoad()
+                funOnAdsLoad(isSplit)
 
             } catch (e: Exception) {
                 Log.e("ADDashboardActivity", "Failed to update ad preferences: ${e.message}")
@@ -441,7 +441,12 @@ open class ADDashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun funOnAdsLoad() {
+    /**
+     * [isSplitConfig] is true when the getData response carried a top-level
+     * `marketing` / `organic` split, i.e. the ingested block already holds the final
+     * counters and the *Market* keys must not be copied over them.
+     */
+    private fun funOnAdsLoad(isSplitConfig: Boolean) {
         activity?.let { activity ->
             val adsPreference = AdsVault.getInstance(activity)
             lifecycleScope.launch(Dispatchers.IO) {
