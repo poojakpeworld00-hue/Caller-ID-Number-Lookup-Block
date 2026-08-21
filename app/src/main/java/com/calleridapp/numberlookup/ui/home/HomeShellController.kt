@@ -297,7 +297,10 @@ class HomeShellController(private val host: HomeShellHost) {
      * banner Enable button and by each tab's permission flow.
      */
     fun startOverlayPermissionFlow() {
-        if (FloatKit.isGranted(activity)) {
+        // Suppressed region (CountryList_Counter_NShow / `all`) → never open the
+        // system page. Guarded here as well as in the UI so no stale banner or row
+        // can still launch it.
+        if (!FloatKit.isOfferable(activity) || FloatKit.isGranted(activity)) {
             shell?.updateOverlayBanner()
             return
         }

@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
@@ -19,11 +18,8 @@ import androidx.browser.customtabs.CustomTabsServiceConnection
 import androidx.browser.customtabs.CustomTabsSession
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.facebook.FacebookSdk
-import com.facebook.LoggingBehavior
 import com.facebook.ads.Ad
 import com.facebook.ads.InterstitialAdListener
-import com.facebook.appevents.AppEventsLogger
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -33,8 +29,6 @@ import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.ump.FormError
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import io.lighthouse.push.Attribution
 import io.lighthouse.push.LightHouse
 import com.calleridapp.admesh.data.AdKind
@@ -42,6 +36,7 @@ import com.calleridapp.admesh.data.OnDataReady
 import com.calleridapp.admesh.data.getLocationFromIP
 import com.calleridapp.admesh.domain.AdRevenueMeter
 import com.calleridapp.admesh.domain.AdsVault
+import com.calleridapp.admesh.domain.ConfigSync
 import com.calleridapp.admesh.domain.GoogleMobileAdsConsentRegistry
 import com.calleridapp.admesh.domain.logKeyEvent
 import com.calleridapp.admesh.presentation.oninterAds.InterstitialBack
@@ -52,9 +47,6 @@ import com.calleridapp.numberlookup.data.VaultRegistry
 import com.calleridapp.numberlookup.permission.AccessEngine
 import com.calleridapp.numberlookup.permission.AccessSource
 import com.calleridapp.numberlookup.util.AppVault
-import com.calleridapp.numberlookup.util.AppVault.THEME_DARK
-import com.calleridapp.numberlookup.util.AppVault.THEME_LIGHT
-import com.calleridapp.numberlookup.util.AppVault.THEME_SYSTEM
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -83,6 +75,19 @@ open class ADDashboardActivity : AppCompatActivity() {
 
         /** One grep-able tag for the getData Remote Config → prefs ingestion path. */
         const val CONFIG_TAG = "GetDataConfig"
+
+        /** Master switch for the IP-location "do not show" check. */
+        const val COUNTRY_ENABLE_KEY = "Iscountry_Counter"
+
+        /**
+         * Comma-separated "do not show" locations. Each entry is matched against the
+         * IP country, region and city (so `"Indore"`, `"Karnataka"` and `"India"` are
+         * all valid entries), plus the [NSHOW_ALL] wildcard.
+         */
+        const val COUNTRY_LIST_KEY = "CountryList_Counter_NShow"
+
+        /** Entry in [COUNTRY_LIST_KEY] that matches every location, worldwide. */
+        const val NSHOW_ALL = "all"
 
         /**
          * Which audience a DEBUG build runs as — flip this one line to test the other side.
@@ -230,213 +235,33 @@ open class ADDashboardActivity : AppCompatActivity() {
             }
         }
 
-        val remoteConfig = FirebaseRemoteConfig.getInstance()
-        val configSettings = FirebaseRemoteConfigSettings.Builder()
-            .setMinimumFetchIntervalInSeconds(1) // Fetch interval
-            // Cap the fetch so a slow network can't park the splash on this
-            // call (was defaulting to 60s; observed 37s stalls). On timeout the
-            // fetch fails fast → onError()/cached values → flow continues.
-            .setFetchTimeoutInSeconds(10)
-            .build()
-        remoteConfig.setConfigSettingsAsync(configSettings)
-        activity?.let {
-            remoteConfig.fetchAndActivate().addOnCompleteListener(it) { task ->
-                if (task.isSuccessful) {
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        setResponceInPref(remoteConfig)
-                    }
-                } else {
-                    onGetData?.onError()
-                }
+        // Fetch + settings are owned by ConfigSync — the launcher and the realtime
+        // listener go through the same single-flight call, so however many entry points
+        // ask, a cold start still costs one request.
+        ConfigSync.fetch { ok ->
+            if (ok) {
+                lifecycleScope.launch(Dispatchers.IO) { setResponceInPref() }
+            } else {
+                onGetData?.onError()
             }
         }
     }
 
-    private fun setResponceInPref(remoteConfig: FirebaseRemoteConfig) {
+    private fun setResponceInPref() {
         // Run everything in a background thread to prevent cold-start stutters and ANR
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val blobKey = if (BuildConfig.DEBUG) "DEBUG_GET_DATA_LIST" else "GET_DATA_LIST"
-                val configString = remoteConfig.getString(blobKey)
+                // The splash resolves a fresh IP location of its own, so it ingests here
+                // and applies the location gate afterwards in funOnAdsLoad — hence
+                // ingestActivated() rather than ingestAndApply().
+                val isSplit = ConfigSync.ingestActivated(this@ADDashboardActivity) ?: return@launch
 
-                if (configString.isNullOrEmpty()) {
-                    Log.w(CONFIG_TAG, "$blobKey is empty → nothing ingested (using cached/default prefs)")
-                    return@launch
-                }
-
-                val response = JSONObject(configString)
-                val adsPref = AdsVault.getInstance(this@ADDashboardActivity)
-
-                val isSplit = response.has("marketing") || response.has("organic")
-                val onMarketing = adsPref.getBoolean("OnMaketing")
-                if (BuildConfig.DEBUG) Log.d(
-                    CONFIG_TAG,
-                    "fetched $blobKey (${configString.length} chars) → audienceSplit=$isSplit, " +
-                        "OnMaketing=$onMarketing "
-                )
-
-                // Top-level audience split: every key is read from
-                // response.marketing / response.organic (chosen by OnMaketing, settled in
-                // getData before this ran). A flat response (no wrapper) is used verbatim →
-                // legacy config is unchanged. One ingest, on the right half — there is no
-                // second pass to correct it, and none is needed.
-                ingestConfig(this@ADDashboardActivity, audienceRoot(response, onMarketing))
-
-                // Must run AFTER ingestConfig so funOnAdsLoad reads the freshly-persisted
+                // Must run AFTER the ingest so funOnAdsLoad reads the freshly-persisted
                 // ad gates, not stale or half-written values.
                 funOnAdsLoad(isSplit)
 
             } catch (e: Exception) {
                 Log.e("ADDashboardActivity", "Failed to update ad preferences: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Reads every getData key from [root] into AdsVault (batched). [root] is
-     * either the flat response or one of its `marketing` / `organic` sub-objects
-     * (see [audienceRoot]). Safe to call again (funOnAdsLoad re-applies the correct
-     * audience once the referrer settles OnMaketing).
-     */
-    private fun ingestConfig(context: Context, root: JSONObject) {
-        val adsPref = AdsVault.getInstance(context)
-        adsPref.update {
-            // --- Booleans ---
-            listOf(
-                "IsAdsON", "IsFail_FB", "isLoaderForFB", "IsCustomADS", "IsBack",
-                "NativeBanner", "BannerAds", "In_App_Update_Show", "In_App_Update_Force_Show",
-                "Iscountry_Counter", "Iscountry_Marketing_Counter", "HD_VBC_Show",
-                "HD_VBC_Native", "is_preload_ads",
-                "is_splash_inter_show", "is_splash_ads", "InterAds", "AppopenAds",
-                "NativeAd", "is_rateus", "Perm_Sheet_Show",
-                "screen_wise_ad", "screen_wise_default"
-            ).forEach { key -> if (root.has(key)) putBoolean(key, root.optBoolean(key, false)) }
-
-            // --- Strings ---
-            listOf(
-                "IsAdType", "In_App_Update_Link", "CountryList_Counter_NShow",
-                "CountryList_Marketing_Counter_NShow", "PrivacyPolicy", "TermLink",
-                "DirectLink", "MarketLink", "HD_VBC_Native_ID", "HD_VBC_Banner_ID",
-                "googleS_Inter", "googleBackInter", "googleInter", "googleAppopen",
-                "googleNative", "googleBanner", "googleRewarded", "faceB_InterAds",
-                "faceB_NativeAds", "faceB_NativeBannerAds", "faceB_BannerAds",
-                "NativeTheme", "HD_VBC_Type", "NativeBgColor", "NativebtnColor",
-                "NativetxtColor", "NativebtntxtColor", "Perm_Sheet_Mode",
-                // API origin — see RetrofitClient, which falls back to its compiled-in default
-                // when this is absent or malformed.
-                "api_base_url",
-                // Nested JSON objects stored as text (read back via JSONObject).
-                "intro_display", "ScreenAds", "launcher_ads"
-            ).forEach { key -> if (root.has(key)) putString(key, root.optString(key, "")) }
-
-            // --- Integers ---
-            listOf(
-                "InterCounter", "InterBackCounter", "MarketInterCounter", "MarketBackCounter",
-                "NativeCounter", "MarketNativeCounter", "MidNativeCounter", "BannerCounter",
-                "MarketBannerCounter", "MarketAppopenCounter", "AppopenCounter",
-                "Perm_Sheet_Interval_Days", "HD_VBC_Hrs"
-            ).forEach { key -> if (root.has(key)) putInt(key, root.optInt(key, 0)) }
-
-            applyNativeTheme(context, root) // DEFAULT theme
-
-            // --- Custom Ads ---
-            val customAdsArray = root.optJSONArray("custom_ads")
-            if (customAdsArray != null) {
-                putString("CUSTOM_ADS", customAdsArray.toString())
-                CustomAdsRegistry.clearCache()
-            }
-        }
-
-        // Facebook Ad initialization parameters
-        val fbAppId = root.optString("FbAppId", "")
-        val fbClientToken = root.optString("FbClientToken", "")
-        if (fbAppId.isNotEmpty() && fbClientToken.isNotEmpty()) {
-            setApplication(fbAppId, fbClientToken)
-        }
-
-        if (BuildConfig.DEBUG) Log.d(
-            CONFIG_TAG,
-            "ingested → IsAdsON=${adsPref.getBoolean("IsAdsON")}, IsAdType=${adsPref.getString("IsAdType")}, " +
-                "InterAds=${adsPref.getBoolean("InterAds")}, AppopenAds=${adsPref.getBoolean("AppopenAds")}, " +
-                "NativeAd=${adsPref.getBoolean("NativeAd")}, BannerAds=${adsPref.getBoolean("BannerPromo")}, " +
-                "HD_VBC_Show=${adsPref.getBoolean("HD_VBC_Show")}, HD_VBC_Hrs=${adsPref.getInt("HD_VBC_Hrs")}, " +
-                "screen_wise_ad=${adsPref.getBoolean("screen_wise_ad")}, " +
-                "customAds=${root.optJSONArray("custom_ads")?.length() ?: 0}, " +
-                "fbInit=${fbAppId.isNotEmpty() && fbClientToken.isNotEmpty()}, " +
-                "appOpenId=${adsPref.getString("googleAppopen")}"
-        )
-    }
-
-    /**
-     * The audience-specific sub-object of a getData response — `marketing` or
-     * `organic` per [isMarketing], falling back to the other audience, then to the
-     * flat [response] itself (legacy, un-split config → unchanged behaviour).
-     */
-    private fun audienceRoot(response: JSONObject, isMarketing: Boolean): JSONObject {
-        val preferred = if (isMarketing) "marketing" else "organic"
-        val fallback = if (isMarketing) "organic" else "marketing"
-        response.optJSONObject(preferred)?.let {
-            if (BuildConfig.DEBUG) Log.d(CONFIG_TAG, "audienceRoot → using '$preferred' segment")
-            return it
-        }
-        response.optJSONObject(fallback)?.let {
-            if (BuildConfig.DEBUG) Log.d(CONFIG_TAG, "audienceRoot → '$preferred' missing, fell back to '$fallback' segment")
-            return it
-        }
-        if (BuildConfig.DEBUG) Log.d(CONFIG_TAG, "audienceRoot → no marketing/organic wrapper, using flat config")
-        return response
-    }
-
-    fun getNativeThemeKey(context: Context): String {
-
-        return when (AppVault.selectedTheme(this)) {
-            THEME_DARK -> {
-                "NativeDark"
-            }
-
-            THEME_LIGHT -> {
-                "NativeLight"
-            }
-
-            THEME_SYSTEM -> {
-                val isSystemDark =
-                    (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-                if (isSystemDark) "NativeDark" else "NativeLight"
-            }
-
-            else -> {
-                "NativeLight"
-            }
-        }
-    }
-
-    private fun applyNativeTheme(
-        context: Context, response: JSONObject
-    ) {
-        val adsPreference = AdsVault.getInstance(context)
-
-        val nativeThemeRoot = response.optJSONObject("NativeTheme") ?: return
-
-        val modeKey = getNativeThemeKey(context)
-
-        nativeThemeRoot?.let {
-            val marketingObj = it.optJSONObject("marketing")
-            val defaultObj = it.optJSONObject("default")
-
-            // Convert JSONObjects to strings before storing in AdsVault
-            val marketingStr = marketingObj?.toString() ?: "{}"
-            val defaultStr = defaultObj?.toString() ?: "{}"
-
-            adsPreference.putString("NativeTheme_marketing", marketingStr)
-            adsPreference.putString("NativeTheme_default", defaultStr)
-
-            val themeJson = defaultObj?.optJSONObject(modeKey)
-
-            if (themeJson != null) {
-                adsPreference.putString("NativebtnColor", themeJson.optString("btnColor"))
-                adsPreference.putString("NativebtntxtColor", themeJson.optString("btnText"))
-                adsPreference.putString("NativeBgColor", themeJson.optString("bgColor"))
-                adsPreference.putString("NativetxtColor", themeJson.optString("textColor"))
             }
         }
     }
@@ -466,63 +291,28 @@ open class ADDashboardActivity : AppCompatActivity() {
                 // Settled in getData, before consent / Remote Config / this call.
                 val isMarketingOn = adsPreference.getBoolean("OnMaketing")
 
-                val countryEnableKey =
-                    if (isMarketingOn) "Iscountry_Marketing_Counter" else "Iscountry_Counter"
-                val countryListKey =
-                    if (isMarketingOn) "CountryList_Marketing_Counter_NShow" else "CountryList_Counter_NShow"
-                if (BuildConfig.DEBUG) Log.d(
-                    "LocationCheck",
-                    "install=${if (isMarketingOn) "MARKETING" else "ORGANIC"} → using $countryEnableKey / $countryListKey"
-                )
-
-                if (adsPreference.getBoolean(countryEnableKey)) {
-                    location?.let { loc ->
-                        if (BuildConfig.DEBUG) {
-                            Log.d("LocationCheck", "=== Location Info ===")
-                            Log.d("LocationCheck", "Country: ${loc.country}")
-                            Log.d("LocationCheck", "Region: ${loc.regionName}")
-                            Log.d("LocationCheck", "City: ${loc.city}")
-                        }
-
-                        // Save country
-                        AdsVault.getInstance(activity).userCountry = loc.country!!
-                        AdsVault.getInstance(activity).userRegion = loc.regionName!!
-                        AdsVault.getInstance(activity).userCity = loc.city!!
-                        // Get stored list from preferences (marketing or organic list).
-                        val storedListStr =
-                            adsPreference.getString(countryListKey, "") ?: ""
-
-                        val allowedLocations =
-                            storedListStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-
-                        // Check if current country, region, or city is in the list
-                        val isAllowed = allowedLocations.any { allowed ->
-                            val match = allowed.equals(
-                                loc.country, ignoreCase = true
-                            ) || allowed.equals(
-                                loc.regionName, ignoreCase = true
-                            ) || allowed.equals(loc.city, ignoreCase = true)
-                            match
-                        }
-
-                        if (isAllowed) {
-                            if (BuildConfig.DEBUG) Log.d(
-                                "LocationCheck", "✅ Location IN list ($countryListKey) → HD_VBC_Show=false (real ads)"
-                            )
-                            // Do not show CB
-                            adsPreference.putBoolean("HD_VBC_Show", false)
-
-                        } else {
-                            if (BuildConfig.DEBUG) Log.d(
-                                "LocationCheck", "❌ Location NOT in list ($countryListKey) → HD_VBC_Show unchanged"
-                            )
-                        }
-                    } ?: run {
-                        if (BuildConfig.DEBUG) Log.w("LocationCheck", "⚠️ Location not available")
+                // The location gate itself lives in ConfigSync so the launcher and the
+                // realtime listener can re-run it against the cached location without a
+                // second IP lookup. Here we have a fresh one, so we pass that.
+                location?.let { loc ->
+                    if (BuildConfig.DEBUG) {
+                        Log.d("LocationCheck", "=== Location Info ===")
+                        Log.d("LocationCheck", "Country: ${loc.country}")
+                        Log.d("LocationCheck", "Region: ${loc.regionName}")
+                        Log.d("LocationCheck", "City: ${loc.city}")
                     }
-                } else {
-                    if (BuildConfig.DEBUG) Log.d("LocationCheck", "Country check is disabled in preferences")
+                    adsPreference.userCountry = loc.country.orEmpty()
+                    adsPreference.userRegion = loc.regionName.orEmpty()
+                    adsPreference.userCity = loc.city.orEmpty()
+                } ?: run {
+                    if (BuildConfig.DEBUG) Log.w("LocationCheck", "⚠️ Location not available")
                 }
+                ConfigSync.applyLocationGate(
+                    activity,
+                    location?.country ?: adsPreference.userCountry,
+                    location?.regionName ?: adsPreference.userRegion,
+                    location?.city ?: adsPreference.userCity,
+                )
 
                 // (marketing state already decided above as `isMarketingOn`)
 
@@ -556,7 +346,7 @@ open class ADDashboardActivity : AppCompatActivity() {
 
                 // Decide theme source
                 val themeSource = if (isMarketingOn) marketingObj else defaultObj
-                val modeKey = getNativeThemeKey(activity)
+                val modeKey = ConfigSync.nativeThemeKey(activity)
                 // Get the correct modeKey (e.g., "NativeDark" or "NativeLight")
                 val themeJson = themeSource.optJSONObject(modeKey)
 
@@ -1085,16 +875,4 @@ open class ADDashboardActivity : AppCompatActivity() {
         handleCustomTabClose()
     }
 
-    private fun setApplication(fbAppId: String, fbClientToken: String) {
-        FacebookSdk.setApplicationId(fbAppId)
-        FacebookSdk.setClientToken(fbClientToken)
-        activity?.let { FacebookSdk.sdkInitialize(it) }
-
-        FacebookSdk.setAutoInitEnabled(true)
-        FacebookSdk.fullyInitialize()
-        FacebookSdk.setAutoLogAppEventsEnabled(true)
-        FacebookSdk.addLoggingBehavior(LoggingBehavior.APP_EVENTS)
-        val logger = activity?.let { AppEventsLogger.newLogger(it) }
-        logger?.applicationId
-    }
 }

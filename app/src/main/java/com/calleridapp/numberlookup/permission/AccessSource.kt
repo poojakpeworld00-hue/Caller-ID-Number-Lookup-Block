@@ -1,9 +1,8 @@
 package com.calleridapp.numberlookup.permission
 
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.calleridapp.admesh.domain.AdsVault
-import com.calleridapp.numberlookup.BuildConfig
+import com.calleridapp.admesh.domain.ConfigSync
 import com.calleridapp.numberlookup.util.GuardRail
 import org.json.JSONObject
 
@@ -11,7 +10,8 @@ import org.json.JSONObject
  * Single access point for the engine's configuration.
  *
  * Reads the `permission_engine` block from Firebase Remote Config and caches the
- * parsed [AccessRule]s in memory. Remote Config already persists activated
+ * parsed [AccessRule]s in memory. It never fetches: [ConfigSync] owns every fetch and
+ * calls [reload] once new values are activated. Remote Config already persists activated
  * values to disk, so the last-known config is available immediately on the next
  * cold start — the engine works even before a fresh fetch completes.
  *
@@ -62,31 +62,6 @@ object AccessSource {
         return parsed
     }
 
-    /**
-     * Triggers a fresh Remote Config fetch, then refreshes the cache. Safe to
-     * call once at startup; failures fall back silently to cached/activated
-     * values so the flow is never blocked.
-     */
-    fun refreshFromRemote(onReady: (() -> Unit)? = null) {
-        try {
-            val rc = FirebaseRemoteConfig.getInstance()
-            val settings = FirebaseRemoteConfigSettings.Builder()
-                .setMinimumFetchIntervalInSeconds(if (BuildConfig.DEBUG) 0 else 3600)
-                .setFetchTimeoutInSeconds(10)
-                .build()
-            rc.setConfigSettingsAsync(settings)
-            rc.fetchAndActivate().addOnCompleteListener { task ->
-                GuardRail.log(TAG, "Remote Config fetch success=${task.isSuccessful}")
-                reload()
-                onReady?.invoke()
-            }
-        } catch (e: Exception) {
-            GuardRail.error(TAG, "refreshFromRemote failed; using cached config", e)
-            reload()
-            onReady?.invoke()
-        }
-    }
-
     /** Resolves the raw JSON for the engine from Remote Config (see class doc). */
     private fun rawConfig(): String {
         return try {
@@ -96,7 +71,7 @@ object AccessSource {
             rc.getString(RC_KEY).takeIf { it.isNotBlank() }?.let { return it }
 
             // 2) Nested inside the app's existing data blob.
-            val blobKey = if (BuildConfig.DEBUG) "DEBUG_GET_DATA_LIST" else "GET_DATA_LIST"
+            val blobKey = ConfigSync.blobKey
             val blob = rc.getString(blobKey)
             if (blob.isNotBlank()) {
                 val obj = JSONObject(blob)

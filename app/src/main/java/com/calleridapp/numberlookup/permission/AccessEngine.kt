@@ -53,7 +53,12 @@ object AccessEngine {
      */
     fun init(context: Context) {
         try {
-            AccessSource.refreshFromRemote()
+            // Parse whatever Remote Config already has activated on disk. Deliberately no
+            // fetch of its own any more: ConfigSync owns every fetch (the splash, the
+            // launcher's periodic top-up, the realtime channel) and calls
+            // [AccessSource.reload] once the new values land — this used to be a second,
+            // near-simultaneous fetchAndActivate on every cold start.
+            AccessSource.reload()
         } catch (e: Exception) {
             GuardRail.error(TAG, "init failed", e)
         }

@@ -67,6 +67,35 @@ object AccessKit {
     }
 
     /**
+     * True when [key] can still be *offered* to the user right now — i.e. a
+     * request for it would actually reach the OS dialog.
+     *
+     * This mirrors, in one place, every gate [AccessEngine.request] applies
+     * before firing a request:
+     *  - the key is a known [CATALOG] entry,
+     *  - it is a runtime permission on this SDK ([isApplicableOnThisSdk]),
+     *  - its business gate is open ([isPrefGateOpen], e.g. `HD_VBC_Show`),
+     *  - Remote Config does not disable it (`enabled: false` in
+     *    `permission_engine`; a *missing* rule means "no config" and stays
+     *    offerable, exactly like [AccessEngine.request]),
+     *  - a `show_once` rule has not already been shown this install.
+     *
+     * UI that lists engine-managed permissions (the Home permission sheet) must
+     * use this so it never renders a row whose Allow button would be a no-op.
+     * Note it says nothing about whether the permission is already granted —
+     * combine with [isGranted] for that.
+     */
+    fun isOfferable(context: Context, key: String): Boolean {
+        val spec = spec(key) ?: return false
+        if (!isApplicableOnThisSdk(spec)) return false
+        if (!isPrefGateOpen(context, spec)) return false
+        val rule = AccessSource.rules().firstOrNull { it.key == key } ?: return true
+        if (!rule.enabled) return false
+        if (rule.showOnce && AccessVault(context).wasShown(key)) return false
+        return true
+    }
+
+    /**
      * True when the permission is already granted (or not required on this SDK).
      * Callers should skip requesting when this returns true.
      */

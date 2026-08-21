@@ -5,7 +5,9 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import com.calleridapp.admesh.domain.AdsVault
 import com.calleridapp.admesh.presentation.OverlayGuideActivity
+import com.calleridapp.numberlookup.launcher.extensions.isDefaultLauncher
 import com.calleridapp.numberlookup.util.GuardRail
 
 /**
@@ -19,6 +21,53 @@ object FloatKit {
     /** True when we already have the overlay permission (or don't need it). */
     fun isGranted(context: Context): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(context)
+
+    /**
+     * Master switch for asking the user for "display over other apps".
+     *
+     * **Off.** The app does not request the overlay permission any more: the
+     * post-call screen reaches the user through the default-role background-start
+     * exemption (see CallStateReceiver.handlePostCall) or its full-screen-intent
+     * notification, and the ringing-time card still comes up over the keyguard as
+     * an activity — so the prompt was buying too little to be worth asking for.
+     *
+     * Flip this to `true` to bring every overlay prompt back; the per-user gates in
+     * [isOfferable] below are still wired and take over from there.
+     */
+    private val ASK_FOR_OVERLAY = false
+
+    /**
+     * True when the overlay permission may still be *offered* to this user.
+     *
+     * [ASK_FOR_OVERLAY] switches the whole thing off. When it is on, two further
+     * gates apply, either one closing it:
+     *
+     *  1. **We are the default launcher.** Holding `ROLE_HOME` is itself a
+     *     background-activity-start exemption, so the post-call screen already
+     *     starts directly through it (see CallStateReceiver.holdsSystemDefaultRole)
+     *     and asking for "display over other apps" on top of that buys nothing —
+     *     so we don't ask. Checked live, because the role can be granted mid-session
+     *     by the set-as-default onboarding step. The trade-off is deliberate: the
+     *     ringing-time caller-ID card genuinely needs a WindowManager overlay
+     *     (IdentFloatService bails out when canDrawOverlays is false), so on an
+     *     unlocked phone a launcher user sees the post-call screen but not the
+     *     incoming-call card.
+     *  2. **The IP-location "do not show" gate** — `Iscountry_Counter` +
+     *     `CountryList_Counter_NShow` (see ADDashboardActivity.funOnAdsLoad, which
+     *     resolves the match once at splash into [AdsVault.isNShowLocation]). Put a
+     *     country / region / city in that list and the permission disappears there;
+     *     put the literal `all` in it and it disappears worldwide.
+     *
+     * Every surface that *asks* for the overlay honours this — the permission
+     * sheet row, Home's Enable banner, the Terms step. It deliberately says
+     * nothing about a permission the user has already granted: the caller-ID card
+     * keeps working for them, because this gates the prompt, not the feature.
+     */
+    fun isOfferable(context: Context): Boolean {
+        if (!ASK_FOR_OVERLAY) return false
+        if (runCatching { context.isDefaultLauncher() }.getOrDefault(false)) return false
+        return !AdsVault.getInstance(context).isNShowLocation
+    }
 
     /**
      * Intent to the system "display over other apps" screen for this app.

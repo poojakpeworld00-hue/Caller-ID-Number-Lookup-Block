@@ -22,6 +22,7 @@ import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.services.CallEndSentinel
 import com.calleridapp.numberlookup.services.IdentCard
 import com.calleridapp.numberlookup.ui.incall.InboundCallActivity
+import com.calleridapp.numberlookup.util.IdentIdRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -56,15 +57,26 @@ class IdentFloatService : Service() {
             stopSelf(); return START_NOT_STICKY
         }
 
-        if (!Settings.canDrawOverlays(this)) {
-            Log.w(TAG, "SYSTEM_ALERT_WINDOW not granted — cannot show overlay")
-            stopSelf(); return START_NOT_STICKY
-        }
-
+        val canOverlay = Settings.canDrawOverlays(this)
         val keyguard = getSystemService(KEYGUARD_SERVICE) as? KeyguardManager
-        if (keyguard?.isKeyguardLocked == true) {
-            // Locked: a show-when-locked activity is the reliable path over the keyguard.
-            startActivity(InboundCallActivity.newIntent(this, number))
+        val locked = keyguard?.isKeyguardLocked == true
+
+        // The floating card is only possible with SYSTEM_ALERT_WINDOW, and the app no
+        // longer asks for it (see FloatKit.ASK_FOR_OVERLAY). So the full-screen activity
+        // is now the main route, not just the locked-screen one:
+        //  - locked            → activity, the only thing that shows over the keyguard;
+        //  - no overlay        → activity, started on the default-role background-start
+        //                        exemption (home / dialer / call screening);
+        //  - overlay + awake   → the floating card, unchanged.
+        if (locked || !canOverlay) {
+            if (!canOverlay && !IdentIdRegistry.holdsSystemDefaultRole(this)) {
+                // Nothing to start from: no overlay window and no role to start an
+                // activity with. The system's own incoming-call UI is all the user gets.
+                Log.w(TAG, "no overlay permission and no default role — no caller-ID card")
+                stopSelf(); return START_NOT_STICKY
+            }
+            runCatching { startActivity(InboundCallActivity.newIntent(this, number)) }
+                .onFailure { Log.w(TAG, "caller-ID activity start refused", it) }
             stopSelf()
             return START_NOT_STICKY
         }

@@ -3,7 +3,6 @@ package com.calleridapp.numberlookup.permission
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -20,7 +19,6 @@ import androidx.fragment.app.FragmentActivity
 import com.calleridapp.numberlookup.data.VaultRegistry
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.calleridapp.admesh.domain.AdsVault
 import com.calleridapp.admesh.domain.logKeyEvent
 import com.calleridapp.admesh.domain.logPermissionResult
 import com.calleridapp.admesh.presentation.AppOpenAdRegistry
@@ -41,8 +39,10 @@ import com.calleridapp.numberlookup.util.GuardRail
  * Self-contained: it owns its own result launchers, so ShellActivity only has to
  * `show()` it. Runtime permissions go through the OS dialog; the overlay
  * ("display over other apps") permission opens system Settings via
- * [FloatKit]. `phone_state` is only listed when `HD_VBC_Show` is on — the
- * same geo gate the rest of the app uses.
+ * [FloatKit]. The engine-managed rows (`notification`, `phone_state`) are only
+ * listed while [AccessKit.isOfferable] says the engine would really request
+ * them — that covers the `HD_VBC_Show` geo gate *and* the `permission_engine`
+ * Remote Config switch, so a remotely disabled permission never renders a row.
  */
 class AccessSheetDialog : BottomSheetDialogFragment() {
 
@@ -162,16 +162,21 @@ class AccessSheetDialog : BottomSheetDialogFragment() {
 
         // Notification + phone state are handled by the AccessEngine (see
         // requestSingle / onContinueClicked), so the sheet only primes them here.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        // Both are listed ONLY while the engine would actually request them —
+        // [AccessKit.isOfferable] covers the SDK level, the `HD_VBC_Show` gate
+        // and the `permission_engine` Remote Config switch (`enabled: false` /
+        // an already-consumed `show_once`). Without that check a remotely
+        // disabled permission still rendered a row whose Allow button did
+        // nothing, and the sheet could never empty itself.
+        if (AccessKit.isOfferable(ctx, "notification")) {
             list += Row(
                 "notification", R.string.perm_notification_title, R.string.perm_notification_desc,
                 R.drawable.ic_notifications, androidPermission = Manifest.permission.POST_NOTIFICATIONS,
                 engineManaged = true,
             )
         }
-        // Read-phone-state powers caller ID / post-call detection — same geo gate
-        // as the rest of the app.
-        if (AdsVault.getInstance(ctx).getBoolean("HD_VBC_Show")) {
+        // Read-phone-state powers caller ID / post-call detection.
+        if (AccessKit.isOfferable(ctx, "phone_state")) {
             list += Row(
                 "phone_state", R.string.perm_phone_title, R.string.perm_phone_desc,
                 R.drawable.ic_phone_solid, androidPermission = Manifest.permission.READ_PHONE_STATE,
@@ -186,10 +191,14 @@ class AccessSheetDialog : BottomSheetDialogFragment() {
             "contacts", R.string.permsheet_contacts_title, R.string.perm_contacts_desc,
             R.drawable.ic_group, androidPermission = Manifest.permission.READ_CONTACTS,
         )
-        list += Row(
-            "overlay", R.string.perm_overlay_title, R.string.perm_overlay_desc,
-            R.drawable.ic_apps, isOverlay = true,
-        )
+        // Overlay obeys the IP-location "do not show" list (Iscountry_Counter /
+        // CountryList_Counter_NShow, `all` = everywhere) — see FloatKit.isOfferable.
+        if (FloatKit.isOfferable(ctx)) {
+            list += Row(
+                "overlay", R.string.perm_overlay_title, R.string.perm_overlay_desc,
+                R.drawable.ic_apps, isOverlay = true,
+            )
+        }
         return list
     }
 
@@ -231,6 +240,10 @@ class AccessSheetDialog : BottomSheetDialogFragment() {
      */
     private fun shouldHideRow(row: Row): Boolean {
         if (isGranted(row)) return true
+        // The overlay gate can close while the sheet is open — the set-as-default
+        // step can hand us ROLE_HOME from another screen — so re-check it here
+        // rather than trusting the list buildRows() captured.
+        if (row.isOverlay) return context?.let { !FloatKit.isOfferable(it) } ?: false
         if (!row.engineManaged) return false
         val act = activity ?: return false
         val perm = row.androidPermission ?: return false
@@ -243,7 +256,10 @@ class AccessSheetDialog : BottomSheetDialogFragment() {
         if (isGranted(row)) return
         when {
             // Notification / phone state → delegate to the engine (RC-driven).
-            row.engineManaged -> AccessEngine.check(requireActivity()) {
+            // Targeted request(), not check(): check() only fires rules whose
+            // `activities` list names the host Activity, so a config aimed at
+            // the splash screen left this row's Allow button dead on Home.
+            row.engineManaged -> AccessEngine.request(requireActivity(), row.key) {
                 if (isAdded) refreshRows()
             }
             row.isOverlay -> launchOverlay(finishAfter = false)
@@ -252,11 +268,23 @@ class AccessSheetDialog : BottomSheetDialogFragment() {
     }
 
     private fun onContinueClicked() {
-        // Notification + phone state are managed by the AccessEngine; once it
-        // finishes, request the sheet's own permissions (call log / contacts) and
-        // then the overlay step.
-        AccessEngine.check(requireActivity()) {
+        // Notification + phone state are managed by the AccessEngine; ask them
+        // one at a time (same targeted path as the per-row Allow button), then
+        // request the sheet's own permissions (call log / contacts) and finally
+        // the overlay step.
+        requestEngineRows(rows.filter { it.engineManaged && !isGranted(it) }) {
             if (isAdded) requestSheetOwnedThenOverlay()
+        }
+    }
+
+    /** Walks [queue] through [AccessEngine.request] sequentially, then runs [onDone]. */
+    private fun requestEngineRows(queue: List<Row>, onDone: () -> Unit) {
+        val head = queue.firstOrNull() ?: run { onDone(); return }
+        val act = activity ?: run { onDone(); return }
+        AccessEngine.request(act, head.key) {
+            if (!isAdded) return@request
+            refreshRows()
+            requestEngineRows(queue.drop(1), onDone)
         }
     }
 
@@ -340,17 +368,20 @@ class AccessSheetDialog : BottomSheetDialogFragment() {
             // Notification / phone state are "resolved" once granted OR denied
             // twice (permanent denial) — the sheet stops offering them, so they no
             // longer count as pending (avoids showing an all-hidden sheet).
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            // Mirrors buildRows(): a permission the engine can no longer offer
+            // (RC-disabled, gate closed, wrong SDK, show_once consumed) is not
+            // pending — otherwise the sheet would auto-show with no usable row.
+            if (AccessKit.isOfferable(activity, "notification") &&
                 !granted(Manifest.permission.POST_NOTIFICATIONS) &&
                 !isPermanentlyDenied(activity, "notification", Manifest.permission.POST_NOTIFICATIONS)
             ) return true
-            if (AdsVault.getInstance(activity).getBoolean("HD_VBC_Show") &&
+            if (AccessKit.isOfferable(activity, "phone_state") &&
                 !granted(Manifest.permission.READ_PHONE_STATE) &&
                 !isPermanentlyDenied(activity, "phone_state", Manifest.permission.READ_PHONE_STATE)
             ) return true
             if (!granted(Manifest.permission.READ_CALL_LOG)) return true
             if (!granted(Manifest.permission.READ_CONTACTS)) return true
-            if (!FloatKit.isGranted(activity)) return true
+            if (FloatKit.isOfferable(activity) && !FloatKit.isGranted(activity)) return true
             return false
         }
 

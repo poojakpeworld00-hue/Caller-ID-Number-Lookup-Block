@@ -318,14 +318,16 @@ class HomeShellFragment : HostFragment<FragmentHomeShellBinding>() {
 
     /**
      * The banner is only relevant once the core permissions are in place: show it when
-     * call-log AND contacts are granted but the overlay permission is not.
+     * call-log AND contacts are granted but the overlay permission is not — and only
+     * where the overlay permission may be offered at all ([FloatKit.isOfferable],
+     * the CountryList_Counter_NShow gate).
      */
     fun updateOverlayBanner() {
         val ctx = context ?: return
         if (view == null) return
         val coreGranted = isPermissionGranted(Manifest.permission.READ_CALL_LOG) &&
             isPermissionGranted(Manifest.permission.READ_CONTACTS)
-        val show = coreGranted && !FloatKit.isGranted(ctx)
+        val show = coreGranted && FloatKit.isOfferable(ctx) && !FloatKit.isGranted(ctx)
         binding.overlayBanner.visibility = if (show) View.VISIBLE else View.GONE
     }
 

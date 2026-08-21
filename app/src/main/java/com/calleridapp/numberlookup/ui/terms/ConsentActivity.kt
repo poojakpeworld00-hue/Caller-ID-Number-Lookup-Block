@@ -129,7 +129,9 @@ class ConsentActivity : HostActivity<ActivityTermsBinding>() {
 
     /** Requests the overlay permission, or skips ahead if it isn't needed. */
     private fun openOverlayPermission() {
-        if (FloatKit.isGranted(this)) {
+        // Already granted, or a region where the permission is not offered at all
+        // (CountryList_Counter_NShow / `all`) → straight on to the next screen.
+        if (FloatKit.isGranted(this) || !FloatKit.isOfferable(this)) {
             proceedToNextScreen()
             return
         }
