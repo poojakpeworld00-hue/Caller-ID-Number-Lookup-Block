@@ -109,7 +109,7 @@ open class ADDashboardActivity : AppCompatActivity() {
          * ORGANIC *before* the override is consulted. The config half below is still
          * marketing on such a device — only the SDK-side read disagrees.
          */
-        val FORCE_AUDIENCE_MARKETING: Boolean? = true
+        val DEBUG_AUDIENCE_MARKETING: Boolean? = true
     }
 
     open fun getData(
