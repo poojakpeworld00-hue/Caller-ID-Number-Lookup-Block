@@ -90,26 +90,21 @@ open class ADDashboardActivity : AppCompatActivity() {
         const val NSHOW_ALL = "all"
 
         /**
-         * Pins the audience half of the config for **every** build, release included:
-         * `true` = marketing, `false` = organic, `null` = use the real LightHouse
-         * attribution (`Attribution.PAID` → marketing).
+         * Which audience a DEBUG build runs as — flip this one line to test the other side.
+         * `true` = marketing, `false` = organic.
          *
-         * Currently `true`: this app ships as a marketing build, so every install runs the
-         * `marketing` half of `GET_DATA_LIST` regardless of how it was actually acquired.
-         * Set it to `null` to hand the decision back to attribution.
+         * A build installed from Studio or adb has no install referrer and no LightHouse
+         * attribution, so it always resolves to organic on its own and the `marketing` half
+         * of the config could never be exercised on a test device. Release builds ignore
+         * this entirely and keep using the real attribution (`Attribution.PAID`).
          *
-         * [LookupShellApp] mirrors this into `LightHouse.debugForceInstallSource`, so the
-         * SDK's own audience reads (disclosure variant, collection gating) match the config
-         * half chosen here. Without that they disagree: the app would run the marketing
-         * config while the SDK still classified the install organic — exactly the mismatch
-         * that reads as "organic install got the marketing config".
-         *
-         * One limit worth knowing, from the SDK's own resolution order: a device the SDK has
-         * flagged (reinstall / cross-app) or one that trips its bot signature is forced
-         * ORGANIC *before* the override is consulted. The config half below is still
-         * marketing on such a device — only the SDK-side read disagrees.
+         * [LookupShellApp] feeds the same value to `LightHouse.debugForceInstallSource` on a
+         * debug build, so the SDK's own audience reads (disclosure variant, collection gating)
+         * match the config half this picks. Without that they disagree: the app would run the
+         * marketing config while the SDK still classified the sideload organic — which is
+         * exactly the mismatch that reads as "organic install got the marketing config".
          */
-        val DEBUG_AUDIENCE_MARKETING: Boolean? = true
+        const val DEBUG_AUDIENCE_MARKETING = true
     }
 
     open fun getData(
