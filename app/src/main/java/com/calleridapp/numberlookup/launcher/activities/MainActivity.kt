@@ -117,6 +117,8 @@ import kotlin.math.max
 import kotlin.math.min
 import androidx.appcompat.app.AppCompatActivity
 import com.calleridapp.numberlookup.data.LocaleRegistry
+import com.calleridapp.admesh.presentation.InAppUpdateRegistry
+import com.google.android.material.snackbar.Snackbar
 import com.calleridapp.numberlookup.ui.home.HomeShellController
 import com.calleridapp.numberlookup.ui.home.HomeShellHost
 import com.calleridapp.numberlookup.util.applyNativeAdTheme
@@ -132,6 +134,26 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
 
     /** The shell rides in the swipe-right panel, so it is on screen only while that is open. */
     override val isShellOnScreen: Boolean get() = isCallerPanelExpanded()
+
+    /** The restart Snackbar, so a re-offer on the next resume does not stack a second one. */
+    private var updateReadySnackbar: Snackbar? = null
+
+    /**
+     * With the panel open the shell's own Snackbar is right; with it shut the shell is parked
+     * off screen, so the home grid has to carry the prompt itself or a downloaded update has
+     * nowhere to be installed from — the launcher home is where these users live.
+     */
+    override fun showUpdateReadyPrompt() {
+        if (isCallerPanelExpanded()) {
+            binding.callerPanel.root.shell()?.showUpdateReadyPrompt()
+            return
+        }
+        if (updateReadySnackbar?.isShown == true) return
+        updateReadySnackbar = Snackbar
+            .make(binding.mainHolder, R.string.update_ready_msg, Snackbar.LENGTH_INDEFINITE)
+            .setAction(R.string.update_restart) { InAppUpdateRegistry.completeUpdate() }
+            .also { it.show() }
+    }
 
     /** Back inside the caller panel with its own tab history exhausted just closes it. */
     override fun onShellBackExhausted() {

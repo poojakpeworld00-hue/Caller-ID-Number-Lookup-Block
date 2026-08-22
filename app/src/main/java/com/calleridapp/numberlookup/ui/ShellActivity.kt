@@ -33,6 +33,11 @@ class ShellActivity : HostActivity<ActivityMainBinding>(), HomeShellHost {
     /** The shell is the whole screen here — there is nothing else it could cover. */
     override val isShellOnScreen: Boolean get() = true
 
+    /** The shell is always the visible surface here, so its own Snackbar is the right place. */
+    override fun showUpdateReadyPrompt() {
+        shell?.showUpdateReadyPrompt()
+    }
+
     /** The shell, once committed. */
     private val shell: HomeShellFragment?
         get() = supportFragmentManager.findFragmentById(R.id.shellContainer) as? HomeShellFragment

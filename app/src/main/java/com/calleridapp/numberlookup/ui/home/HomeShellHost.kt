@@ -44,6 +44,16 @@ interface HomeShellHost {
     fun onShellBackExhausted()
 
     /**
+     * Offer the "a new version is downloaded — restart to install" affordance.
+     *
+     * Owned by the host rather than by [HomeShellFragment] because the launcher commits that
+     * fragment at `onCreate` and parks it off screen: a Snackbar anchored inside it while the
+     * caller panel is shut is drawn on a view the user cannot see, so the update sits pending
+     * with nothing on screen to act on. Each host puts it where its user is actually looking.
+     */
+    fun showUpdateReadyPrompt()
+
+    /**
      * Pull the host Activity back to the front of its task.
      *
      * Called when a grant is detected while the user is sitting on a system Settings page,

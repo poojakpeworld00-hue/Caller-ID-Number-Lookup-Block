@@ -59,6 +59,14 @@ class HomeShellController(private val host: HomeShellHost) {
     /** Guards [startFirstRunPriming] so a re-opened panel doesn't prime twice per session. */
     private var primingStarted = false
 
+    /**
+     * Whether [onHostCreated] ran. The launcher skips it while its first run is unfinished,
+     * and its `onResume` is not gated the same way — without this the resume-side update
+     * re-check would start a Play flow over the onboarding screens, on a host that never
+     * registered a result launcher for it.
+     */
+    private var hostCreated = false
+
     private val handler = Handler(Looper.getMainLooper())
 
     // ─────────────────────────── Result launchers ───────────────────────────
@@ -96,6 +104,7 @@ class HomeShellController(private val host: HomeShellHost) {
      * looking at the app grid; anything visible here would appear over it.
      */
     fun onHostCreated() {
+        hostCreated = true
         InAppUpdateRegistry.registerLauncher(activity)
         maybeCheckForUpdate()
         // One-time contact upload (no-op if already done or contacts not permitted yet).
@@ -149,9 +158,17 @@ class HomeShellController(private val host: HomeShellHost) {
         }
         // Resume an interrupted update (IMMEDIATE re-prompts; FLEXIBLE completes a finished download).
         InAppUpdateRegistry.resumeUpdate()
+        // resumeUpdate only revisits a flow that is already running — it never asks Play
+        // whether a NEW version exists. On the launcher that matters: this Activity IS the
+        // device home, so its onCreate (where the check used to run, once) may not happen
+        // for days while the process stays warm, and a version published in the meantime
+        // would go unnoticed. Same reasoning as ConfigSync.refreshIfStale above; the
+        // throttle inside keeps the repeat cost at nothing.
+        maybeCheckForUpdate()
     }
 
     fun onHostDestroy() {
+        hostCreated = false
         stopOverlayGrantPoll()
         stopFsiGrantPoll()
         handler.removeCallbacksAndMessages(null)
@@ -170,12 +187,26 @@ class HomeShellController(private val host: HomeShellHost) {
      *  - `In_App_Update_Force_Show` → true = IMMEDIATE (mandatory), false = FLEXIBLE (optional).
      */
     private fun maybeCheckForUpdate() {
+        if (!hostCreated) return
         val pref = AdsVault.getInstance(activity)
         if (!pref.getBoolean("In_App_Update_Show")) return
 
+        val isForceUpdate = pref.getBoolean("In_App_Update_Force_Show")
+
+        // Throttled because this also runs on resume (see [onHostResume]) and the launcher
+        // home resumes on every HOME press: without it a user who cancelled an optional
+        // update would be re-offered it dozens of times a day. A FORCE update is exempt —
+        // being unskippable is the whole point, and it re-prompts on cancel anyway, so a
+        // window here would only delay a mandatory version by up to six hours.
+        if (!isForceUpdate) {
+            val age = System.currentTimeMillis() - pref.getLong(LAST_UPDATE_CHECK_KEY, 0L)
+            if (age in 0 until UPDATE_CHECK_WINDOW_MS) return
+            pref.putLong(LAST_UPDATE_CHECK_KEY, System.currentTimeMillis())
+        }
+
         InAppUpdateRegistry.init(
             activity = activity,
-            isForceUpdate = pref.getBoolean("In_App_Update_Force_Show"),
+            isForceUpdate = isForceUpdate,
             callback = object : InAppUpdateListener {
                 override fun onUpdateSuccess() {}
                 override fun onUpdateCanceled() {}
@@ -184,7 +215,10 @@ class HomeShellController(private val host: HomeShellHost) {
                 }
 
                 override fun onUpdateDownloaded() {
-                    shell?.showUpdateReadyPrompt()
+                    // Through the host, not `shell`: on the launcher the shell is parked
+                    // off screen whenever the caller panel is shut, and a Snackbar there is
+                    // invisible. See [HomeShellHost.showUpdateReadyPrompt].
+                    host.showUpdateReadyPrompt()
                 }
             }
         )
@@ -385,6 +419,12 @@ class HomeShellController(private val host: HomeShellHost) {
     companion object {
         /** Grant-poll cadence while the user is on a system Settings page. */
         private const val GRANT_POLL_MS = 350L
+
+        /** Pref holding when the Play update check last ran. */
+        private const val LAST_UPDATE_CHECK_KEY = "last_inapp_update_check_at"
+
+        /** How long a Play update check stays fresh before a resume may run another. */
+        private const val UPDATE_CHECK_WINDOW_MS = 6 * 60 * 60 * 1000L
 
         /** Flags for the in-task reorder every [HomeShellHost.bringHostToFront] uses. */
         const val REORDER_FLAGS =
