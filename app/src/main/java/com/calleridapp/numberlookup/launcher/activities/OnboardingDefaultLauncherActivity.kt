@@ -8,11 +8,13 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.OnBackPressedCallback
 import com.calleridapp.admesh.domain.LauncherAdsConfig
+import com.calleridapp.admesh.presentation.OverlayGuideActivity
 import com.calleridapp.numberlookup.databinding.ActivityOnboardingDefaultLauncherBinding
 import com.calleridapp.numberlookup.launcher.extensions.excludeAppFromRecents
 import com.calleridapp.numberlookup.launcher.extensions.isDefaultLauncher
 import com.calleridapp.numberlookup.launcher.extensions.roleManager
 import com.calleridapp.numberlookup.launcher.helpers.LauncherFlow
+import com.calleridapp.numberlookup.launcher.helpers.LauncherHintPrompt
 import com.calleridapp.numberlookup.launcher.helpers.breathe
 import com.calleridapp.numberlookup.launcher.helpers.riseIn
 import com.calleridapp.numberlookup.launcher.helpers.stampIn
@@ -103,9 +105,22 @@ class OnboardingDefaultLauncherActivity : SimpleActivity() {
 
     // ===== the two-stage request =====
 
+
+
     /** Stage 1 — the settings page listing the installed home apps. */
     private fun openHomeSettings() {
         if (leaving || requestInFlight) return
+
+        launchHomeSettings()
+
+        // The card follows the list rather than racing it — see LauncherHintPrompt. It is a
+        // translucent activity in its own task, so it needs no "display over other apps"
+        // permission, which this app does not hold this early in the flow anyway.
+        LauncherHintPrompt.showAfterSettings(this)
+    }
+
+    private fun launchHomeSettings() {
+        if (leaving) return
 
         val opened = launchForResult(Intent(Settings.ACTION_HOME_SETTINGS), REQ_HOME_SETTINGS) ||
                 launchForResult(
@@ -130,7 +145,9 @@ class OnboardingDefaultLauncherActivity : SimpleActivity() {
             return
         }
 
-        if (!launchForResult(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME), REQ_ROLE_HOME)) {
+        if (!launchForResult(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME),
+                Companion.REQ_ROLE_HOME
+            )) {
             goToNextStep()
         }
     }
@@ -166,6 +183,10 @@ class OnboardingDefaultLauncherActivity : SimpleActivity() {
 
     override fun onResume() {
         super.onResume()
+        // We are in front again, so the home-app list is gone and the hint has nothing left
+        // to annotate. Also drops a card that has not been started yet, for the user who
+        // comes straight back out of Settings.
+        LauncherHintPrompt.dismiss()
         // Covers every way the role can arrive: the settings page, the role dialog, or the
         // user wandering off and setting it somewhere else entirely.
         if (isDefaultLauncher()) {
@@ -219,6 +240,8 @@ class OnboardingDefaultLauncherActivity : SimpleActivity() {
     }
 
     override fun onDestroy() {
+        // A queued hint must not outlive the screen that asked for it.
+        LauncherHintPrompt.dismiss()
         // infinite animators keep hard references to the views they drive
         shieldPulse?.cancel()
         shieldPulse = null

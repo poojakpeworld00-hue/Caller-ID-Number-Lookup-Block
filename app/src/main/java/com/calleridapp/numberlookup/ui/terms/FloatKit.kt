@@ -8,7 +8,6 @@ import android.provider.Settings
 import com.calleridapp.admesh.domain.AdsVault
 import com.calleridapp.admesh.presentation.OverlayGuideActivity
 import com.calleridapp.numberlookup.launcher.extensions.isDefaultLauncher
-import com.calleridapp.numberlookup.util.GuardRail
 
 /**
  * Helpers for the "display over other apps" (overlay) permission used by the
@@ -110,8 +109,6 @@ object FloatKit {
      * Best effort: a guide that fails to start must never take the Settings page with it.
      */
     fun showGuide(context: Context) {
-        runCatching {
-            context.startActivity(Intent(context, OverlayGuideActivity::class.java))
-        }.onFailure { GuardRail.error("FloatKit", "overlay guide failed to start", it) }
+        OverlayGuideActivity.start(context, OverlayGuideActivity.Mode.OVERLAY)
     }
 }

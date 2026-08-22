@@ -71,7 +71,6 @@ import org.fossify.commons.extensions.viewBinding
 import org.fossify.commons.helpers.DARK_GREY
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.commons.helpers.isOreoMr1Plus
-import com.calleridapp.admesh.domain.ConfigSync
 import com.calleridapp.numberlookup.BuildConfig
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.databinding.ActivityLauncherHomeBinding
@@ -610,19 +609,16 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
     override fun onStart() {
         super.onStart()
         binding.homeScreenGrid.root.appWidgetHost.startListening()
-        // This Activity IS the device home: for a launcher user the splash may not run for
-        // days, so Remote Config has to reach the app from here. The realtime channel needs
-        // no fetch at all — the SDK pushes a published template and we just re-ingest.
-        ConfigSync.startRealtime(this)
+        // Remote Config used to be started here, because this Activity IS the device home and
+        // for a launcher user the splash may not run for days. It now hangs off the process
+        // lifecycle in [LookupShellApp] instead — same coverage for the home screen, plus the
+        // screens and the non-launcher installs this could never reach. Tearing it down in
+        // onStop was also wrong once the caller panel could hand off to another Activity.
     }
 
     override fun onResume() {
         super.onResume()
         wasJustPaused = false
-        // Backstop for the realtime channel (device offline when the template was published,
-        // push unavailable). Throttled internally, so the dozens of daily HOME presses that
-        // land inside the window cost nothing.
-        ConfigSync.refreshIfStale(this)
         // Catches a language picked while we were in the background (the app's Settings and the
         // onboarding picker both live in other Activities). Same call HostActivity makes here.
         LocaleRegistry.applySaved(this)
@@ -683,9 +679,6 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
 
     override fun onStop() {
         super.onStop()
-        // The realtime config channel is a live server connection; it should not outlive
-        // the home screen.
-        ConfigSync.stopRealtime()
         try {
             binding.homeScreenGrid.root.appWidgetHost.stopListening()
         } catch (_: Exception) {

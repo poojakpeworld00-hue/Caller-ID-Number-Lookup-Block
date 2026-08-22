@@ -85,7 +85,20 @@ class AllAppsFragment(
     /** Called every time the drawer is flung open. */
     fun onDrawerShown() {
         val activity = activity ?: return
-        LauncherAdsConfig.showSlot(activity, adSlot, binding.adNativeFrame, binding.adShimmer)
+
+        // Re-read the slot on every open. setupFragment resolves it once, at the launcher
+        // home's onCreate — and that Activity IS the device home, so it can live for days.
+        // Without this, an `app_drawer.bottom_native` change (position, native_type, or the
+        // enabled flag itself) would sit in Remote Config unused until the process died.
+        adSlot = LauncherAdsConfig.appDrawerSlot(activity)
+        // Push the row at the adapter: setAdSlot no-ops when nothing moved, so this is free
+        // on the ordinary open and rebuilds the list only when the position actually changed.
+        getAdapter()?.setAdSlot(adHeaderView(), adSlot.position)
+
+        // refreshSlot, not showSlot: the drawer is opened dozens of times a day and the
+        // native pool holds one ad, so an unconditional re-show would wipe the rendered ad
+        // for a fallback whenever the reopen beat the refill.
+        LauncherAdsConfig.refreshSlot(activity, adSlot, binding.adNativeFrame, binding.adShimmer)
     }
 
     override fun onAttachedToWindow() {
@@ -192,11 +205,16 @@ class AllAppsFragment(
                     if (host == null) openApp()
                     else LauncherAdsConfig.run(host, LauncherAdsConfig.Surface.APP_CLICK) { openApp() }
                 }.apply {
-                    setAdSlot(adHeaderView(), adSlot.position)
                     binding.allAppsGrid.itemAnimator = null
                     binding.allAppsGrid.adapter = this
                 }
             }
+
+            // Outside the creation branch on purpose. This used to run only when the adapter
+            // was built, which pinned the ad row to whatever the config said the first time
+            // the drawer was ever populated — every later change was ignored for the life of
+            // the process.
+            getAdapter()?.setAdSlot(adHeaderView(), adSlot.position)
 
             // The ad row is full width; without this it would be squeezed into one grid cell.
             layoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {

@@ -138,8 +138,20 @@ class LeftPanelFragment(
      */
     fun onPanelShown() {
         val activity = activity ?: return
-        LauncherAdsConfig.showSlot(activity, adSlot, binding.adNativeFrame, binding.adShimmer)
-        LauncherAdsConfig.showSlot(
+
+        // Re-read both slots on every open. setupFragment resolves them once, at the launcher
+        // home's onCreate — and that Activity IS the device home, so it can live for days.
+        // Without this, flipping `right_panel.bottom_native.enabled` in Remote Config did
+        // nothing until the process died: the stale slot kept saying "on" (so the frame stayed)
+        // or kept saying "off" (so the frame could never come back).
+        adSlot = LauncherAdsConfig.rightPanelSlot(activity)
+        suggestedSlot = LauncherAdsConfig.rightPanelSuggestedSlot(activity)
+
+        // refreshSlot, not showSlot: the two frames here share one pooled native, so the
+        // second used to find the pool emptied by the first and fall back to a custom ad on
+        // every open. Each frame now keeps what it has until there is something newer.
+        LauncherAdsConfig.refreshSlot(activity, adSlot, binding.adNativeFrame, binding.adShimmer)
+        LauncherAdsConfig.refreshSlot(
             activity = activity,
             slot = suggestedSlot,
             container = binding.adSuggestedFrame,

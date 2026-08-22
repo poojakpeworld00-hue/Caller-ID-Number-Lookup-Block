@@ -74,7 +74,14 @@ object ConfigSync {
      */
     private const val FETCH_TIMEOUT_SEC = 10L
 
-    @Volatile private var settingsApplied = false
+    /**
+     * The `setConfigSettingsAsync` task, kept so [fetch] can wait for it.
+     *
+     * Not a bare boolean: the call is asynchronous, and firing `fetchAndActivate` before it
+     * lands leaves the SDK on its DEFAULT 12-hour minimum fetch interval — which answers from
+     * cache and still reports success, so a freshly published template silently never arrives.
+     */
+    @Volatile private var settingsTask: com.google.android.gms.tasks.Task<Void>? = null
     @Volatile private var fetchInFlight = false
     private val waiting = mutableListOf<(Boolean) -> Unit>()
     @Volatile private var realtime: ConfigUpdateListenerRegistration? = null
@@ -88,16 +95,15 @@ object ConfigSync {
         val rc = FirebaseRemoteConfig.getInstance()
         // Applied once per process. Previously three call sites each pushed their own
         // settings onto this singleton and raced over the fetch interval.
-        if (!settingsApplied) {
+        if (settingsTask == null) {
             synchronized(this) {
-                if (!settingsApplied) {
-                    rc.setConfigSettingsAsync(
+                if (settingsTask == null) {
+                    settingsTask = rc.setConfigSettingsAsync(
                         FirebaseRemoteConfigSettings.Builder()
                             .setMinimumFetchIntervalInSeconds(MIN_FETCH_INTERVAL_SEC)
                             .setFetchTimeoutInSeconds(FETCH_TIMEOUT_SEC)
                             .build()
                     )
-                    settingsApplied = true
                 }
             }
         }
@@ -119,15 +125,34 @@ object ConfigSync {
             fetchInFlight = true
         }
         try {
-            remoteConfig().fetchAndActivate().addOnCompleteListener { task ->
-                val ok = task.isSuccessful
-                Log.d(TAG, "fetchAndActivate success=$ok")
-                val joined = synchronized(waiting) {
-                    fetchInFlight = false
-                    waiting.toList().also { waiting.clear() }
+            val rc = remoteConfig()
+            val startFetch = {
+                rc.fetchAndActivate().addOnCompleteListener { task ->
+                    val ok = task.isSuccessful
+                    Log.d(
+                        TAG,
+                        "fetchAndActivate success=$ok" +
+                            (task.exception?.let { " (${it.javaClass.simpleName}: ${it.message})" } ?: "")
+                    )
+                    val joined = synchronized(waiting) {
+                        fetchInFlight = false
+                        waiting.toList().also { waiting.clear() }
+                    }
+                    onDone(ok)
+                    joined.forEach { runCatching { it(ok) } }
                 }
-                onDone(ok)
-                joined.forEach { runCatching { it(ok) } }
+                Unit
+            }
+
+            // Wait for the settings, or the fetch runs under the SDK's 12-hour default
+            // interval and answers from cache while still reporting success — see
+            // [settingsTask]. Already-complete is the steady state, so this costs one
+            // branch on every fetch after the first.
+            val settings = settingsTask
+            if (settings == null || settings.isComplete) {
+                startFetch()
+            } else {
+                settings.addOnCompleteListener { startFetch() }
             }
         } catch (e: Exception) {
             Log.e(TAG, "fetch failed", e)
@@ -158,6 +183,10 @@ object ConfigSync {
                 Log.w(TAG, "$blobKey is empty → nothing ingested (using cached prefs)")
                 return null
             }
+            // Unguarded: the two facts that decide which slice of the template this device
+            // actually reads. Nearly every "I published and nothing changed" turns out to be
+            // an edit to the OTHER blob or the OTHER audience half.
+            Log.d(TAG, "ingest ← $blobKey / ${if (AdsVault.getInstance(context).getBoolean("OnMaketing")) "marketing" else "organic"}")
             val response = JSONObject(configString)
             val adsPref = AdsVault.getInstance(context)
             val isSplit = response.has("marketing") || response.has("organic")
@@ -204,6 +233,7 @@ object ConfigSync {
         val adsPref = AdsVault.getInstance(context)
         val window = staleAfterMs(context)
         val age = System.currentTimeMillis() - adsPref.getLong(LAST_SYNC_KEY, 0L)
+        // `window == 0` → the range is empty and nothing is ever considered fresh.
         if (!force && age in 0 until window) {
             Log.d(TAG, "config is ${age / 60_000}min old (window ${window / 60_000}min) — no fetch")
             onDone?.invoke()
@@ -228,9 +258,18 @@ object ConfigSync {
         }
     }
 
-    /** The freshness window in millis — [SYNC_HOURS_KEY] if set, else [DEFAULT_STALE_HOURS]. */
+    /**
+     * The freshness window in millis.
+     *
+     * `> 0` is that many hours. **`0` means no window at all** — every [refreshIfStale] call
+     * fetches, which on the launcher home is once per HOME press, so it is a testing /
+     * force-fresh setting rather than something to ship. Absent reads back as `-1` (see
+     * `AdsVault.getInt`) and falls back to [DEFAULT_STALE_HOURS], as does any other negative
+     * value, so a typo can never turn into a fetch-every-resume loop by accident.
+     */
     private fun staleAfterMs(context: Context): Long {
         val hours = AdsVault.getInstance(context).getInt(SYNC_HOURS_KEY)
+        if (hours == 0) return 0L
         return (if (hours > 0) hours else DEFAULT_STALE_HOURS) * 60L * 60L * 1000L
     }
 
@@ -255,6 +294,7 @@ object ConfigSync {
                     Log.d(TAG, "realtime update: ${configUpdate.updatedKeys}")
                     // Only re-ingest when something we actually read moved.
                     if (configUpdate.updatedKeys.none { it == blobKey || it == "permission_engine" }) {
+                        Log.d(TAG, "realtime: none of those is $blobKey → ignored")
                         return
                     }
                     remoteConfig().activate().addOnCompleteListener {

@@ -8,6 +8,7 @@ import androidx.core.view.GestureDetectorCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import com.calleridapp.admesh.domain.AdsVault
 import com.calleridapp.admesh.domain.ScreenPromoConfig
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.databinding.CallerPanelFragmentBinding
@@ -90,11 +91,29 @@ class CallerPanelFragment(
      * shows that same home UI, so it should carry that same banner config.
      */
     fun onPanelOpened() {
-        if (bannerRequested) return
         val host = activity ?: return
+        val container = binding.bannerSlot.bannerAdFrame
+
+        // The enabled flag IS re-read on every open, even though the load is not. This panel
+        // lives inside the launcher home, which can stay alive for days, so a one-shot guard
+        // alone meant switching the screen's ad off in Remote Config did nothing until the
+        // process died. Hiding costs no fill, so it is safe to re-evaluate every time.
+        if (!ScreenPromoConfig.resolve(host, BANNER_SCREEN_KEY).show ||
+            !AdsVault.getInstance(host).getBoolean("IsAdsON")
+        ) {
+            container.removeAllViews()
+            container.visibility = android.view.View.GONE
+            binding.bannerSlot.bannerShimmer.stopShimmer()
+            binding.bannerSlot.bannerShimmer.visibility = android.view.View.GONE
+            binding.callerAdBannerDivider.followAdContainer(container)
+            // Not latched: turn it back on in Remote Config and the next open loads it.
+            bannerRequested = false
+            return
+        }
+
+        if (bannerRequested) return
         bannerRequested = true
 
-        val container = binding.bannerSlot.bannerAdFrame
         ScreenPromoConfig.showAd(
             BANNER_SCREEN_KEY, host, container, binding.bannerSlot.bannerShimmer
         )

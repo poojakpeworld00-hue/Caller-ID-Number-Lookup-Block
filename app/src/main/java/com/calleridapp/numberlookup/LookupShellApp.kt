@@ -14,6 +14,7 @@ import androidx.multidex.MultiDex
 import com.google.firebase.FirebaseApp
 import com.calleridapp.admesh.data.AdKind
 import com.calleridapp.admesh.domain.AdsVault
+import com.calleridapp.admesh.domain.ConfigSync
 import com.calleridapp.admesh.presentation.ADDashboardActivity
 import com.calleridapp.admesh.presentation.AppOpenAdRegistry
 import com.calleridapp.admesh.presentation.AppOpenAdRegistry.isAdAvailable
@@ -108,6 +109,25 @@ class LookupShellApp : Application() , Application.ActivityLifecycleCallbacks,
             object : DefaultLifecycleObserver {
                 override fun onStart(owner: LifecycleOwner) {
                     handleAppForeground()
+                    // Remote Config follows the PROCESS, not one screen.
+                    //
+                    // These used to hang off the launcher home's onStart/onResume/onStop,
+                    // which meant a console change only ever reached a device that was
+                    // sitting on the home grid — never a user inside the app, and never at
+                    // all on a device where we are not the default launcher. Owning it here
+                    // covers every screen: the realtime channel is live for as long as the
+                    // app is foreground, and dies with it rather than with an Activity.
+                    ConfigSync.startRealtime(this@LookupShellApp)
+                    // Backstop for the push channel (offline when the template was
+                    // published, or a device it never reached). Throttled by
+                    // `Config_Sync_Hrs`, so repeat foregrounds inside the window cost
+                    // nothing; a zero window means every foreground fetches.
+                    ConfigSync.refreshIfStale(this@LookupShellApp)
+                }
+
+                override fun onStop(owner: LifecycleOwner) {
+                    // A live server connection has no business outliving the foreground.
+                    ConfigSync.stopRealtime()
                 }
             }
         )

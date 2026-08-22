@@ -45,6 +45,11 @@
     <string name="overlay_guide_row_hint">Tap to turn on</string>
     <string name="overlay_guide_dismiss">Tap anywhere to dismiss</string>
 
+    <!-- Same coach-mark, shown over the system "Default home app" list. -->
+    <string name="home_guide_title">Set this app as your home screen</string>
+    <string name="home_guide_desc">Find this app in the list and select it.</string>
+    <string name="home_guide_row_hint">Tap to select</string>
+
     <!-- Post-call summary fallback notification -->
     <string name="post_call_notif_title">Call ended: %1$s</string>
     <string name="post_call_notif_body">Tap to see the call summary</string>
