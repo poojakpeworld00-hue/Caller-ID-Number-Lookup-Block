@@ -27,6 +27,16 @@ interface HomeShellHost {
     val homeShellController: HomeShellController
 
     /**
+     * Whether the shell is actually the thing the user is looking at right now.
+     *
+     * In [com.calleridapp.numberlookup.ui.ShellActivity] the shell *is* the screen, so this
+     * is always true. In the launcher it is true only while the swipe-right caller panel is
+     * open — the same Activity also draws the home grid, and anything the shell puts on
+     * screen while the panel is shut lands over that grid instead of over its own content.
+     */
+    val isShellOnScreen: Boolean
+
+    /**
      * Back was pressed on Home with the visited-tab history already empty.
      *
      * ShellActivity leaves for the launcher home screen; the launcher panel just closes.

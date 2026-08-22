@@ -130,6 +130,9 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
     // which is exactly why the Activity-bound half lives out here.
     override val homeShellController = HomeShellController(this)
 
+    /** The shell rides in the swipe-right panel, so it is on screen only while that is open. */
+    override val isShellOnScreen: Boolean get() = isCallerPanelExpanded()
+
     /** Back inside the caller panel with its own tab history exhausted just closes it. */
     override fun onShellBackExhausted() {
         hideCallerPanel()
@@ -145,6 +148,10 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
             startActivity(
                 Intent(this, MainActivity::class.java)
                     .addFlags(HomeShellController.REORDER_FLAGS)
+                    // singleTask means this reorder is delivered as a new intent, which
+                    // onNewIntent would otherwise read as a HOME press and close the panel
+                    // out from under the flow that asked to come back. Mark it as ours.
+                    .putExtra(HomeShellController.EXTRA_SELF_REORDER, true)
             )
         }
     }
@@ -526,6 +533,15 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+
+        // Our own bringHostToFront reorder, not a HOME press: the app is pulling itself back
+        // from a system Settings page it opened from inside the caller panel, and everything
+        // below would tear that panel down — leaving the permission sheet that follows the
+        // grant to land over the home grid instead of over the caller-ID content it asks
+        // about. Nothing below applies to a self-reorder, so return before any of it.
+        if (intent.getBooleanExtra(HomeShellController.EXTRA_SELF_REORDER, false)) {
+            return
+        }
 
         // Same as onCreate: a home intent can land here with the first run still pending, once
         // this activity already exists. It is only reachable that way after the role changed
