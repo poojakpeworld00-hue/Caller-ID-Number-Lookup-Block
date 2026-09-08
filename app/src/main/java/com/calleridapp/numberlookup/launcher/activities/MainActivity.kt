@@ -884,10 +884,14 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
                             hideFragment(binding.widgetsFragment)
                         }
                     }
+                }
 
-                    if (!mIgnoreXMoveEvents) {
-                        binding.homeScreenGrid.root.finalizeSwipe()
-                    }
+                // Outside the mIgnoreUpEvent guard, and reached on ACTION_CANCEL too: a partial
+                // page swipe has to be settled by the gesture that started it, or its offset
+                // survives to be committed by an unrelated later one. Returns immediately when
+                // there is no swipe to settle.
+                if (!mIgnoreXMoveEvents) {
+                    binding.homeScreenGrid.root.finalizeSwipe()
                 }
 
                 mIgnoreXMoveEvents = false
@@ -1639,14 +1643,28 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
         }
     }
 
+    /**
+     * True when the horizontal gesture in flight is already dragging the home grid between pages.
+     *
+     * A page drag ends with velocity, so the same gesture also arrives as a fling. Letting the
+     * fling claim it set [mIgnoreUpEvent], which suppressed the [MotionEvent.ACTION_UP] branch
+     * that calls `finalizeSwipe()` — the grid stayed frozen part-way between two pages and the
+     * abandoned swipe offset was applied to whatever gesture came next. Paging owns the gesture
+     * once it has started; the panels still get every fling the grid cannot page on, which is any
+     * fling on a single-page home screen, a right fling on the first page and a left fling on the
+     * last.
+     */
+    private fun isPagingTheHomeScreen() = binding.homeScreenGrid.root.isPageSwipeInProgress()
+
     override fun onFlingRight() {
-        if (mIgnoreXMoveEvents) {
+        if (mIgnoreXMoveEvents || isPagingTheHomeScreen()) {
             return
         }
 
         mIgnoreUpEvent = true
-        // A right fling opens the caller-ID panel, whichever page we are on. Paging is still
-        // available by dragging horizontally, which never reaches here.
+        // A right fling opens the caller-ID panel unless the grid is already paging under it —
+        // see isPagingTheHomeScreen(). On the first page there is nothing to the left to page to,
+        // so the panel is what a right fling means there.
         if (!isAllAppsFragmentExpanded() && !isWidgetsFragmentExpanded()) {
             completeSwipeHint(LauncherAdsConfig.HintDirection.RIGHT)
             // Paced by launcher_ads.swipe_right; the panel opens on every path regardless.
@@ -1659,12 +1677,12 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
     }
 
     override fun onFlingLeft() {
-        if (mIgnoreXMoveEvents) {
+        if (mIgnoreXMoveEvents || isPagingTheHomeScreen()) {
             return
         }
 
         mIgnoreUpEvent = true
-        // see onFlingRight: the panel wins over paging on a fling
+        // see onFlingRight; on the last page there is nothing further right to page to
         if (!isAllAppsFragmentExpanded() && !isWidgetsFragmentExpanded()) {
             completeSwipeHint(LauncherAdsConfig.HintDirection.LEFT)
             // Paced by launcher_ads.swipe_left; the panel opens on every path regardless.

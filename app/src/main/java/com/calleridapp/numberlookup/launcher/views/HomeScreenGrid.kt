@@ -1893,6 +1893,15 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         pager.finalizeSwipe()
     }
 
+    /**
+     * True while a horizontal drag is sitting partway between two pages.
+     *
+     * The gesture belongs to paging from that point on, and [com.calleridapp.numberlookup.launcher.activities.MainActivity]
+     * checks this before letting a fling claim the same gesture for a side panel. A fling that
+     * the grid cannot page on never gets this far, because no swipe was ever started.
+     */
+    fun isPageSwipeInProgress() = pager.isSwiped()
+
     fun openFolder(folder: HomeScreenGridItem) {
         if (currentlyOpenFolder == null) {
             currentlyOpenFolder = folder.toFolder(animateOpening = true)
@@ -2360,20 +2369,17 @@ private class AnimatedGridPager(
             return
         }
 
-        if (abs(pageChangeSwipedPercentage) > 0.5f) {
+        val target = if (pageChangeSwipedPercentage > 0f) currentPage - 1 else currentPage + 1
+
+        // Commit only to a page that exists. setSwipeMovement() already refuses to start a swipe
+        // that would run off either end, but the percentage it leaves behind outlives the gesture
+        // that set it, so the bound is re-checked here rather than trusted from there.
+        if (abs(pageChangeSwipedPercentage) > 0.5f && target in 0..getMaxPage()) {
             lastPage = currentPage
-            currentPage = if (pageChangeSwipedPercentage > 0f) {
-                currentPage - 1
-            } else {
-                currentPage + 1
-            }
+            currentPage = target
             handlePageChange(true)
         } else {
-            lastPage = if (pageChangeSwipedPercentage > 0f) {
-                currentPage - 1
-            } else {
-                currentPage + 1
-            }
+            lastPage = target
             pageChangeSwipedPercentage =
                 sign(pageChangeSwipedPercentage) * (1 - abs(pageChangeSwipedPercentage))
             handlePageChange(true)
