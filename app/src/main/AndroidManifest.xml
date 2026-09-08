@@ -26,6 +26,18 @@
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
 
+    <!-- androidx.core declares this signature permission AND a matching <uses-permission>; it is
+         how ContextCompat.registerReceiver() implements RECEIVER_NOT_EXPORTED on API 26-32 (it
+         registers with the permission instead of the flag, which only exists on API 33+).
+         org.fossify:commons strips that <uses-permission> with tools:node="remove", leaving the
+         permission declared but never requested — so checkSelfPermission() denies and every
+         NOT_EXPORTED registration throws "Permission ... is required by your application to
+         receive broadcasts" on pre-33 devices (crashed MainActivity via PseudoClockWidget).
+         Re-declaring it here restores it; tools:node="replace" beats the library's removal. -->
+    <uses-permission
+        android:name="${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+        tools:node="replace" />
+
     <!-- Package visibility (Android 11+) for the apps/intents we hand off to. -->
     <queries>
         <package android:name="com.whatsapp" />
@@ -82,6 +94,36 @@
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
         android:theme="@style/Theme.CallerLookupBlock">
+
+        <!-- WorkManager off the eager androidx.startup path, initialised on first use instead.
+             WorkManagerInitializer runs inside InitializationProvider, i.e. before the app has a
+             single line of its own running, and anything it throws is an un-catchable startup
+             fatal: `NoSuchMethodError: No virtual method JobScheduler.forNamespace` on ROMs that
+             report API 34 without shipping the API 34 method WorkManager calls behind that very
+             version check. On demand, the same failure lands inside a reminder call this app can
+             guard, and costs a reminder instead of the whole app. LookupShellApp supplies the
+             configuration WorkManager would otherwise have taken from the initializer. -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                tools:node="remove" />
+        </provider>
+
+        <!-- Post-crash relaunch helper. Its own process, because the crashing one is stalled
+             inside the Crashlytics handler and cannot host an Activity any more; its own task
+             (taskAffinity="") so it never lands in the home task when we hold the HOME role. -->
+        <activity
+            android:name=".util.CrashRestartActivity"
+            android:process=":restart"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.CallerLookupBlock" />
 
         <activity
             android:screenOrientation="portrait"

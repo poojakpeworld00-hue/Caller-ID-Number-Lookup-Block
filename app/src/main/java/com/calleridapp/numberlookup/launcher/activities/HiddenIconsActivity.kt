@@ -15,6 +15,7 @@ import com.calleridapp.numberlookup.databinding.ActivityHiddenIconsBinding
 import com.calleridapp.numberlookup.launcher.extensions.config
 import com.calleridapp.numberlookup.launcher.extensions.getDrawableForPackageName
 import com.calleridapp.numberlookup.launcher.extensions.hiddenIconsDB
+import com.calleridapp.numberlookup.launcher.extensions.queryIntentActivitiesSafe
 import com.calleridapp.numberlookup.launcher.models.HiddenIcon
 
 class HiddenIconsActivity : SimpleActivity(), RefreshRecyclerViewListener {
@@ -56,7 +57,7 @@ class HiddenIconsActivity : SimpleActivity(), RefreshRecyclerViewListener {
                 val intent = Intent(Intent.ACTION_MAIN, null)
                 intent.addCategory(Intent.CATEGORY_LAUNCHER)
 
-                val list = packageManager.queryIntentActivities(intent, PackageManager.PERMISSION_GRANTED)
+                val list = packageManager.queryIntentActivitiesSafe(intent, PackageManager.PERMISSION_GRANTED)
                 for (info in list) {
                     val componentInfo = info.activityInfo.applicationInfo
                     val packageName = componentInfo.packageName

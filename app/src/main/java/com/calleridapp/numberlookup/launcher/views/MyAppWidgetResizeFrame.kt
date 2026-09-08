@@ -12,6 +12,7 @@ import kotlinx.collections.immutable.toImmutableList
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.launcher.extensions.config
 import com.calleridapp.numberlookup.launcher.extensions.getCellCount
+import com.calleridapp.numberlookup.launcher.extensions.installedProvidersSafe
 import com.calleridapp.numberlookup.launcher.helpers.MAX_CLICK_DURATION
 import com.calleridapp.numberlookup.launcher.models.HomeScreenGridItem
 
@@ -72,7 +73,7 @@ class MyAppWidgetResizeFrame(context: Context, attrs: AttributeSet, defStyle: In
         this.cellHeight = cellHeight
         this.sideMargins = sideMargins
         this.resizedItem = gridItem
-        val providerInfo = gridItem.providerInfo ?: AppWidgetManager.getInstance(context)!!.installedProviders.firstOrNull {
+        val providerInfo = gridItem.providerInfo ?: AppWidgetManager.getInstance(context)!!.installedProvidersSafe().firstOrNull {
             it.provider.className == gridItem.className
         } ?: return
 

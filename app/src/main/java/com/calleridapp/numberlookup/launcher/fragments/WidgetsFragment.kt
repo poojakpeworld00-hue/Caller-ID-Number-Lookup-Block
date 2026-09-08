@@ -23,7 +23,9 @@ import com.calleridapp.numberlookup.launcher.adapters.WidgetsAdapter
 import com.calleridapp.numberlookup.databinding.WidgetsFragmentBinding
 import com.calleridapp.numberlookup.launcher.extensions.config
 import com.calleridapp.numberlookup.launcher.extensions.getInitialCellSize
+import com.calleridapp.numberlookup.launcher.extensions.installedProvidersSafe
 import com.calleridapp.numberlookup.launcher.extensions.setupDrawerBackground
+import com.calleridapp.numberlookup.launcher.extensions.queryIntentActivitiesSafe
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_SHORTCUT
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_WIDGET
 import com.calleridapp.numberlookup.launcher.helpers.PSEUDO_WIDGET_CLOCK
@@ -126,7 +128,7 @@ class WidgetsFragment(context: Context, attributeSet: AttributeSet) :
             appWidgets.addAll(getPseudoWidgets())
             val manager = AppWidgetManager.getInstance(context)
             val packageManager = context.packageManager
-            val infoList = manager.installedProviders
+            val infoList = manager.installedProvidersSafe()
             for (info in infoList) {
                 val appPackageName = info.provider.packageName
                 val appMetadata = getAppMetadataFromPackage(appPackageName) ?: continue
@@ -159,7 +161,7 @@ class WidgetsFragment(context: Context, attributeSet: AttributeSet) :
             // show also the widgets that are technically shortcuts
             val intent = Intent(Intent.ACTION_CREATE_SHORTCUT, null)
             val list =
-                packageManager.queryIntentActivities(intent, PackageManager.PERMISSION_GRANTED)
+                packageManager.queryIntentActivitiesSafe(intent, PackageManager.PERMISSION_GRANTED)
             for (info in list) {
                 val componentInfo = info.activityInfo.applicationInfo
                 val appTitle = componentInfo.loadLabel(packageManager).toString()

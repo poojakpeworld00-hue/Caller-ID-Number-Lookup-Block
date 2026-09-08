@@ -26,6 +26,7 @@ import com.calleridapp.admesh.data.Nudge
 import com.calleridapp.admesh.presentation.my_main_counter.adapter.NudgeAdapter
 import com.calleridapp.admesh.presentation.my_main_counter.receiver.NudgeWorker
 import com.calleridapp.numberlookup.R
+import com.calleridapp.numberlookup.util.GuardRail
 import com.calleridapp.numberlookup.util.triggerClick
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -179,7 +180,15 @@ class NudgeFragment : Fragment() {
             ).setInputData(data).addTag("reminder").build()
 
         val ctx = context ?: return
-        WorkManager.getInstance(ctx).enqueue(request)
+        // First touch of WorkManager is what initialises it, so this is where a ROM missing the
+        // API 34 JobScheduler method WorkManager expects surfaces — as a NoSuchMethodError, which
+        // is why this catches Throwable rather than Exception. See the manifest's
+        // InitializationProvider override.
+        runCatching { WorkManager.getInstance(ctx).enqueue(request) }
+            .onFailure {
+                GuardRail.error("Nudge", "could not schedule reminder", it)
+                Toast.makeText(ctx, R.string.reminder_schedule_failed, Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun requestNotificationPermissionIfNeeded() {
@@ -227,7 +236,9 @@ class NudgeFragment : Fragment() {
             saveReminders()
             updateEmptyState()
             val ctx = context ?: return
-            WorkManager.getInstance(ctx).cancelAllWorkByTag("reminder_${reminder.id}")
+            runCatching {
+                WorkManager.getInstance(ctx).cancelAllWorkByTag("reminder_${reminder.id}")
+            }.onFailure { GuardRail.error("Nudge", "could not cancel reminder", it) }
         }
     }
 }

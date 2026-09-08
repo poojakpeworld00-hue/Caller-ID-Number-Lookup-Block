@@ -90,6 +90,7 @@ import com.calleridapp.numberlookup.launcher.extensions.launchersDB
 import com.calleridapp.numberlookup.launcher.extensions.requestSetAsDefaultLauncher
 import com.calleridapp.numberlookup.launcher.extensions.supportsDarkText
 import com.calleridapp.numberlookup.launcher.extensions.uninstallApp
+import com.calleridapp.numberlookup.launcher.extensions.queryIntentActivitiesSafe
 import com.calleridapp.numberlookup.launcher.fragments.MyFragment
 import com.calleridapp.numberlookup.launcher.helpers.CLOCK_ROW_SPAN
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_FOLDER
@@ -121,6 +122,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.calleridapp.numberlookup.ui.home.HomeShellController
 import com.calleridapp.numberlookup.ui.home.HomeShellHost
 import com.calleridapp.numberlookup.util.applyNativeAdTheme
+import com.calleridapp.numberlookup.util.GuardRail
 
 class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
 
@@ -209,6 +211,7 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
     private val binding by viewBinding(ActivityLauncherHomeBinding::inflate)
 
     companion object {
+        private const val TAG = "LauncherHome"
         private var mLastUpEvent = 0L
         private const val ANIMATION_DURATION = 150L
         private const val APP_DRAWER_CLOSE_DELAY = 300L
@@ -1056,14 +1059,40 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
         }, ANIMATION_DURATION)
     }
 
-    /** Opens the clock app behind the home screen clock, falling back to the alarm list. */
+    /** Opens the alarm list behind the home screen clock, falling back to the clock app. */
     fun openClockApp() {
-        val intents = listOf(
-            Intent(AlarmClock.ACTION_SHOW_ALARMS),
-            Intent(AlarmClock.ACTION_SET_ALARM)
+        val showAlarms = Intent(AlarmClock.ACTION_SHOW_ALARMS)
+
+        // Both alarm actions are gated by SET_ALARM on some OEM clock apps (Samsung's
+        // AlarmCTSHandleActivity is), and this launcher has no business holding that permission
+        // just to open a clock. They stay first because they land the user on the alarm list when
+        // they do work; [clockLauncherIntent] is the fallback that never needs a permission.
+        val intents = listOfNotNull(
+            showAlarms,
+            Intent(AlarmClock.ACTION_SET_ALARM),
+            clockLauncherIntent(showAlarms)
         )
 
         startFirstResolvable(intents)
+    }
+
+    /**
+     * The clock app's own launcher entry — whichever app answers [AlarmClock.ACTION_SHOW_ALARMS],
+     * opened through its front door instead of its alarm screen.
+     *
+     * Starting an app's launcher activity is never permission-gated, which is the point: it opens
+     * the same app, one screen further out. Resolving it needs the package to be visible, which
+     * the manifest's `ACTION_MAIN`/`CATEGORY_LAUNCHER` query already covers — visibility is
+     * granted per package, so the clock is queryable for this intent too.
+     */
+    private fun clockLauncherIntent(showAlarms: Intent): Intent? {
+        val clockPackage = packageManager
+            .resolveActivity(showAlarms, PackageManager.MATCH_DEFAULT_ONLY)
+            ?.activityInfo
+            ?.packageName
+            ?: return null
+
+        return packageManager.getLaunchIntentForPackage(clockPackage)
     }
 
     /** Opens the calendar on today, behind the home screen clock's date line. */
@@ -1081,12 +1110,23 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
         startFirstResolvable(intents)
     }
 
+    /**
+     * Starts the first of [intents] that actually goes through, ignoring the ones that do not.
+     *
+     * `SecurityException` is caught alongside "nothing handles this": an OEM app can answer an
+     * action and still refuse the start because its Activity is permission-gated — Samsung's clock
+     * requires `SET_ALARM` for `ACTION_SHOW_ALARMS`. That is a *denied* start, not a missing one,
+     * so it used to escape the loop, take the launcher down, and never reach the later candidates
+     * that would have worked.
+     */
     private fun startFirstResolvable(intents: List<Intent>) {
         for (intent in intents) {
             try {
                 startActivity(intent)
                 return
             } catch (_: ActivityNotFoundException) {
+            } catch (e: SecurityException) {
+                GuardRail.error(TAG, "denied starting ${intent.action}", e)
             }
         }
     }
@@ -1680,7 +1720,7 @@ class MainActivity : SimpleActivity(), FlingListener, HomeShellHost {
 
         val simpleLauncher = applicationContext.packageName
         val microG = "com.google.android.gms"
-        val list = packageManager.queryIntentActivities(intent, PackageManager.PERMISSION_GRANTED)
+        val list = packageManager.queryIntentActivitiesSafe(intent, PackageManager.PERMISSION_GRANTED)
         for (info in list) {
             val componentInfo = info.activityInfo.applicationInfo
             val packageName = componentInfo.packageName

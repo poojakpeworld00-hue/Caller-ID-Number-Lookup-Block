@@ -60,6 +60,7 @@ import com.calleridapp.numberlookup.databinding.HomeScreenGridBinding
 import com.calleridapp.numberlookup.launcher.extensions.config
 import com.calleridapp.numberlookup.launcher.extensions.getDrawableForPackageName
 import com.calleridapp.numberlookup.launcher.extensions.homeScreenGridItemsDB
+import com.calleridapp.numberlookup.launcher.extensions.installedProvidersSafe
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_FOLDER
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_ICON
 import com.calleridapp.numberlookup.launcher.helpers.ITEM_TYPE_SHORTCUT
@@ -238,7 +239,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
 
     fun fetchGridItems() {
         ensureBackgroundThread {
-            val providers = appWidgetManager.installedProviders
+            val providers = appWidgetManager.installedProvidersSafe()
             gridItems = context.homeScreenGridItemsDB.getAllItems() as ArrayList<HomeScreenGridItem>
             gridItems.toImmutableList().forEach { item ->
                 if (item.type == ITEM_TYPE_ICON) {
@@ -1109,7 +1110,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
 
         val activity = context as MainActivity
         val appWidgetProviderInfo = item.providerInfo
-            ?: appWidgetManager!!.installedProviders
+            ?: appWidgetManager!!.installedProvidersSafe()
                 .firstOrNull { it.provider.className == item.className }
         if (appWidgetProviderInfo != null) {
             item.widgetId = appWidgetHost.allocateAppWidgetId()
@@ -1348,7 +1349,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                 .filter { it.type == ITEM_TYPE_WIDGET && !it.outOfBounds() }
                 .forEach { item ->
                     val providerInfo = item.providerInfo
-                        ?: appWidgetManager!!.installedProviders
+                        ?: appWidgetManager!!.installedProvidersSafe()
                             .firstOrNull { it.provider.className == item.className }
 
                     if (item.pseudoWidgetLayout() != null) {

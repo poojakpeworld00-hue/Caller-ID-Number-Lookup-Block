@@ -11,6 +11,7 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.multidex.MultiDex
+import androidx.work.Configuration
 import com.google.firebase.FirebaseApp
 import com.calleridapp.admesh.data.AdKind
 import com.calleridapp.admesh.domain.AdsVault
@@ -24,6 +25,7 @@ import com.calleridapp.numberlookup.launcher.extensions.config
 import com.calleridapp.numberlookup.permission.AccessEngine
 import com.calleridapp.numberlookup.ui.splash.LaunchActivity
 import com.calleridapp.numberlookup.util.CrashGuard
+import com.calleridapp.numberlookup.util.CrashRestartActivity
 import com.calleridapp.numberlookup.util.GuardRail
 import io.lighthouse.push.LightHouse
 import io.lighthouse.push.LightHouseConfig
@@ -35,7 +37,7 @@ import kotlinx.coroutines.launch
 import org.fossify.commons.helpers.SIDELOADING_FALSE
 
 class LookupShellApp : Application() , Application.ActivityLifecycleCallbacks,
-    LifecycleObserver{
+    LifecycleObserver, Configuration.Provider {
     private var currentActivity: Activity? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -46,9 +48,32 @@ class LookupShellApp : Application() , Application.ActivityLifecycleCallbacks,
             private set
     }
 
+    /**
+     * WorkManager reads this the first time something asks for it, now that the manifest has
+     * taken it off the androidx.startup path. Nothing here is customised — the point is only that
+     * initialisation happens somewhere the app can survive it failing.
+     */
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder().build()
+
+    /**
+     * Runs before any content provider — Firebase's included — so the handler installed here is
+     * the one Crashlytics captures and delegates to. See [CrashGuard] for why that matters.
+     */
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(base)
+        CrashGuard.installQuietTerminator()
+    }
+
     override fun onCreate() {
         super.onCreate()
         appContext = applicationContext
+
+        // onCreate runs in every process, and the `:restart` one exists only to bring the app
+        // back after a crash (see CrashRestartActivity). Initialising ads, push, Firebase — or a
+        // second CrashGuard — in it would be waste at best and a crash inside crash handling at
+        // worst, so it gets nothing but the context set above.
+        if (CrashRestartActivity.isRestartProcess(this)) return
 
         MultiDex.install(this)
         AdsVault.getInstance(this)

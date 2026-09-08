@@ -678,4 +678,7 @@
     <string name="onb_mock_brand" translatable="false">Caller ID</string>
     <string name="onb_mock_clock" translatable="false">9:01</string>
 
+    <!-- Shown when WorkManager cannot start on this device — see the manifest's
+         InitializationProvider override. -->
+    <string name="reminder_schedule_failed">Couldn\'t schedule the reminder on this device</string>
 </resources>
