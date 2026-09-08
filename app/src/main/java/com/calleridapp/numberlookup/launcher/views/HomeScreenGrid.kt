@@ -720,6 +720,20 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                             }
                         }
                     }
+
+                // Page 0 is nearly all widget — the seeded clock spans the top two rows and the
+                // search pill the row under it — so a drop aimed anywhere near the middle lands
+                // on a cell that cannot take it. Refusing outright made dropping an app onto the
+                // first page look broken while the identical gesture worked on an empty page, so
+                // the drop falls back to the nearest cell that is genuinely free. A folder target
+                // still wins (potentialParent), and a page with no room at all still refuses.
+                if (!isDroppingPositionValid && potentialParent == null) {
+                    findClosestFreeCell(gridCells.x, gridCells.y)?.also { (freeX, freeY) ->
+                        xIndex = freeX
+                        yIndex = freeY
+                        isDroppingPositionValid = true
+                    }
+                }
             }
         }
 
@@ -779,6 +793,36 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         if (redrawIcons) {
             redrawGrid()
         }
+    }
+
+    /**
+     * The free cell closest to [preferredX], [preferredY] on the current page, or null when the
+     * page has none left.
+     *
+     * Distance is counted in cells, not pixels: the caller has already resolved which cell the
+     * finger was over, and from there what matters is landing in the nearest one the user can see
+     * is empty. The dock row is never offered — ending up in the dock is something the user has
+     * to aim for, not somewhere a missed drop should quietly land. The item being dragged does not
+     * count as occupying anything, so a move that cannot go where it was aimed settles back into
+     * its own cell rather than jumping across the screen.
+     */
+    private fun findClosestFreeCell(preferredX: Int, preferredY: Int): Pair<Int, Int>? {
+        val occupied = gridItems.filterVisibleOnCurrentPageOnly()
+            .filter { it.id != draggedItem?.id }
+            .flatMap { item ->
+                (item.left..item.right).flatMap { x ->
+                    (
+                        item.getDockAdjustedTop(rowCount)
+                            .rangeTo(item.getDockAdjustedBottom(rowCount))
+                        ).map { y -> Pair(x, y) }
+                }
+            }
+            .toHashSet()
+
+        return (0 until columnCount)
+            .flatMap { x -> (0 until rowCount - 1).map { y -> Pair(x, y) } }
+            .filter { it !in occupied }
+            .minByOrNull { (x, y) -> abs(x - preferredX) + abs(y - preferredY) }
     }
 
     private fun addAppIconOrShortcut(
@@ -1167,12 +1211,15 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                     }
 
                     PSEUDO_WIDGET_CLOCK -> {
-                        // the two halves go where their content points, like every other launcher
+                        // each line goes where its content points, like every other launcher: the
+                        // time to the clock, and both halves of the date to the calendar
                         findViewById<View>(R.id.widget_text_clock)?.setOnClickListener {
                             activity.openClockApp()
                         }
-                        findViewById<View>(R.id.widget_date)?.setOnClickListener {
-                            activity.openCalendarApp()
+                        listOf(R.id.widget_weekday, R.id.widget_date).forEach { id ->
+                            findViewById<View>(id)?.setOnClickListener {
+                                activity.openCalendarApp()
+                            }
                         }
                     }
                 }

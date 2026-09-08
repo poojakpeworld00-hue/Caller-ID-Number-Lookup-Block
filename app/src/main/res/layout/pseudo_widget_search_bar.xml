@@ -20,7 +20,8 @@
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:contentDescription="@string/pseudo_widget_search_bar"
-        android:src="@drawable/ic_pseudo_search_vector" />
+        android:src="@drawable/ic_pseudo_search_vector"
+        android:tint="@color/pseudo_search_bar_foreground" />
 
     <TextView
         android:id="@+id/search_bar_hint"
@@ -32,7 +33,7 @@
         android:fontFamily="@font/nunito_semibold"
         android:maxLines="1"
         android:text="@string/pseudo_widget_search_bar_hint"
-        android:textColor="#e6ffffff"
+        android:textColor="@color/pseudo_search_bar_foreground"
         android:textSize="14sp" />
 
 </LinearLayout>

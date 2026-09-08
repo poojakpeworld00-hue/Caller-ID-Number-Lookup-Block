@@ -15,17 +15,18 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Root of [R.layout.pseudo_widget_digital_clock]: two plain TextViews showing the current
- * time and weekday. The system ticks us once a minute while the home screen is up, which is
- * all the resolution the clock needs, so there is no timer of our own to leak.
+ * Root of [R.layout.pseudo_widget_digital_clock]: three plain TextViews showing the weekday,
+ * the current time and the date. The system ticks us once a minute while the home screen is up,
+ * which is all the resolution the clock needs, so there is no timer of our own to leak.
  */
 class PseudoClockWidget @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : LinearLayout(context, attrs) {
 
+    private var weekday: TextView? = null
     private var time: TextView? = null
-    private var day: TextView? = null
+    private var date: TextView? = null
     private var isReceiverRegistered = false
 
     private val ticker = object : BroadcastReceiver() {
@@ -34,8 +35,9 @@ class PseudoClockWidget @JvmOverloads constructor(
 
     override fun onFinishInflate() {
         super.onFinishInflate()
+        weekday = findViewById(R.id.widget_weekday)
         time = findViewById(R.id.widget_text_clock)
-        day = findViewById(R.id.widget_date)
+        date = findViewById(R.id.widget_date)
         refresh()
     }
 
@@ -80,13 +82,19 @@ class PseudoClockWidget @JvmOverloads constructor(
         val locale = Locale.getDefault()
         val timePattern = if (DateFormat.is24HourFormat(context)) HOUR_24 else HOUR_12
 
+        // The date is the one line whose field order is not ours to choose — "8 September" here
+        // is "September 8" elsewhere — so the pattern is asked for rather than hardcoded.
+        val datePattern = DateFormat.getBestDateTimePattern(locale, DAY_AND_MONTH)
+
+        weekday?.text = SimpleDateFormat(WEEKDAY, locale).format(now)
         time?.text = SimpleDateFormat(timePattern, locale).format(now)
-        day?.text = SimpleDateFormat(WEEKDAY, locale).format(now)
+        date?.text = SimpleDateFormat(datePattern, locale).format(now)
     }
 
     companion object {
         private const val HOUR_24 = "HH:mm"
         private const val HOUR_12 = "h:mm"
         private const val WEEKDAY = "EEEE"
+        private const val DAY_AND_MONTH = "dMMMM"
     }
 }

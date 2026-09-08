@@ -157,4 +157,7 @@
 
 
 
+    <!-- Icon and hint on the white home screen search pill: Material's on-surface grey, dark
+         enough to read on white without the hard contrast of pure black. -->
+    <color name="pseudo_search_bar_foreground">#5F6368</color>
 </resources>
