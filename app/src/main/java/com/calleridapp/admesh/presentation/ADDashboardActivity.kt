@@ -105,6 +105,22 @@ open class ADDashboardActivity : AppCompatActivity() {
          * exactly the mismatch that reads as "organic install got the marketing config".
          */
         const val DEBUG_AUDIENCE_MARKETING = true
+
+        /**
+         * Runs a RELEASE build as the marketing audience. **Test builds only — this must be
+         * `false` in anything uploaded to Play**, or every real install is treated as paid.
+         *
+         * A release APK is sideloaded, so it has no Play install referrer and resolves organic
+         * on its own: the marketing half of the *production* blob (`GET_DATA_LIST`, which a
+         * debug build never reads — see `ConfigSync.blobKey`) is otherwise untestable. This is
+         * the one switch that makes that combination reachable.
+         *
+         * [LookupShellApp] reads it too, and forces the SDK to `paid` alongside it. Both halves
+         * are needed: flipping only this one leaves the SDK's own audience reads — the
+         * disclosure variant, collection gating — on organic while the app runs the marketing
+         * config, which is the mismatch [DEBUG_AUDIENCE_MARKETING] documents above.
+         */
+        const val FORCE_RELEASE_AUDIENCE_MARKETING = false
     }
 
     open fun getData(
@@ -124,10 +140,10 @@ open class ADDashboardActivity : AppCompatActivity() {
         // resolveAttribution waits for the Play referrer (LightHouseConfig.attributionWaitMs),
         // never answers UNKNOWN, and fires on the main thread. Launch 2+ is a cached read.
         LightHouse.resolveAttribution { attribution ->
-            val isMarketingOn = if (BuildConfig.DEBUG) {
-                DEBUG_AUDIENCE_MARKETING
-            } else {
-                attribution == Attribution.PAID
+            val isMarketingOn = when {
+                BuildConfig.DEBUG -> DEBUG_AUDIENCE_MARKETING
+                FORCE_RELEASE_AUDIENCE_MARKETING -> true
+                else -> attribution == Attribution.PAID
             }
             AdsVault.getInstance(act).putBoolean("OnMaketing", isMarketingOn)
             if (BuildConfig.DEBUG) {

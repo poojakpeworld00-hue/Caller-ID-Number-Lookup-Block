@@ -104,14 +104,20 @@ class LookupShellApp : Application() , Application.ActivityLifecycleCallbacks,
                 attributionWaitMs = 5_000L,
             ),
         )
-        // Debug builds have no install referrer, so the SDK would classify every sideload
-        // organic while ADDashboardActivity runs whichever half DEBUG_AUDIENCE_MARKETING
-        // picks. Force the SDK to the same side so the disclosure screen and the config
-        // under test agree. Release builds never touch this — real attribution stands.
+        // Sideloads have no install referrer, so the SDK would classify them organic while
+        // ADDashboardActivity runs whichever half the audience constants pick. Force the SDK to
+        // the same side so the disclosure screen and the config under test agree — without this
+        // they disagree, and the app reads as "organic install got the marketing config".
+        //
+        // Release normally keeps real attribution and never gets here; the second branch is the
+        // deliberate test-build override, and is dead code whenever
+        // FORCE_RELEASE_AUDIENCE_MARKETING is false, which is how it ships.
         if (BuildConfig.DEBUG) {
             LightHouse.debugForceInstallSource(
                 if (ADDashboardActivity.DEBUG_AUDIENCE_MARKETING) "paid" else "organic"
             )
+        } else if (ADDashboardActivity.FORCE_RELEASE_AUDIENCE_MARKETING) {
+            LightHouse.debugForceInstallSource("paid")
         }
         CoroutineScope(Dispatchers.Main).launch {
             try {
