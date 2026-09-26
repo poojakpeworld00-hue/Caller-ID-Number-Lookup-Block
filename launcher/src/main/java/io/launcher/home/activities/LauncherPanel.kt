@@ -270,7 +270,9 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
                 binding.allAppsFragmentUi.root,
                 binding.widgetsFragmentUi.root,
                 binding.leftPanelUi.root,
-                binding.hostPanelUi.root,
+                // Not the host panel: the host's screens pad their own headers for the status
+                // bar (edge-to-edge, as in the app itself), so padding the panel too doubled the
+                // gap above them.
                 binding.defaultLauncherBannerUi.root
             ),
             padBottomImeAndSystem = listOf(

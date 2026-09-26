@@ -9,100 +9,8 @@
     android:clickable="true"
     android:focusable="true">
 
-    <!-- Greeting + date, set by AppsPanelSurface.onOpened; the first thing the cascade lifts in. -->
-    <LinearLayout
-        android:id="@+id/panel_headerUi"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="14dp"
-        android:layout_marginEnd="20dp"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/panel_greetingUi"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:shadowColor="@color/launcher_app_label_shadow"
-            android:shadowDy="1"
-            android:shadowRadius="4"
-            android:textColor="@android:color/white"
-            android:textSize="24sp"
-            tools:text="Good morning" />
-
-        <TextView
-            android:id="@+id/panel_dateUi"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:shadowColor="@color/launcher_app_label_shadow"
-            android:shadowDy="1"
-            android:shadowRadius="4"
-            android:textColor="#CCFFFFFF"
-            android:textSize="13sp"
-            tools:text="Thursday, 17 September" />
-
-    </LinearLayout>
-
-    <RelativeLayout
-        android:id="@+id/panel_search_holderUi"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/panel_headerUi"
-        android:layout_marginStart="14dp"
-        android:layout_marginTop="14dp"
-        android:layout_marginEnd="14dp"
-        android:background="@drawable/lnch_panel_search_bg"
-        android:paddingStart="8dp"
-        android:paddingEnd="4dp">
-
-        <ImageView
-            android:id="@+id/panel_search_iconUi"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="5dp"
-            android:contentDescription="@string/search"
-            android:padding="4dp"
-            android:src="@drawable/lnch_ic_pseudo_search_vector" />
-
-        <ImageView
-            android:id="@+id/panel_search_clearUi"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:layout_marginEnd="5dp"
-            android:contentDescription="@string/launcher_clear"
-            android:padding="9dp"
-            android:src="@drawable/ic_cross_vector"
-            app:tint="@android:color/white"
-            android:visibility="gone" />
-
-        <EditText
-            android:id="@+id/panel_searchUi"
-            android:layout_width="match_parent"
-            android:layout_height="46dp"
-            android:layout_toStartOf="@+id/panel_search_clearUi"
-            android:layout_toEndOf="@+id/panel_search_iconUi"
-            android:background="@null"
-            android:ellipsize="end"
-            android:gravity="start|center_vertical"
-            android:hint="@string/launcher_search_apps_hint"
-            android:imeOptions="actionSearch"
-            android:inputType="text"
-            android:maxLines="1"
-            android:paddingStart="5dp"
-            android:paddingEnd="0dp"
-            android:singleLine="true"
-            android:textColor="@android:color/white"
-            android:textColorHint="#B3FFFFFF"
-            android:textSize="15sp" />
-
-    </RelativeLayout>
-
+    <!-- Pinned to the panel's bottom edge. The scroll view stops above it, so the ad never lies on
+         top of the app grids; while it is GONE the scroll view runs to the bottom. -->
     <FrameLayout
         android:id="@+id/panel_native_frameUi"
         android:layout_width="match_parent"
@@ -110,18 +18,114 @@
         android:layout_alignParentBottom="true"
         android:visibility="gone" />
 
+    <!-- Everything above the bottom ad scrolls as one: greeting, search, both app grids. -->
     <ScrollView
         android:id="@+id/panel_scrollUi"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/panel_search_holderUi"
+        android:layout_above="@+id/panel_native_frameUi"
+        android:layout_alignWithParentIfMissing="true"
         android:clipToPadding="false"
-        android:paddingBottom="50dp">
+        android:paddingBottom="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
+            <!-- Greeting + date, set by AppsPanelSurface.onOpened; the first thing the cascade lifts in. -->
+            <LinearLayout
+                android:id="@+id/panel_headerUi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginEnd="20dp"
+                android:visibility="gone"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/panel_greetingUi"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:shadowColor="@color/launcher_app_label_shadow"
+                    android:shadowDy="1"
+                    android:shadowRadius="4"
+                    android:textColor="@android:color/white"
+                    android:textSize="24sp"
+                    tools:text="Good morning" />
+
+                <TextView
+                    android:id="@+id/panel_dateUi"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:shadowColor="@color/launcher_app_label_shadow"
+                    android:shadowDy="1"
+                    android:shadowRadius="4"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="13sp"
+                    tools:text="Thursday, 17 September" />
+
+            </LinearLayout>
+
+            <RelativeLayout
+                android:id="@+id/panel_search_holderUi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginEnd="14dp"
+                android:background="@drawable/lnch_panel_search_bg"
+                android:paddingStart="8dp"
+                android:paddingEnd="4dp">
+
+                <ImageView
+                    android:id="@+id/panel_search_iconUi"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="5dp"
+                    android:contentDescription="@string/search"
+                    android:padding="4dp"
+                    android:src="@drawable/lnch_ic_pseudo_search_vector" />
+
+                <ImageView
+                    android:id="@+id/panel_search_clearUi"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="5dp"
+                    android:contentDescription="@string/launcher_clear"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_cross_vector"
+                    app:tint="@android:color/white"
+                    android:visibility="gone" />
+
+                <EditText
+                    android:id="@+id/panel_searchUi"
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:layout_toStartOf="@+id/panel_search_clearUi"
+                    android:layout_toEndOf="@+id/panel_search_iconUi"
+                    android:background="@null"
+                    android:ellipsize="end"
+                    android:gravity="start|center_vertical"
+                    android:hint="@string/launcher_search_apps_hint"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="0dp"
+                    android:singleLine="true"
+                    android:textColor="@android:color/white"
+                    android:textColorHint="#B3FFFFFF"
+                    android:textSize="15sp" />
+
+            </RelativeLayout>
 
             <RelativeLayout
                 android:id="@+id/panel_results_headerUi"

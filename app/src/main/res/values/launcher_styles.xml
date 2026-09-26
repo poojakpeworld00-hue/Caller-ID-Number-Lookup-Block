@@ -35,7 +35,7 @@
     <!-- MaterialButton ignores android:background, and backgroundTint cannot carry a ripple, so
          the CTA is a plain AppCompat button with the design's g-700 pill as its background -->
     <style name="OnboardingButton" parent="Widget.AppCompat.Button.Borderless">
-        <item name="android:background">@drawable/bg_onboarding_cta</item>
+        <item name="android:background">@drawable/bg_btn_primary</item>
         <item name="android:textColor">@color/cid_onb_on_cta</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:textSize">16sp</item>
