@@ -180,7 +180,9 @@ Where it sits in the flow is `onboarding.order`'s job; this block is only about 
 ```
 
 The screens shown on first run, in this order. Names: `welcome`, `set_default`, `intro`,
-`language`. The last one always leads to the launcher home screen.
+`language`. The last one always leads to Home — the launcher home screen, or the caller-ID
+app's own home when the audience block sets `"onboarding_home": "app"`. `set_default`,
+`language` and `welcome` show a "Step n of m" header counted from this order.
 
 - **Omitted = skipped.** `["welcome", "language"]` runs Welcome → Language → Home; the
   set-as-default ask and the intro carousel never appear.
@@ -189,7 +191,7 @@ The screens shown on first run, in this order. Names: `welcome`, `set_default`, 
   more at the end. A repeat that has nothing left to ask (already default, or `skip_if_default`)
   is dropped.
 - **Unknown names are ignored**, so a typo costs one screen, not the flow.
-- **Missing / empty `order`** falls back to `["welcome", "set_default", "intro", "language"]`.
+- **Missing / empty `order`** falls back to `["set_default", "language", "welcome", "intro"]`.
 - The per-screen gates still apply on top: a screen switched off by its own block
   (`default_home_screen.enabled: false`) or by `intro_display` cadence is skipped even when
   listed here.
@@ -223,7 +225,9 @@ Screens: `welcome`, `set_default`, `intro`, `language`.
 | `inter_enabled` | bool | interstitial on that screen's continue/skip action, per screen. |
 | `ads_counter` | int | skip-then-show pacing for that screen's interstitial, own counter. |
 | `skip_enabled` | bool | show the Skip button. `false` makes the screen a required step — the CTA is the only way forward (Back still behaves as it did). Default `true`. |
-| `back_action` | `next_page` \| `next_screen` | `intro` only. `next_page` (default) = Back walks forward through the carousel, so every page is seen. `next_screen` = any Back leaves for the next screen straight away. |
+| `back_action` | `next_page` \| `next_screen` | `intro` only. `next_page` (default) = Back walks forward through the carousel, so every page is seen. `next_screen` = any Back leaves for the next screen straight away. **Paid (`OnMaketing`) users only** — for organic users Back is always plain Back on every onboarding screen (previous slide, then leave the screen). |
+| `auto_next` | bool | `set_default` only. Role granted → move on by itself (default `true`); `false` waits for the CTA. |
+| `auto_next_delay_ms` | int | `set_default` only. Delay before `auto_next` moves on. Default `650`, clamped 0–5000. |
 | `slot.enabled` | bool | the on-screen ad frame (the mid native above the CTA today). |
 | `slot.ad_type` | `native` \| `banner` \| `none` | native or banner in that frame. |
 | `slot.native_type` | `mid` \| `mid2` \| `big` \| `native_banner` | which native renderer. |

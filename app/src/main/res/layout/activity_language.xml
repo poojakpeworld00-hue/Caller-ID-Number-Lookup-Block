@@ -99,6 +99,21 @@
                 android:textSize="@dimen/_10ssp" />
         </LinearLayout>
 
+        <!-- "Step n of m" during onboarding — filled and shown by LauncherFlow.bindStepHeader;
+             stays gone when the picker is opened from Settings. -->
+        <include
+            android:id="@+id/onboarding_step_header"
+            layout="@layout/view_onboarding_step_header"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_18sdp"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:layout_marginEnd="@dimen/_18sdp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnContinue" />
+
         <!-- ===== Suggested + All languages — one continuous scroll ===== -->
         <androidx.core.widget.NestedScrollView
             android:id="@+id/scroll"
@@ -109,7 +124,7 @@
             app:layout_constraintBottom_toTopOf="@id/adNativeFrame"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btnContinue">
+            app:layout_constraintTop_toBottomOf="@id/onboarding_step_header">
 
             <LinearLayout
                 android:layout_width="match_parent"

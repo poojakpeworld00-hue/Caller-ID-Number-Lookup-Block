@@ -14,7 +14,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.calleridapp.numberlookup.R
-import com.calleridapp.numberlookup.launcher.extensions.isDefaultLauncher
+import io.launcher.home.extensions.isDefaultLauncher
 import com.calleridapp.numberlookup.util.GuardRail
 import java.lang.ref.WeakReference
 

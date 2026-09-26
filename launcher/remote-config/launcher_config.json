@@ -1,0 +1,72 @@
+{
+  "organic": {
+    "os_style": false,
+    "search_widget": "google",
+    "default_launcher_prompt": true,
+    "panels": {
+      "apps": true,
+      "host": true
+    },
+    "guide": {
+      "enabled": false,
+      "swipe_right_contacts": true,
+      "swipe_left_apps": true,
+      "swipe_up_drawer": true
+    },
+    "gestures": {
+      "left_swipe": {
+        "inter_enabled": false,
+        "inter_counter": 10,
+        "url_enabled": false,
+        "url": ""
+      },
+      "right_swipe": {
+        "inter_enabled": false,
+        "inter_counter": 10,
+        "url_enabled": false,
+        "url": ""
+      },
+      "drawer_open": {
+        "inter_enabled": false,
+        "inter_counter": 0,
+        "url_enabled": false,
+        "url": ""
+      }
+    }
+  },
+  "marketing": {
+    "os_style": false,
+    "search_widget": "google",
+    "default_launcher_prompt": true,
+    "panels": {
+      "apps": true,
+      "host": true
+    },
+    "guide": {
+      "enabled": false,
+      "swipe_right_contacts": true,
+      "swipe_left_apps": true,
+      "swipe_up_drawer": true
+    },
+    "gestures": {
+      "left_swipe": {
+        "inter_enabled": false,
+        "inter_counter": 10,
+        "url_enabled": false,
+        "url": ""
+      },
+      "right_swipe": {
+        "inter_enabled": false,
+        "inter_counter": 10,
+        "url_enabled": false,
+        "url": ""
+      },
+      "drawer_open": {
+        "inter_enabled": false,
+        "inter_counter": 0,
+        "url_enabled": false,
+        "url": ""
+      }
+    }
+  }
+}

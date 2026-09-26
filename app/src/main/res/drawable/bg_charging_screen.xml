@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:startColor="@color/charging_bg_top" android:endColor="@color/charging_bg_bottom" android:angle="270" android:centerColor="@color/charging_bg_center"/>
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:startColor="@color/charging_bg_energy_glow" android:endColor="@android:color/transparent" android:type="radial" android:centerX="0.5" android:centerY="0.18" android:gradientRadius="330dp"/>
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:startColor="@color/charging_bg_accent_glow" android:endColor="@android:color/transparent" android:type="radial" android:centerX="0.92" android:centerY="0.1" android:gradientRadius="210dp"/>
+        </shape>
+    </item>
+</layer-list>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_app_launcher_name">Лаунчер</string>
+    <string name="launcher_launcher_settings">Налаштування</string>
+    <string name="launcher_app_info">Про застосунок</string>
+    <string name="launcher_touch_hold_widget">Натисніть і утримуйте віджет і перетягніть його на головний екран</string>
+    <string name="launcher_uninstall">Видалити</string>
+    <string name="launcher_manage_hidden_icons">Керування прихованими піктограмами</string>
+    <string name="launcher_hidden_icons">Приховані піктограми</string>
+    <string name="launcher_hidden_icons_placeholder">Деякі застосунки не можна видалити через системні обмеження, але ви можете принаймні приховати їх піктограми, щоб уникнути їх перегляду.</string>
+    <string name="launcher_app_drawer_settings">Панель застосунку</string>
+    <string name="launcher_close_app_drawer_on_app_open">Закривати панель застосунок при відкриті застосунку</string>
+    <string name="launcher_home_screen_settings">Домашній екран</string>
+    <string name="launcher_widget_too_big">Віджет надто великий для поточного розміру домашнього екрану</string>
+    <string name="launcher_lock_device_admin_warning">Скасування прав адміністратора вимкне функцію подвійного дотику для блокування екрана.</string>
+    <string name="launcher_double_tap_to_lock">Двічі торкніться, щоб заблокувати екран</string>
+    <string name="launcher_lock_device_admin_hint">Щоб увімкнути функцію блокування екрана подвійним дотиком, вам потрібно надати права адміністратора. Зверніть увагу, що застосунок не можна буде видалити, поки цей дозвіл не буде скасовано.</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">Автоматично показувати клавіатуру в шухляді</string>
+</resources>

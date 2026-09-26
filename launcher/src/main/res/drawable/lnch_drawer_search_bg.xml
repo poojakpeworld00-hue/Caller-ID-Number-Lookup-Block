@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The drawer's search pill: one flat, translucent white over the sheet's dark scrim - no gradient,
+    rim or shadow - rounded to a full pill (see MySearchMenu.applyDrawerSkin for its size).
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/launcher_drawer_search_fill" />
+    <corners android:radius="999dp" />
+</shape>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_app_launcher_name">ランチャー</string>
+    <string name="launcher_launcher_settings">ランチャー設定</string>
+    <string name="launcher_app_info">アプリ情報</string>
+    <string name="launcher_touch_hold_widget">ウィジェットを長押しして、ホーム画面にドラッグします</string>
+    <string name="launcher_uninstall">アンインストール</string>
+    <string name="launcher_manage_hidden_icons">非表示アイコンの管理</string>
+    <string name="launcher_hidden_icons">非表示のアイコン</string>
+    <string name="launcher_hidden_icons_placeholder">一部のアプリはシステムの制限によりアンインストールできませんが、非表示によって表示されないようにすることはできます。</string>
+    <string name="launcher_app_drawer_settings">アプリドローワー</string>
+    <string name="launcher_close_app_drawer_on_app_open">アプリを開く際にドローワーを閉じる</string>
+    <string name="launcher_home_screen_settings">ホーム画面</string>
+    <string name="launcher_widget_too_big">ウィジェットが現在のホーム画面のサイズよりも大きいです</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">ドロワーを開いた際に自動的にキーボードを表示する</string>
+    <string name="launcher_double_tap_to_lock">ダブルタップしてロック画面を表示する</string>
+</resources>

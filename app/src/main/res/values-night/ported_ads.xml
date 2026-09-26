@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resources ported with the reference app's ad flow screens. -->
+<resources>
+    <color name="ad_sk">#222D44</color>
+    <color name="ad_green">#12B76A</color>
+    <color name="ad_star">#FBBF24</color>
+    <color name="lk_ink">#EEF3FB</color>
+    <color name="ad_tag_fg">#FBBF24</color>
+    <color name="lk_sub">#A3AEC2</color>
+    <color name="ad_body">#C9D2E3</color>
+    <color name="ad_cta_fg">#12172B</color>
+    <color name="ad_cta_bg">#EEF3FB</color>
+    <color name="ad_green_deep">#067647</color>
+    <color name="lk_card">#161F30</color>
+    <color name="lk_border">#26314A</color>
+    <color name="ad_tag_bg">#29FBBF24</color>
+    <color name="ad_tag_bd">#66FBBF24</color>
+</resources>

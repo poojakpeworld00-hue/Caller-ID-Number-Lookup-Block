@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_holderUi"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Behind the status bar on the workspace: the bar draws white icons over the wallpaper, and
+         a wallpaper can be any colour, so this keeps them readable. Declared first, so the grid,
+         the banner and every panel draw over it; the panels and the drawer bring their own
+         surface and their own icon colour. -->
+    <View
+        android:id="@+id/status_scrimUi"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/lnch_status_scrim" />
+
+    <!-- sits below the grid the same way the reference app stacks it: the grid is transparent, so
+         the banner shows through, and opening the drawer or a side panel covers it -->
+    <include
+        android:id="@+id/default_launcher_bannerUi"
+        layout="@layout/lnch_default_launcher_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true" />
+
+    <include
+        android:id="@+id/home_screen_gridUi"
+        layout="@layout/lnch_home_screen_grid" />
+
+    <include
+        android:id="@+id/all_apps_fragmentUi"
+        layout="@layout/lnch_all_apps_fragment"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/widgets_fragmentUi"
+        layout="@layout/lnch_widgets_fragment"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/left_panelUi"
+        layout="@layout/lnch_left_panel_fragment"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/host_panelUi"
+        layout="@layout/lnch_host_panel"
+        android:visibility="gone" />
+
+    <!--
+        The guide's scrim. Deliberately not clickable: LauncherPanel receives touches at the Activity
+        level, so both the swipe it teaches and the tap-to-perform shortcut still land even though
+        nothing here consumes them. Making it clickable would swallow the drag and silently break
+        the very gesture step three teaches.
+
+        Declared after the panels and the drawer so it draws above them, and taken down the moment
+        any of them starts moving — see hideSwipeHint's callers.
+    -->
+    <LinearLayout
+        android:id="@+id/swipe_hintUi"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#be000000"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <!--
+            The chevron run. Orientation, drawable and per-child alpha are all set in code for the
+            current step; the alpha ramp always leads in the direction of travel so the run reads as
+            motion rather than as three identical arrows.
+        -->
+        <LinearLayout
+            android:id="@+id/swipe_hint_chevronsUi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="no"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/swipe_hint_chevron_1Ui"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:alpha="0.3"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_chevron_right_vector"
+                android:tint="@android:color/white" />
+
+            <ImageView
+                android:id="@+id/swipe_hint_chevron_2Ui"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:alpha="0.6"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_chevron_right_vector"
+                android:tint="@android:color/white" />
+
+            <ImageView
+                android:id="@+id/swipe_hint_chevron_3Ui"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_chevron_right_vector"
+                android:tint="@android:color/white" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/swipe_hint_labelUi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:text="@string/launcher_swipe_right_hint"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:alpha="0.7"
+            android:gravity="center"
+            android:text="@string/launcher_swipe_hint_tap"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/home_screen_popup_menu_anchorUi"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="gone" />
+
+</RelativeLayout>

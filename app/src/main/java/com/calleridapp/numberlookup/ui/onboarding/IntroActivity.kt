@@ -15,7 +15,7 @@ import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.base.HostActivity
 import com.calleridapp.numberlookup.data.VaultRegistry
 import com.calleridapp.numberlookup.databinding.ActivityOnboardingBinding
-import com.calleridapp.numberlookup.launcher.helpers.LauncherFlow
+import com.calleridapp.numberlookup.onboard.LauncherFlow
 import com.calleridapp.numberlookup.permission.AccessEngine
 import com.calleridapp.numberlookup.ui.ShellActivity
 import com.calleridapp.numberlookup.ui.intro.IntroRevealConfig
@@ -101,6 +101,12 @@ class IntroActivity : HostActivity<ActivityOnboardingBinding>() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 val current = binding.viewPager.currentItem
+                // Organic: Back is Back — the previous slide, then the screen's default.
+                if (!LauncherFlow.backMovesForward(this@IntroActivity)) {
+                    if (current > 0) binding.viewPager.setCurrentItem(current - 1, true)
+                    else LauncherFlow.passBackThrough(this@IntroActivity, this)
+                    return
+                }
                 if (!ui.backAdvances && current < pages.lastIndex) {
                     binding.viewPager.setCurrentItem(current + 1, true)
                 } else if (!forwarding) {

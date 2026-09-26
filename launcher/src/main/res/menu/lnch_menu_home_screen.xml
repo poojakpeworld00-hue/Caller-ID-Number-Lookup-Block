@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/widgetsUi"
+        android:title="@string/widgets" />
+    <item
+        android:id="@+id/wallpapersUi"
+        android:title="@string/wallpapers" />
+    <item
+        android:id="@+id/launcher_settingsUi"
+        android:title="@string/launcher_launcher_settings" />
+    <item
+        android:id="@+id/set_as_defaultUi"
+        android:title="@string/set_as_default" />
+</menu>

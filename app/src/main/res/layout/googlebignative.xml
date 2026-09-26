@@ -1,11 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Big native (Claude Design "Ads Redesign" · big native): 44dp r12 icon, headline + Ad badge,
+     "★ 4.6 · Free" line, body, 150dp r13 media, dark Install button. IDs are the ones
+     NativeADs / BS_NativeAds bind (the latter through GooglebignativeBinding). -->
 <com.google.android.gms.ads.nativead.NativeAdView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mainNativeadView"
+    style="@style/AdCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="5dp"
-    android:background="@drawable/ads_bg"
-    android:padding="5dp">
+    android:layout_marginStart="@dimen/ad_card_margin_h"
+    android:layout_marginEnd="@dimen/ad_card_margin_h"
+    android:layout_marginTop="@dimen/ad_card_margin_top"
+    android:layout_marginBottom="@dimen/ad_card_margin_bottom"
+    android:padding="12dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,94 +23,94 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cvcalculate"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_gravity="center"
-                android:foreground="?android:attr/selectableItemBackground"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="@dimen/_2sdp"
-                app:cardElevation="0dp">
-
-                <ImageView
-                    android:id="@+id/ad_app_icon"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:adjustViewBounds="true" />
-            </androidx.cardview.widget.CardView>
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ad_app_icon"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:adjustViewBounds="true"
+                android:background="@color/ad_sk"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/AdIconR12" />
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="5sp"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_ad" />
+                <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
                     <TextView
-                        android:id="@+id/ad_headline"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="@dimen/_3sdp"
-                        android:fontFamily="@font/figtree_medium"
-                        android:includeFontPadding="false"
-                        android:singleLine="true"
-                        android:textColor="@android:color/black"
-                        android:textSize="@dimen/_12sdp" />
-                </LinearLayout>
+                    android:id="@+id/ad_headline"
+                    style="@style/AdHeadline"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                        android:textSize="14.5sp"
+                        tools:text="FitTrack — Workout Planner"
+                    app:layout_constrainedWidth="true"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/ad_badge"
+                    app:layout_constraintHorizontal_bias="0"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintWidth_default="wrap" />
+
+                    <TextView
+                    android:id="@+id/ad_badge"
+                    style="@style/AdTag"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/ad_headline"
+                    app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <TextView
-                    android:id="@+id/ad_body"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_3sdp"
-                    android:fontFamily="@font/figtree_medium"
-                    android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:textColor="@android:color/black"
-                    android:textSize="@dimen/_10sdp" />
-
+                    android:id="@+id/ad_stars"
+                    style="@style/AdStars"
+                    tools:text="★ 4.6 · Free"
+                    tools:visibility="visible" />
             </LinearLayout>
         </LinearLayout>
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/ad_body"
+            style="@style/AdBody"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_marginTop="9dp"
+            android:lineSpacingMultiplier="1.2"
+            tools:text="Plan workouts, track progress and hit your goals in 10 minutes a day." />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_marginTop="10dp"
+            app:cardBackgroundColor="@color/ad_sk"
+            app:cardCornerRadius="13dp"
+            app:cardElevation="0dp">
 
             <com.google.android.gms.ads.nativead.MediaView
                 android:id="@+id/ad_media"
                 android:layout_width="match_parent"
-                android:layout_height="145dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="5dp" />
+                android:layout_height="match_parent" />
+        </androidx.cardview.widget.CardView>
 
-            <TextView
-                android:id="@+id/ad_call_to_action"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:background="@drawable/bg_btn_primary"
-                android:fontFamily="@font/figtree_medium"
-                android:gravity="center"
-                android:padding="@dimen/_13sdp"
-                android:textColor="@color/white"
-                android:textStyle="bold" />
-        </LinearLayout>
+        <TextView
+            android:id="@+id/ad_call_to_action"
+            style="@style/AdCta"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_ad_cta14"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            tools:text="Install" />
     </LinearLayout>
 </com.google.android.gms.ads.nativead.NativeAdView>

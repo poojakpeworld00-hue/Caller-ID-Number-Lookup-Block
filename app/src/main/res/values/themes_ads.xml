@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themes for the ad-flow screens ported from the reference app. -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        The in-app page a direct link opens in (DirectLinkOpener, `link_open_in: webview`). White and
+        edge to edge: promo landing pages assume a white background, and unlike a Custom Tab or a
+        browser this page has no toolbar of its own to hide.
+    -->
+    <style name="Theme.PromoWeb" parent="Theme.Material3.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="23">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
+        <item name="android:enforceStatusBarContrast" tools:targetApi="29">false</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="29">false</item>
+    </style>
+
+    <!-- The charge / discharge screen: dark, full bleed, drawn over the lock screen. -->
+    <style name="Theme.Charging" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:windowBackground">@drawable/bg_charging_screen</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+</resources>

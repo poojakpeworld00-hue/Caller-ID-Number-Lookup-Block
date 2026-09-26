@@ -18,13 +18,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <!-- ── Home-screen launcher ─────────────────────────────────────────────────────
-         The home screen hosts app widgets and the icon menu offers uninstall.
-         (Launcher-activity enumeration comes from the <queries> block below.) -->
-    <uses-permission
-        android:name="android.permission.BIND_APPWIDGET"
-        tools:ignore="ProtectedPermissions" />
+         The :launcher module's manifest brings BIND_APPWIDGET, EXPAND_STATUS_BAR and the
+         <queries> it needs; the icon menu's uninstall is the one the app still declares. -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
-    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
 
     <!-- androidx.core declares this signature permission AND a matching <uses-permission>; it is
          how ContextCompat.registerReceiver() implements RECEIVER_NOT_EXPORTED on API 26-32 (it
@@ -63,22 +59,6 @@
     <queries>
         <intent>
             <action android:name="android.telecom.action.CHANGE_PHONE_ACCOUNTS" />
-        </intent>
-    </queries>
-
-    <!-- Package visibility for the launcher: without this, queryIntentActivities for
-         MAIN/LAUNCHER returns almost nothing on API 30+ and the app drawer comes up empty. -->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent>
-        <!-- Widget picker: AppWidgetManager.installedProviders + shortcut-style widgets. -->
-        <intent>
-            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.CREATE_SHORTCUT" />
         </intent>
     </queries>
 
@@ -170,113 +150,95 @@
             android:name=".ui.ShellActivity"
             android:exported="false" />
 
-        <!-- ══ Home-screen launcher ═══════════════════════════════════════════════
-             LauncherHomeActivity is the actual home screen: it carries the HOME
-             intent-filter, so it is what the system shows once the user makes this
-             app their default launcher. The onboarding screens ahead of it run once,
-             right after the caller-ID splash. -->
+        <!-- ══ Launcher onboarding ═══════════════════════════════════════════════
+             The home screen itself (LauncherPanel, with the HOME intent-filter), its settings
+             screens, widgets and device-admin receiver all come from the :launcher module's
+             own manifest. The onboarding screens ahead of it run once, right after the
+             caller-ID splash. -->
         <!--
              excludeFromRecents only governs recents when the activity is the ROOT of its
              task, and these two are not — the caller-ID splash roots the task and starts
              them into it (dumpsys: rootOfTask=false). It is declared anyway so the flow
              still behaves if it is ever entered directly, but the attribute that actually
              does the work is the runtime AppTask.setExcludeFromRecents() call in
-             SimpleActivity.excludeAppFromRecents(), invoked by both screens.
+             LauncherFlow's excludeAppFromRecents(), invoked by both screens.
         -->
         <activity
-            android:name=".launcher.activities.OnboardingWelcomeActivity"
+            android:name=".onboard.OnboardingWelcomeActivity"
             android:excludeFromRecents="true"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/OnboardingTheme" />
 
+        <!-- The centred, dimmed "pick this app" hint over the system Default home app list.
+             Translucent and in its own task (empty affinity), so it sits over Settings instead
+             of joining this app's task behind it. -->
         <activity
-            android:name=".launcher.activities.OnboardingDefaultLauncherActivity"
+            android:name=".onboard.RoleHintActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:screenOrientation="portrait"
+            android:taskAffinity=""
+            android:theme="@style/Theme.OverlayGuide" />
+
+        <activity
+            android:name=".onboard.OnboardingDefaultLauncherActivity"
             android:excludeFromRecents="true"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/OnboardingTheme" />
 
+        <!-- ══ Ad-flow screens (ported from the reference app) ═════════════════════ -->
+
+        <!-- The in-app page a direct link opens in when `link_open_in` / `DirectLinkType` is webview. -->
         <activity
-            android:name=".launcher.activities.MainActivity"
-            android:clearTaskOnLaunch="true"
+            android:name="com.calleridapp.admesh.presentation.PromoWebActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:excludeFromRecents="true"
-            android:exported="true"
+            android:exported="false"
+            android:theme="@style/Theme.PromoWeb" />
+
+        <!-- Reopened from Recents: `recent_ad` in `launcher_ads` decides whether this ever shows. -->
+        <activity
+            android:name=".ui.recent.RecentAdActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait" />
+
+        <!--
+            The install / uninstall result screen. singleTask so a second package event arriving
+            while it is up is delivered to onNewIntent instead of stacking another copy.
+        -->
+        <activity
+            android:name=".ui.pkgresult.PackageResultActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
-            android:theme="@style/LauncherTheme">
+            android:taskAffinity="" />
 
-            <intent-filter>
-                <action android:name="android.content.pm.action.CONFIRM_PIN_SHORTCUT" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.HOME" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
+        <!-- The optimisation screen the package result links to. -->
         <activity
-            android:name=".launcher.activities.SettingsActivity"
-            android:configChanges="orientation"
+            android:name=".ui.cleaner.CleanerActivity"
+            android:excludeFromRecents="true"
             android:exported="false"
-            android:label="@string/launcher_settings"
-            android:parentActivityName=".launcher.activities.MainActivity"
-            android:theme="@style/LauncherBaseTheme" />
+            android:screenOrientation="portrait" />
 
+        <!-- The charge / discharge screen. Shown by ChargeEventWatcher from one of our own screens;
+             its own task so it overlays cleanly and stays out of the back stack. Shows over the
+             lock screen. -->
         <activity
-            android:name=".launcher.activities.HiddenIconsActivity"
+            android:name=".ui.charging.ChargingStatusActivity"
+            android:excludeFromRecents="true"
             android:exported="false"
-            android:label="@string/hidden_icons"
-            android:parentActivityName=".launcher.activities.SettingsActivity"
-            android:theme="@style/LauncherBaseTheme" />
-
-        <activity
-            android:name="org.fossify.commons.activities.CustomizationActivity"
-            android:exported="false"
-            android:label="@string/customize_colors"
-            android:parentActivityName=".launcher.activities.SettingsActivity"
-            android:theme="@style/LauncherBaseTheme" />
-
-        <!-- The long-press "lock screen" action needs a device-admin component to call
-             lockNow() through. -->
-        <receiver
-            android:name=".launcher.receivers.LockDeviceAdminReceiver"
-            android:exported="true"
-            android:permission="android.permission.BIND_DEVICE_ADMIN">
-            <meta-data
-                android:name="android.app.device_admin"
-                android:resource="@xml/device_admin_policies" />
-            <intent-filter>
-                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
-            android:name=".launcher.widgets.DigitalClockWidgetProvider"
-            android:exported="false"
-            android:label="@string/digital_clock_widget">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/digital_clock_widget_info" />
-        </receiver>
-
-        <receiver
-            android:name=".launcher.widgets.AnalogClockWidgetProvider"
-            android:exported="false"
-            android:label="@string/analog_clock_widget">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/analog_clock_widget_info" />
-        </receiver>
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:showWhenLocked="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Charging"
+            android:turnScreenOn="true" />
 
         <!-- Firebase-gated Full-Screen-Intent priming Screen (after Language). -->
         <activity

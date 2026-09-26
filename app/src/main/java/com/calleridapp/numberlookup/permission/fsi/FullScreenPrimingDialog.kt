@@ -12,7 +12,7 @@ import android.widget.TextView
 import com.calleridapp.admesh.domain.logKeyEvent
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.permission.AccessEngine
-import com.calleridapp.numberlookup.ui.home.HomeShellHost
+import com.calleridapp.numberlookup.ui.home.homeShellHost
 
 /**
  * The ShellActivity Full-Screen-Intent priming dialog. Same visual language as the
@@ -66,7 +66,7 @@ object FullScreenPrimingDialog {
             enableTapped = true
             dialog.dismiss()
             AccessEngine.request(activity, "notification") {
-                (activity as? HomeShellHost)?.homeShellController?.openFsiSettings()
+                activity?.homeShellHost?.homeShellController?.openFsiSettings()
             }
         }
         view.findViewById<TextView>(R.id.fsDialogLater).setOnClickListener {

@@ -3,7 +3,7 @@ package com.calleridapp.numberlookup.permission.fsi
 import android.content.Context
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.calleridapp.admesh.domain.AdsVault
-import com.calleridapp.numberlookup.BuildConfig
+import com.calleridapp.admesh.domain.ConfigSync
 import com.calleridapp.numberlookup.util.GuardRail
 import org.json.JSONObject
 
@@ -114,7 +114,7 @@ data class FullScreenConfig(
             return try {
                 val rc = FirebaseRemoteConfig.getInstance()
                 rc.getString(RC_KEY).takeIf { it.isNotBlank() }?.let { return it }
-                val blobKey = if (BuildConfig.DEBUG) "DEBUG_GET_DATA_LIST" else "GET_DATA_LIST"
+                val blobKey = ConfigSync.blobKey
                 val blob = rc.getString(blobKey)
                 if (blob.isNotBlank()) {
                     val obj = JSONObject(blob)

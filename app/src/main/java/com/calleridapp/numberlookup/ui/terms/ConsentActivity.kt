@@ -13,7 +13,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.calleridapp.numberlookup.ui.ShellActivity
 import com.calleridapp.numberlookup.ui.intro.IntroRevealConfig
-import com.calleridapp.numberlookup.launcher.helpers.LauncherFlow
+import com.calleridapp.numberlookup.onboard.LauncherFlow
 import com.calleridapp.numberlookup.ui.intro.IntroRevealPolicy
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.base.HostActivity
@@ -80,6 +80,11 @@ class ConsentActivity : HostActivity<ActivityTermsBinding>() {
         // proceedToNextScreen is itself idempotent.
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                // Organic: Back is Back — it never accepts the terms on the user's behalf.
+                if (!LauncherFlow.backMovesForward(this@ConsentActivity)) {
+                    LauncherFlow.passBackThrough(this@ConsentActivity, this)
+                    return
+                }
                 prefs.isTermsAccepted = true
                 proceedToNextScreen()
             }

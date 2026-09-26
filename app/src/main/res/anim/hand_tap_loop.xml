@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    The pointing hand on the home hint: a shallow press-and-release toward its top-left
+    fingertip, so the tip stays on the radio it is tapping rather than lifting off it.
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:anim/accelerate_decelerate_interpolator">
+    <scale
+        android:duration="750"
+        android:fromXScale="1.0"
+        android:fromYScale="1.0"
+        android:pivotX="0%"
+        android:pivotY="0%"
+        android:repeatCount="infinite"
+        android:repeatMode="reverse"
+        android:toXScale="0.88"
+        android:toYScale="0.88" />
+    <translate
+        android:duration="750"
+        android:fromXDelta="0%"
+        android:fromYDelta="0%"
+        android:repeatCount="infinite"
+        android:repeatMode="reverse"
+        android:toXDelta="-4%"
+        android:toYDelta="-8%" />
+</set>

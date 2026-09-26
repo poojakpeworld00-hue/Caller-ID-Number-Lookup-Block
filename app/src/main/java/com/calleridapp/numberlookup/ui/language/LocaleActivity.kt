@@ -21,7 +21,7 @@ import com.calleridapp.numberlookup.data.RegionLocator
 import com.calleridapp.numberlookup.data.LocaleRegistry
 import com.calleridapp.numberlookup.data.VaultRegistry
 import com.calleridapp.numberlookup.databinding.ActivityLanguageBinding
-import com.calleridapp.numberlookup.launcher.helpers.LauncherFlow
+import com.calleridapp.numberlookup.onboard.LauncherFlow
 import com.calleridapp.numberlookup.permission.AccessEngine
 import com.calleridapp.numberlookup.permission.fsi.FullScreenAccess
 import com.calleridapp.numberlookup.permission.fsi.FullScreenAccessActivity
@@ -85,6 +85,12 @@ class LocaleActivity : HostActivity<ActivityLanguageBinding>() {
         )
         binding.adNativeDivider.followAdContainer(binding.adNativeFrame)
 
+        if (!standalone) {
+            LauncherFlow.bindStepHeader(
+                this, LauncherAdsConfig.OnboardScreen.LANGUAGE, binding.root
+            )
+        }
+
         // 1) Resolve the region FIRST, before the lists exist. The device seed is
         //    synchronous, so viewModel.suggested/others already hold the correct,
         //    region-specific groups by the time the adapters observe them — the
@@ -115,6 +121,11 @@ class LocaleActivity : HostActivity<ActivityLanguageBinding>() {
         if (!standalone) {
             onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
+                    // Organic: Back is Back — it never picks a language on the user's behalf.
+                    if (!LauncherFlow.backMovesForward(this@LocaleActivity)) {
+                        LauncherFlow.passBackThrough(this@LocaleActivity, this)
+                        return
+                    }
                     if (forwarding) return
                     forwarding = true
                     onContinue()

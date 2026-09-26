@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The hint card that sits over a system screen this app has just opened, showing the user what they
+    came there to do. Three bodies, one shown per Kind (DefaultHomeHintPanel.applyKind):
+
+     - guideRowUi: words only, for the SMS chooser (which names this app and offers a button);
+     - guideHomeMockUi: a mock of the "Default home app" list with this app's row lifted out of it,
+       selected;
+     - guideOverlayMockUi: a mock of the "Display over other apps" page with this app's row lifted
+       out of it, its switch flipping on.
+
+    Each mock is what the screen behind looks like once the user has done the thing. Colours come
+    from launcher_hint_colors (light / night by system mode: the card is drawn over another app's
+    page, so the app theme does not apply). The spacer holds the card at the foot of the window;
+    the TOP position hides it. Tapping anywhere closes the card, which also takes itself down.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llMainUi"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <View
+        android:id="@+id/guideSpacerUi"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:id="@+id/guideCardUi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/lnch_overlay_guide_card_bg"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:elevation="8dp"
+        android:orientation="vertical">
+
+        <!-- ===== simple row: SMS chooser (words only) ===== -->
+        <LinearLayout
+            android:id="@+id/guideRowUi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="14dp">
+
+            <ImageView
+                android:id="@+id/guideAppIconUi"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@null"
+                android:src="@mipmap/ic_launcher" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/guideTitleUi"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/launcher_hint_overlay_title"
+                    android:textColor="@color/hint_text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/guideDescriptionUi"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="@string/launcher_hint_overlay_description"
+                    android:textColor="@color/hint_text_secondary"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ===== default-home mock: the list behind, this app's row lifted out of it ===== -->
+        <FrameLayout
+            android:id="@+id/guideHomeMockUi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:paddingStart="16dp"
+            android:paddingTop="30dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="30dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/guideMockListUi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="40dp"
+                android:layout_marginEnd="40dp"
+                android:background="@drawable/lnch_hint_mock_list"
+                android:orientation="vertical"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
+
+                <include layout="@layout/lnch_hint_mock_row" />
+
+                <!-- the slot the highlighted row sits over -->
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="74dp" />
+
+                <include layout="@layout/lnch_hint_mock_row" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/guideMockAppRowUi"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:layout_gravity="center"
+                android:background="@drawable/lnch_hint_mock_app_row"
+                android:elevation="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:outlineAmbientShadowColor="@color/hint_mock_app_shadow"
+                android:outlineSpotShadowColor="@color/hint_mock_app_shadow"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <!-- the mimic radio: ring tints and the dot grows on loop, never a real RadioButton -->
+                <FrameLayout
+                    android:id="@+id/guideRadioRingUi"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:background="@drawable/lnch_permission_hint_radio_ring">
+
+                    <View
+                        android:id="@+id/guideRadioDotUi"
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/lnch_permission_hint_radio_dot" />
+
+                </FrameLayout>
+
+                <FrameLayout
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="16dp"
+                    android:background="@drawable/lnch_hint_app_tile"
+                    android:elevation="3dp"
+                    android:outlineProvider="background">
+
+                    <ImageView
+                        android:id="@+id/guideMockAppIconUi"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@null"
+                        android:src="@mipmap/ic_launcher" />
+
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/guideMockAppLabelUi"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/app_name"
+                    android:textColor="@color/hint_mock_app_text"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+        <!-- ===== overlay mock: the permission page behind, this app's switch row lifted out ===== -->
+        <FrameLayout
+            android:id="@+id/guideOverlayMockUi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:paddingStart="16dp"
+            android:paddingTop="30dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="30dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="40dp"
+                android:layout_marginEnd="40dp"
+                android:background="@drawable/lnch_hint_mock_list"
+                android:orientation="vertical"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
+
+                <include layout="@layout/lnch_hint_mock_toggle_row" />
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="74dp" />
+
+                <include layout="@layout/lnch_hint_mock_toggle_row" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/guideMockOverlayRowUi"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:layout_gravity="center"
+                android:background="@drawable/lnch_hint_mock_app_row"
+                android:elevation="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:outlineAmbientShadowColor="@color/hint_mock_app_shadow"
+                android:outlineSpotShadowColor="@color/hint_mock_app_shadow"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp">
+
+                <FrameLayout
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/lnch_hint_app_tile"
+                    android:elevation="3dp"
+                    android:outlineProvider="background">
+
+                    <ImageView
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@null"
+                        android:src="@mipmap/ic_launcher" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/guideMockOverlayLabelUi"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/app_name"
+                        android:textColor="@color/hint_mock_app_text"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/launcher_hint_overlay_row"
+                        android:textColor="@color/hint_mock_row_text"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+                <!--
+                    A mimic of the switch on the screen behind, animated on loop. Never a real Switch:
+                    it must not look tappable, because the control that counts is the system's own.
+                -->
+                <FrameLayout
+                    android:id="@+id/guideSwitchTrackUi"
+                    android:layout_width="52dp"
+                    android:layout_height="32dp"
+                    android:background="@drawable/lnch_overlay_guide_switch_track"
+                    android:duplicateParentState="false">
+
+                    <View
+                        android:id="@+id/guideSwitchThumbUi"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:layout_gravity="center_vertical|start"
+                        android:layout_marginStart="3dp"
+                        android:background="@drawable/lnch_overlay_guide_switch_thumb" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

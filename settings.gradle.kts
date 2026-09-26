@@ -34,4 +34,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Caller ID Number Lookup Block"
 include(":app")
- 
+ include(":launcher")

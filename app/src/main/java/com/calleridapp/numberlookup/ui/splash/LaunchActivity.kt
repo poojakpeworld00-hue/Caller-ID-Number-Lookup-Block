@@ -33,8 +33,8 @@ import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.base.HostActivity
 import com.calleridapp.numberlookup.data.VaultRegistry
 import com.calleridapp.numberlookup.databinding.ActivitySplashBinding
-import com.calleridapp.numberlookup.launcher.activities.OnboardingWelcomeActivity
-import com.calleridapp.numberlookup.launcher.helpers.LauncherFlow
+import com.calleridapp.numberlookup.onboard.OnboardingWelcomeActivity
+import com.calleridapp.numberlookup.onboard.LauncherFlow
 import com.calleridapp.numberlookup.ui.intro.IntroRevealPolicy
 import com.calleridapp.numberlookup.ui.language.LocaleActivity
 import com.calleridapp.numberlookup.ui.onboarding.IntroActivity

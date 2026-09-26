@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_launcher_settings">إعدادات المشغل</string>
+    <string name="launcher_app_info">معلومات التطبيق</string>
+    <string name="launcher_touch_hold_widget">اضغط مطولاً على الويدجت واسحبها إلى شاشتك الرئيسية</string>
+    <string name="launcher_uninstall">إلغاء التثبيت</string>
+    <string name="launcher_manage_hidden_icons">إدارة اﻷيقونات المخفية</string>
+    <string name="launcher_hidden_icons">اﻷيقونات المخفية</string>
+    <string name="launcher_hidden_icons_placeholder">لا يمكن إلغاء تثبيت بعض التطبيقات بسبب قيود النظام، ولكن يمكن إخفاء أيقوناتها لتجنب ظهورها.</string>
+    <string name="launcher_app_drawer_settings">درج التطبيق</string>
+    <string name="launcher_close_app_drawer_on_app_open">إغلاق درج التطبيق عند فتح تطبيق</string>
+    <string name="launcher_widget_too_big">الأداة كبيرة جدًا بالنسبة لحجم الشاشة الرئيسية الحالي</string>
+    <string name="launcher_app_launcher_name">المشغل</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">إظهار لوحة المفاتيح في الدرج تلقائيًا</string>
+    <string name="launcher_home_screen_settings">الشاشة الرئيسية</string>
+    <string name="launcher_double_tap_to_lock">انقر نقراً مزدوجاً لقفل الشاشة</string>
+    <string name="launcher_lock_device_admin_hint">لتفعيل ميزة النقر المزدوج لقفل الشاشة، عليك منح التطبيق إذن المسؤول. ملاحظة: لا يمكن إلغاء تثبيت التطبيق إلا بعد إزالة هذا الإذن.</string>
+    <string name="launcher_lock_device_admin_warning">سيؤدي تعطيل إذن المسؤول إلى تعطيل ميزة النقر المزدوج لقفل الشاشة.</string>
+</resources>

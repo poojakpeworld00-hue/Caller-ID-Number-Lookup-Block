@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+    "Setup not complete" card at the top of the launcher workspace, shown while the Home role is
+    not held. Outer wrapper is transparent and takes the status bar inset padding; the gradient
+    card lives inside it. The whole card is the tap target (LauncherPanel hangs the click on the
+    root); LauncherBannerMotion owns every animation - entrance, the hero loops, the chevron
+    nudge and the sheen sweep - and starts / stops them with the card's visibility.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:paddingHorizontal="12dp"
+    android:paddingTop="12dp"
+    android:visibility="gone">
+
+    <FrameLayout
+        android:id="@+id/bannerCardUi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/lnch_bg_default_launcher_banner"
+        android:elevation="6dp">
+
+        <!-- decorative discs bleeding off the corners; clipped by the card outline -->
+        <View
+            android:id="@+id/bannerBlobUi"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="-70dp"
+            android:layout_marginEnd="-50dp"
+            android:background="@drawable/lnch_banner_blob" />
+
+        <View
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="bottom|start"
+            android:layout_marginStart="60dp"
+            android:layout_marginBottom="-52dp"
+            android:alpha="0.6"
+            android:background="@drawable/lnch_banner_blob" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="12dp">
+
+            <!-- hero: breathing glow + slow dashed ring + floating art + two sparkles -->
+            <FrameLayout
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <View
+                    android:id="@+id/bannerGlowUi"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/lnch_banner_glow" />
+
+                <View
+                    android:id="@+id/bannerRingUi"
+                    android:layout_width="62dp"
+                    android:layout_height="62dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/lnch_banner_ring" />
+
+                <ImageView
+                    android:id="@+id/bannerArtUi"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/lnch_art_default_home" />
+
+                <ImageView
+                    android:id="@+id/bannerSparkle1Ui"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginEnd="2dp"
+                    android:alpha="0.9"
+                    android:contentDescription="@null"
+                    android:src="@drawable/glyph_star_black_24dp"
+                    app:tint="#FFFFFF" />
+
+                <ImageView
+                    android:id="@+id/bannerSparkle2Ui"
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:layout_gravity="bottom|start"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="6dp"
+                    android:alpha="0.7"
+                    android:contentDescription="@null"
+                    android:src="@drawable/glyph_star_black_24dp"
+                    app:tint="#FFFFFF" />
+
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/bannerTitleUi"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/launcher_default_launcher_banner_title"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/bannerBodyUi"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:lineSpacingExtra="1dp"
+                    android:text="@string/launcher_default_launcher_banner_body"
+                    android:textColor="#D9FFFFFF"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <!-- tap hint: translucent round chip with a chevron that nudges to the right -->
+            <FrameLayout
+                android:id="@+id/bannerChevronUi"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/lnch_banner_chip">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/glyph_chevron_right"
+                    app:tint="#FFFFFF" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+        <!--
+            diagonal highlight swept across the card by LauncherBannerMotion. Fixed height: a
+            match_parent View in a wrap_content FrameLayout takes all the free space and the
+            card grows with it; taller than the card and centred so the tilt never shows an end.
+        -->
+        <View
+            android:id="@+id/bannerSheenUi"
+            android:layout_width="56dp"
+            android:layout_height="160dp"
+            android:layout_gravity="center_vertical|start"
+            android:layout_marginTop="-32dp"
+            android:layout_marginBottom="-32dp"
+            android:background="@drawable/lnch_banner_sheen"
+            android:rotation="18"
+            android:visibility="invisible" />
+
+    </FrameLayout>
+
+</LinearLayout>

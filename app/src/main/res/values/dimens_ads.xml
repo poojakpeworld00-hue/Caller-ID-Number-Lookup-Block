@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Spacing around the native ad card (CallerIDNumReveal's "margin 0 16 14" ad card). Applied on the
+     layout roots for the shimmer placeholders and by NativeAdLook for the bound ads, so the two
+     line up and the ad never jumps when it replaces its placeholder. -->
+<resources>
+    <dimen name="ad_card_margin_h">16dp</dimen>
+    <dimen name="ad_card_margin_top">10dp</dimen>
+    <dimen name="ad_card_margin_bottom">14dp</dimen>
+    <dimen name="ad_card_elevation">3dp</dimen>
+</resources>

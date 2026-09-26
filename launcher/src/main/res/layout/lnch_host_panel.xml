@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+    Container for the host app's own UI in the right-hand panel. The host's fragment brings its own
+    toolbar, lists and chrome, so this file holds nothing but the view it is committed into.
+
+    The theme matters. The host's layouts read attributes only the host's own theme defines, and the
+    launcher is not themed like the app it is embedded in. @style/LauncherHostPanelTheme is the
+    module's neutral default; a host redefines that style name in its own res to hand its panel the
+    theme its own screens run under.
+-->
+<io.launcher.home.fragments.HostPanelSurface xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/host_panel_holderUi"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/lnch_host_panel_bg"
+    android:clickable="true"
+    android:focusable="true"
+    android:theme="@style/LauncherHostPanelTheme">
+
+    <!-- deliberately no android:name — inflating the fragment here would build the whole host UI,
+         with everything it queries and every ad slot it owns, on every launcher start. It is
+         committed on the first panel warm-up instead, in HostPanelSurface.refresh(). -->
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/host_panel_containerUi"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</io.launcher.home.fragments.HostPanelSurface>

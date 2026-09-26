@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The install / uninstall screen. Shown by PackageEventWatcher on ACTION_PACKAGE_ADDED /
+    ACTION_PACKAGE_REMOVED: a privacy check of the new app's permissions on install, a storage and
+    memory check on uninstall. Every figure shown is read from the device.
+
+    One layout serves both outcomes: PackageResultActivity swaps the hero wash, the badge glyph and
+    the status pill between installed (green) and removed (red), and hides "Open app" when there is
+    nothing left to open. Colours are literals from colors_package_result.xml so the page reads the
+    same whatever the app's light/dark setting is.
+-->
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/pkgresContentVw"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/pkgres_page">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/pkgresHeroBottomVw"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.30" />
+
+        <!-- ============ HERO ============ -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/pkgresHeroVw"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/form_pkgres_hero_installed"
+            app:layout_constraintBottom_toTopOf="@+id/pkgresHeroBottomVw"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <View
+                android:layout_width="190dp"
+                android:layout_height="190dp"
+                android:alpha="0.68"
+                android:background="@drawable/form_pkgres_hero_glow"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageButton
+                android:id="@+id/pkgresCloseVw"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/form_pkgres_close"
+                android:contentDescription="@string/pkgres_close"
+                android:padding="9dp"
+                android:src="@drawable/glyph_close"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/pkgres_text_primary" />
+
+            <FrameLayout
+                android:layout_width="92dp"
+                android:layout_height="92dp"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <FrameLayout
+                    android:layout_width="84dp"
+                    android:layout_height="84dp"
+                    android:layout_gravity="start|top"
+                    android:background="@drawable/form_pkgres_app_icon"
+                    android:clipToOutline="true"
+                    android:elevation="8dp">
+
+                    <ImageView
+                        android:id="@+id/pkgresAppIconVw"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@string/pkgres_app_icon"
+                        android:scaleType="fitCenter" />
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/pkgresBadgeVw"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="end|bottom"
+                    android:background="@drawable/form_pkgres_badge_installed"
+                    android:elevation="10dp">
+
+                    <ImageView
+                        android:id="@+id/pkgresBadgeIconVw"
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@null"
+                        android:src="@drawable/glyph_check"
+                        app:tint="@color/pkgres_on_accent" />
+                </FrameLayout>
+            </FrameLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- ============ STATUS + COPY ============ -->
+        <TextView
+            android:id="@+id/pkgresStatusVw"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/form_pkgres_status_installed"
+            android:fontFamily="@font/nunito_bold"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:letterSpacing="0.14"
+            android:paddingHorizontal="12dp"
+            android:text="@string/pkgres_installed_status"
+            android:textAllCaps="true"
+            android:textColor="@color/pkgres_installed"
+            android:textSize="10sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/pkgresHeroVw" />
+
+        <TextView
+            android:id="@+id/pkgresTitleVw"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="8dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/nunito_extrabold"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:letterSpacing="-0.02"
+            android:maxLines="1"
+            android:textColor="@color/pkgres_text_primary"
+            android:textSize="24sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/pkgresStatusVw"
+            tools:text="Instagram installed" />
+
+        <TextView
+            android:id="@+id/pkgresSubtitleVw"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:maxLines="2"
+            android:text="@string/pkgres_installed_subtitle"
+            android:textColor="@color/pkgres_text_secondary"
+            android:textSize="13sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/pkgresTitleVw" />
+
+        <!-- ============ CHECK ============ -->
+        <!-- The check runs in two phases: a short progress while the real figures are read, then a
+             card of results (rows added in code: row_pkgres_check). -->
+        <LinearLayout
+            android:id="@+id/pkgresBodyVw"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/pkgresSubtitleVw">
+
+            <LinearLayout
+                android:id="@+id/pkgresProgressVw"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/form_pkgres_details"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/pkgresStepVw"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/nunito_bold"
+                    android:includeFontPadding="false"
+                    android:textColor="@color/pkgres_text_primary"
+                    android:textSize="13sp"
+                    tools:text="Reading app permissions…" />
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/pkgresProgressBarVw"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:max="100"
+                    app:indicatorColor="@color/pkgres_installed"
+                    app:trackColor="@color/pkgres_installed_soft"
+                    app:trackCornerRadius="4dp"
+                    app:trackThickness="6dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/pkgresChecksVw"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/form_pkgres_details"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="6dp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- The body native; shown only when the config asks for it. -->
+        <FrameLayout
+            android:id="@+id/adNativeFrame"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/pkgresActionsVw"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/pkgresBodyVw">
+
+            <com.facebook.shimmer.ShimmerFrameLayout
+                android:id="@+id/adShimmer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#ccc">
+
+                <include layout="@layout/googlemidnative2" />
+            </com.facebook.shimmer.ShimmerFrameLayout>
+        </FrameLayout>
+
+        <!-- ============ ACTIONS ============ -->
+        <LinearLayout
+            android:id="@+id/pkgresActionsVw"
+            android:layout_width="0dp"
+            android:layout_height="54dp"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginBottom="16dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/pkgresDoneVw"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="5dp"
+                android:layout_weight="1"
+                android:fontFamily="@font/nunito_bold"
+                android:text="@string/pkgres_done"
+                android:textAllCaps="false"
+                android:textColor="@color/pkgres_text_primary"
+                android:textSize="14sp"
+                app:backgroundTint="@color/pkgres_surface"
+                app:cornerRadius="22dp"
+                app:icon="@drawable/glyph_check"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:iconTint="@color/pkgres_text_primary"
+                app:strokeColor="@color/pkgres_border"
+                app:strokeWidth="1dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/pkgresOpenVw"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5dp"
+                android:layout_weight="1"
+                android:fontFamily="@font/nunito_bold"
+                android:text="@string/pkgres_open_app"
+                android:textAllCaps="false"
+                android:textColor="@color/pkgres_on_accent"
+                android:textSize="14sp"
+                app:backgroundTint="@color/pkgres_installed"
+                app:cornerRadius="22dp"
+                app:icon="@drawable/glyph_open_in_new"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:iconTint="@color/pkgres_on_accent" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

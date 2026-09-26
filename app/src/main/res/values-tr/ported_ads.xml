@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resources ported with the reference app's ad flow screens. -->
+<resources>
+    <string name="ad_badge">Reklam</string>
+</resources>

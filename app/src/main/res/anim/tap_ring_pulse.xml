@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    The radio the hand is tapping, pulsing in phase with hand_tap_loop (same 750ms half-period)
+    so the two read as one gesture rather than two.
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:anim/accelerate_decelerate_interpolator">
+    <scale
+        android:duration="750"
+        android:fromXScale="1.0"
+        android:fromYScale="1.0"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:repeatCount="infinite"
+        android:repeatMode="reverse"
+        android:toXScale="1.12"
+        android:toYScale="1.12" />
+    <alpha
+        android:duration="750"
+        android:fromAlpha="1.0"
+        android:repeatCount="infinite"
+        android:repeatMode="reverse"
+        android:toAlpha="0.55" />
+</set>

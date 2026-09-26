@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_app_launcher_name">Рабочий стол</string>
+    <string name="launcher_launcher_settings">Настройки</string>
+    <string name="launcher_app_info">О приложении</string>
+    <string name="launcher_touch_hold_widget">Удерживайте нажатие на виджет и перетащите его на главный экран</string>
+    <string name="launcher_uninstall">Удалить</string>
+    <string name="launcher_manage_hidden_icons">Управление скрытыми значками</string>
+    <string name="launcher_hidden_icons">Скрытые значки</string>
+    <string name="launcher_hidden_icons_placeholder">Некоторые приложения нельзя удалить из-за системных ограничений, но можно скрыть их значки.</string>
+    <string name="launcher_app_drawer_settings">Панель приложения</string>
+    <string name="launcher_close_app_drawer_on_app_open">Закрывать боковую панель при открытии приложения</string>
+    <string name="launcher_home_screen_settings">Домашний экран</string>
+    <string name="launcher_widget_too_big">Виджет слишком велик для текущего размера домашнего экрана</string>
+    <string name="launcher_double_tap_to_lock">Двойное нажатие блокирует экран</string>
+    <string name="launcher_lock_device_admin_hint">Для включения функции блокировки экрана двойным нажатием необходимы права администратора. Учтите, что приложение нельзя будет удалить, пока данное разрешение не будет отключено.</string>
+    <string name="launcher_lock_device_admin_warning">Удаление прав администратора приведёт к отключению функции блокировки экрана двойным нажатием.</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">Автоматически показывать клавиатуру в боковой панели</string>
+</resources>

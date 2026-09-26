@@ -20,6 +20,8 @@ import com.calleridapp.admesh.data.AdKind
 import com.calleridapp.admesh.domain.AdCounterRegistry.interCounter
 import com.calleridapp.admesh.domain.AdRevenueMeter
 import com.calleridapp.admesh.domain.AdsVault
+import com.calleridapp.admesh.domain.LauncherPlacementAds
+import com.calleridapp.admesh.presentation.DirectLinkOpener
 import com.calleridapp.admesh.domain.logKeyEvent
 import com.calleridapp.admesh.presentation.isNetworkConnected
 import com.calleridapp.numberlookup.BuildConfig
@@ -27,6 +29,12 @@ import com.calleridapp.numberlookup.R
 class InterstitialNormal {
 
     companion object {
+
+        /**
+         * The app-wide interstitial's own placement name, so its link-first / `ad_flow` /
+         * `inter_fallback` keys live under `app_…` like every other placement's.
+         */
+        private const val APP_PLACEMENT = "app"
 
         private var _isInterShow: Boolean = false
         var isInterShow: Boolean
@@ -103,6 +111,14 @@ class InterstitialNormal {
             val url = AdsVault.getInstance(context).getString("DirectLink")
 
             if (url.isNullOrEmpty()) {
+                onClosed()
+                return
+            }
+
+            // `DirectLinkType` webview / browser: DirectLinkOpener owns those. Only the custom tab
+            // path below needs the close tracking, so it alone stays here.
+            if (DirectLinkOpener.mode(context) != DirectLinkOpener.Mode.CUSTOM_TAB) {
+                DirectLinkOpener.open(context, url)
                 onClosed()
                 return
             }
@@ -263,6 +279,18 @@ class InterstitialNormal {
         }
         interCounter = 0
         act.safeLog("inter_counter_triggered")
+
+        // `app_link_first_then` + `app_DirectLink`: the links first, then the listed follow-ups.
+        if (LauncherPlacementAds.showLinkFirst(act, APP_PLACEMENT) { safeClose("link_first") }) {
+            act.safeLog("inter_link_first")
+            return
+        }
+        // `app_ad_flow`: the whole chain, in the configured order, instead of the interstitial.
+        if (LauncherPlacementAds.showAdFlow(act, APP_PLACEMENT) { safeClose("ad_flow") }) {
+            act.safeLog("inter_ad_flow")
+            return
+        }
+
         val isPreload = pref.getBoolean("is_preload_ads")
 
         when (AdKind.fromString(pref.getString("IsAdType"))) {
@@ -453,6 +481,10 @@ class InterstitialNormal {
                     showCustomAfterFacebookFail(activity, pref, safeClose)
                 }
             )
+        } else if (LauncherPlacementAds.hasFallback(activity, APP_PLACEMENT)) {
+            // `inter_fallback`: rewarded / full-screen native / … before giving up on the slot.
+            activity.safeLog("google_fail_fallback_chain")
+            LauncherPlacementAds.runFallback(activity, APP_PLACEMENT) { safeClose("google_fail_fallback") }
         } else {
             if (customEnabled) {
                 activity.safeLog("google_fail_open_custom")

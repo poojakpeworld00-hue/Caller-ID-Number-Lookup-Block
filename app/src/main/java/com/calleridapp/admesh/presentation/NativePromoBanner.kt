@@ -15,11 +15,12 @@ import com.calleridapp.admesh.data.AdKind
 import com.calleridapp.admesh.domain.AdCounterRegistry.nativeBannerCounter
 import com.calleridapp.admesh.domain.AdRevenueMeter
 import com.calleridapp.admesh.domain.AdsVault
+import com.calleridapp.admesh.domain.ScreenPromoConfig
 import com.calleridapp.admesh.domain.TAG_EVENT
 import com.calleridapp.admesh.domain.logKeyEvent
 import com.calleridapp.numberlookup.BuildConfig
 import com.calleridapp.numberlookup.databinding.FacebookNativeBannerBinding
-import com.calleridapp.numberlookup.databinding.GooglesmallnativeBinding
+import com.calleridapp.numberlookup.databinding.GooglenativebannerBinding
 import com.facebook.ads.Ad
 import com.facebook.ads.AdError
 import com.facebook.ads.AdOptionsView
@@ -102,6 +103,8 @@ class NativePromoBanner {
         if (!isNetworkConnected(context)
             || !adsPref.getBoolean("IsAdsON")
             || !adsPref.getBoolean("NativeBanner")
+            // Per-screen visibility: a screen whose ScreenAds entry is off gets no native banner.
+            || !ScreenPromoConfig.resolve(context, context.javaClass.simpleName).show
         ) {
             layout.removeAllViews()
             layout.invisible()
@@ -132,7 +135,7 @@ class NativePromoBanner {
                     try {
                         if (context.isFinishing || context.isDestroyed) return@post
                         if (nativeAdBanner != null) {
-                            val binding = GooglesmallnativeBinding.inflate(context.layoutInflater)
+                            val binding = GooglenativebannerBinding.inflate(context.layoutInflater)
                             bindGoogleNativeAd(nativeAdBanner!!, binding, context)
 
                             layout.removeAllViews()
@@ -146,7 +149,7 @@ class NativePromoBanner {
                         } else {
                             // Google failed → FB fallback or Custom
                             if (adsPref.getBoolean("IsFail_FB")) {
-                                showFBNativeBannerFallback(context, layout)
+                                showFBNativeBannerFallback(context, layout, shimmer)
                             } else {
                                 layout.removeAllViews()
                                 shimmer?.stopShimmer()
@@ -158,12 +161,18 @@ class NativePromoBanner {
                         }
                     } catch (e: Exception) {
                         Log.e("NativePromoBanner", "Google NativeBanner failed: ${e.message}")
+                        // Never leave a shimmer running over a slot that is not going to fill.
+                        runCatching {
+                            shimmer?.stopShimmer()
+                            shimmer?.isVisible = false
+                            layout.removeAllViews()
+                        }
                     }
                 }
             }
 
             AdKind.FACEBOOK -> {
-                showFBNativeBannerFallback(context, layout)
+                showFBNativeBannerFallback(context, layout, shimmer)
             }
 
             AdKind.UNKNOWN, AdKind.CUSTOM -> {
@@ -178,7 +187,7 @@ class NativePromoBanner {
     }
 
     private fun bindGoogleNativeAd(
-        nativeAd: NativeAd, binding: GooglesmallnativeBinding, context: Activity
+        nativeAd: NativeAd, binding: GooglenativebannerBinding, context: Activity
     ) {
         // Log load
         context.logKeyEvent("NativeBanner_Show_Google")
@@ -196,34 +205,7 @@ class NativePromoBanner {
             mainNativeadView.iconView = adAppIcon
 
             (adHeadline as TextView).text = nativeAd.headline
-
-            val bgColor = AdsVault.getInstance(context).getString("NativeBgColor")
-            val btnColor = AdsVault.getInstance(context).getString("NativebtnColor")
-
-
-            val txtColor =
-                AdsVault.getInstance(context).getString("NativetxtColor") ?: "#000000"
-
-            (binding.mainNativeadView.headlineView as TextView).apply {
-                setTextColor(Color.parseColor(txtColor))
-            }
-
-            (binding.mainNativeadView.bodyView as TextView).apply {
-                setTextColor(Color.parseColor(txtColor))
-            }
-
-            val btntxtColor =
-                AdsVault.getInstance(context).getString("NativebtntxtColor") ?: "#000000"
-
-            (adCallToAction as TextView).apply {
-                setTextColor(Color.parseColor(btntxtColor))
-            }
-
-            mainNativeadView.backgroundTintList =
-                ColorStateList.valueOf(safeParseColor(bgColor, "#FFFFFF"))
-
-            adCallToAction.backgroundTintList =
-                ColorStateList.valueOf(safeParseColor(btnColor, "#000000"))
+            // Remote Config ad colours (theme fallback) are applied in NativeAdLook.bind.
 
 
             if (nativeAd.body != null) {
@@ -248,6 +230,7 @@ class NativePromoBanner {
                 adCallToAction.visibility = View.GONE
             }
 
+            NativeAdLook.bind(mainNativeadView, nativeAd)
             mainNativeadView.setNativeAd(nativeAd)
         }
     }

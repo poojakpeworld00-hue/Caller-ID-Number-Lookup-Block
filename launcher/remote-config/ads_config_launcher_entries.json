@@ -1,0 +1,42 @@
+{
+  "_readme": "Not a parameter of its own. Merge these three entries into the host's ads parameter (ads_config, and its debug twin) under BOTH organic.screenWiseAds and marketing.screenWiseAds. The ad SDK reads adType / loadType / adData / adDataList; the launcher itself reads the two extra fields, reload_ad_on_open (default true) and app_drawer.ad_row_position (default 0). isActive=false hides a slot without calling the SDK at all; a key missing entirely leaves the slot GONE. The adIds below are Google test units - swap them before release.",
+  "screenWiseAds": {
+    "apps_panel": {
+      "reload_ad_on_open": false,
+      "adType": "native",
+      "loadType": "onload",
+      "adData": {
+        "adId": "ca-app-pub-3940256099942544/2247696110",
+        "isActive": false,
+        "adSubType": 4,
+        "notes": "Native - bottom of the app-search panel (fling left)"
+      },
+      "adDataList": []
+    },
+    "suggested_recent_panel": {
+      "reload_ad_on_open": false,
+      "adType": "native",
+      "loadType": "onload",
+      "adData": {
+        "adId": "ca-app-pub-3940256099942544/2247696110",
+        "isActive": false,
+        "adSubType": 6,
+        "notes": "Native - middle of the app-search panel, under the suggested apps"
+      },
+      "adDataList": []
+    },
+    "app_drawer": {
+      "reload_ad_on_open": false,
+      "ad_row_position": 9,
+      "adType": "native",
+      "loadType": "preload",
+      "adData": {
+        "adId": "ca-app-pub-3940256099942544/2247696110",
+        "isActive": false,
+        "adSubType": 4,
+        "notes": "Native - a full-span row inside the app drawer, at ad_row_position"
+      },
+      "adDataList": []
+    }
+  }
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_app_launcher_name">Εκκινητής</string>
+    <string name="launcher_launcher_settings">Ρυθμίσεις Εκκινητή</string>
+    <string name="launcher_app_info">Πληροφορίες εφαρμογής</string>
+    <string name="launcher_touch_hold_widget">Πατήστε παρατεταμένα το γραφικό στοιχείο και σύρετέ το στην αρχική οθόνη</string>
+    <string name="launcher_uninstall">Απεγκατάσταση</string>
+    <string name="launcher_manage_hidden_icons">Διαχείριση κρυφών εικονιδίων</string>
+    <string name="launcher_hidden_icons">Κρυφά εικονίδια</string>
+    <string name="launcher_hidden_icons_placeholder">Ορισμένες εφαρμογές δεν μπορούν να απεγκατασταθούν λόγω περιορισμών του συστήματος, αλλά μπορείτε να αποκρύψετε τα εικονίδια τους για να μην φαίνονται.</string>
+    <string name="launcher_app_drawer_settings">Συρτάρι εφαρμογών</string>
+    <string name="launcher_close_app_drawer_on_app_open">Κλείστε το συρτάρι εφαρμογών κατά το άνοιγμα μιας εφαρμογής</string>
+    <string name="launcher_home_screen_settings">Αρχική οθόνη</string>
+    <string name="launcher_widget_too_big">Το γραφικό είναι πολύ μεγάλο για το τρέχον μέγεθος της αρχικής οθόνης</string>
+    <string name="launcher_lock_device_admin_hint">Για να ενεργοποιήσετε τη λειτουργία διπλής βρύσης για κλείδωμα οθόνης, πρέπει να παραχωρήσετε άδεια διαχειριστή. Λάβετε υπόψη ότι δεν είναι δυνατή η κατάργηση εγκατάστασης της εφαρμογής μέχρι να καταργηθεί αυτή η άδεια.</string>
+    <string name="launcher_double_tap_to_lock">Διπλό πάτημα για κλείδωμα οθόνης</string>
+    <string name="launcher_lock_device_admin_warning">Η απενεργοποίηση της άδειας διαχειριστή θα απενεργοποιήσει τη λειτουργία διπλής βρύσης για κλείδωμα οθόνης.</string>
+</resources>

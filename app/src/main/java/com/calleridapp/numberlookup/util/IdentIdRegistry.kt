@@ -4,7 +4,7 @@ import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import com.calleridapp.numberlookup.launcher.extensions.isDefaultLauncher
+import io.launcher.home.extensions.isDefaultLauncher
 
 /**
  * Single source of truth for whether "Caller ID" is enabled for this app.

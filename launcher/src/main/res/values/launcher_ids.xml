@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- View tag key for CommonAnimations.buttonPressAnimation re-entrancy guard. -->
+    <item name="tag_press_animating" type="id" />
+    <!-- View tag key for CommonAnimations.revealCard / concealCard target state. -->
+    <item name="tag_card_shown" type="id" />
+</resources>

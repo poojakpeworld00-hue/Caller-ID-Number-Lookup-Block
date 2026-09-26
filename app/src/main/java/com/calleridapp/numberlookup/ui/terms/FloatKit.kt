@@ -7,7 +7,7 @@ import android.os.Build
 import android.provider.Settings
 import com.calleridapp.admesh.domain.AdsVault
 import com.calleridapp.admesh.presentation.OverlayGuideActivity
-import com.calleridapp.numberlookup.launcher.extensions.isDefaultLauncher
+import io.launcher.home.extensions.isDefaultLauncher
 
 /**
  * Helpers for the "display over other apps" (overlay) permission used by the

@@ -10,7 +10,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.base.HostActivity
 import com.calleridapp.numberlookup.databinding.ActivityMainBinding
-import com.calleridapp.numberlookup.launcher.activities.MainActivity as LauncherHomeActivity
+import io.launcher.home.activities.LauncherPanel as LauncherHomeActivity
 import com.calleridapp.numberlookup.ui.home.HomeShellController
 import com.calleridapp.numberlookup.ui.home.HomeShellFragment
 import com.calleridapp.numberlookup.ui.home.HomeShellHost

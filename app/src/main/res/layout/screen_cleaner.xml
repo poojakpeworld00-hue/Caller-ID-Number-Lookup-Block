@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/background"
+        android:fitsSystemWindows="true">
+
+        <!-- Header -->
+        <LinearLayout
+            android:id="@+id/cleanerHeaderVw"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="@dimen/_10sdp"
+            android:paddingTop="@dimen/_12sdp"
+            android:paddingBottom="@dimen/_6sdp">
+
+            <ImageView
+                android:id="@+id/cleanerBackVw"
+                android:layout_width="@dimen/_30sdp"
+                android:layout_height="@dimen/_30sdp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/cleaner_done"
+                android:padding="@dimen/_5sdp"
+                android:src="@drawable/glyph_arrow_back"
+                app:tint="@color/on_surface" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/_8sdp"
+                android:layout_weight="1"
+                android:fontFamily="@font/nunito_extrabold"
+                android:letterSpacing="-0.02"
+                android:text="@string/cleaner_title"
+                android:textColor="@color/on_surface"
+                android:textSize="@dimen/_16ssp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/adNativeFrame"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true">
+
+            <com.facebook.shimmer.ShimmerFrameLayout
+                android:id="@+id/adShimmer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#ccc">
+
+                <include layout="@layout/googlemidnative2" />
+            </com.facebook.shimmer.ShimmerFrameLayout>
+        </FrameLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@id/adNativeFrame"
+            android:layout_below="@id/cleanerHeaderVw"
+            android:clipToPadding="false"
+            android:paddingHorizontal="@dimen/_16sdp"
+            android:paddingBottom="@dimen/_16sdp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Verdict -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingTop="@dimen/_10sdp"
+                    android:paddingBottom="@dimen/_14sdp">
+
+                    <FrameLayout
+                        android:id="@+id/cleanerRingVw"
+                        android:layout_width="@dimen/_74sdp"
+                        android:layout_height="@dimen/_74sdp"
+                        android:background="@drawable/form_cleaner_ring">
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_margin="@dimen/_8sdp"
+                            android:background="@drawable/form_cleaner_ring_fill" />
+
+                        <ImageView
+                            android:id="@+id/cleanerMarkVw"
+                            android:layout_width="@dimen/_30sdp"
+                            android:layout_height="@dimen/_30sdp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/glyph_cid_sparkle"
+                            app:tint="@color/success" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/cleanerLabelVw"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/_13sdp"
+                        android:fontFamily="@font/nunito_extrabold"
+                        android:letterSpacing="0.04"
+                        android:text="@string/cleaner_ready"
+                        android:textColor="@color/success"
+                        android:textSize="@dimen/_11ssp" />
+
+                    <TextView
+                        android:id="@+id/cleanerAmountVw"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/_6sdp"
+                        android:fontFamily="@font/nunito_extrabold"
+                        android:letterSpacing="-0.03"
+                        android:textColor="@color/on_surface"
+                        android:textSize="@dimen/_26ssp"
+                        tools:text="7.2 MB" />
+
+                    <TextView
+                        android:id="@+id/cleanerAmountBodyVw"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/_6sdp"
+                        android:gravity="center_horizontal"
+                        android:text="@string/cleaner_found_body"
+                        android:textColor="@color/on_surface_variant"
+                        android:textSize="@dimen/_12ssp" />
+                </LinearLayout>
+
+                <!-- Figures -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/form_cleaner_card"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="@dimen/_16sdp">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/cleaner_space_found"
+                                android:textColor="@color/on_surface_variant"
+                                android:textSize="@dimen/_11ssp" />
+
+                            <TextView
+                                android:id="@+id/cleanerRecoveredVw"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/_4sdp"
+                                android:fontFamily="@font/nunito_extrabold"
+                                android:textColor="@color/on_surface"
+                                android:textSize="@dimen/_18ssp"
+                                tools:text="7.2 MB" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="match_parent"
+                            android:background="@color/outline" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="@dimen/_16sdp">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/cleaner_temp_files"
+                                android:textColor="@color/on_surface_variant"
+                                android:textSize="@dimen/_11ssp" />
+
+                            <TextView
+                                android:id="@+id/cleanerItemsVw"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/_4sdp"
+                                android:fontFamily="@font/nunito_extrabold"
+                                android:textColor="@color/on_surface"
+                                android:textSize="@dimen/_18ssp"
+                                tools:text="3 items" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/outline" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="@dimen/_16sdp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:baselineAligned="false"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:fontFamily="@font/nunito_bold"
+                                android:text="@string/cleaner_storage_title"
+                                android:textColor="@color/on_surface"
+                                android:textSize="@dimen/_13ssp" />
+
+                            <TextView
+                                android:id="@+id/cleanerPercentVw"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/nunito_extrabold"
+                                android:textColor="@color/cid_onb_accent"
+                                android:textSize="@dimen/_18ssp"
+                                tools:text="53%" />
+                        </LinearLayout>
+
+                        <ProgressBar
+                            android:id="@+id/cleanerStorageBarVw"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="7dp"
+                            android:layout_marginTop="@dimen/_12sdp"
+                            android:max="100"
+                            android:progressDrawable="@drawable/form_cleaner_storage_progress"
+                            tools:progress="53" />
+
+                        <TextView
+                            android:id="@+id/cleanerStorageTextVw"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/_10sdp"
+                            android:textColor="@color/on_surface_variant"
+                            android:textSize="@dimen/_11ssp"
+                            tools:text="27 GB of 51 GB used" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/cleanerActionVw"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_44sdp"
+                    android:layout_marginTop="@dimen/_16sdp"
+                    android:background="@drawable/form_cleaner_cta"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:fontFamily="@font/nunito_extrabold"
+                    android:gravity="center"
+                    android:text="@string/cleaner_action"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="@dimen/_13ssp" />
+
+            </LinearLayout>
+        </ScrollView>
+
+    </RelativeLayout>
+</layout>

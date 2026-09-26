@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    One gesture tile for the WELCOME step, ported from the reference app's Ready screen. Four of
+    these sit in a single row (included with layout_weight="1" each); the chevron is rotated per
+    direction in code (HelloStepActivity.bindGestureTiles). Icon + title + body ids: tileIcon,
+    tileTitle, tileBody.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tileRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/shape_onb_feature_card"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingHorizontal="4dp"
+    android:paddingVertical="14dp">
+
+    <ImageView
+        android:id="@+id/tileIcon"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
+        android:contentDescription="@null"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_swipe_chevrons"
+        tools:rotation="-90" />
+
+    <org.fossify.commons.views.MyTextView
+        android:id="@+id/tileTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textColor="@color/cid_onb_ink"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        tools:text="Swipe up" />
+
+    <org.fossify.commons.views.MyTextView
+        android:id="@+id/tileBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textColor="@color/cid_onb_muted"
+        android:textSize="9sp"
+        tools:text="All apps" />
+
+</LinearLayout>

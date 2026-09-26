@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<io.launcher.home.fragments.AppsPanelSurface xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/left_panel_holderUi"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/launcher_all_app_bg"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Greeting + date, set by AppsPanelSurface.onOpened; the first thing the cascade lifts in. -->
+    <LinearLayout
+        android:id="@+id/panel_headerUi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginEnd="20dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/panel_greetingUi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:shadowColor="@color/launcher_app_label_shadow"
+            android:shadowDy="1"
+            android:shadowRadius="4"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
+            tools:text="Good morning" />
+
+        <TextView
+            android:id="@+id/panel_dateUi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:shadowColor="@color/launcher_app_label_shadow"
+            android:shadowDy="1"
+            android:shadowRadius="4"
+            android:textColor="#CCFFFFFF"
+            android:textSize="13sp"
+            tools:text="Thursday, 17 September" />
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/panel_search_holderUi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/panel_headerUi"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginEnd="14dp"
+        android:background="@drawable/lnch_panel_search_bg"
+        android:paddingStart="8dp"
+        android:paddingEnd="4dp">
+
+        <ImageView
+            android:id="@+id/panel_search_iconUi"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="5dp"
+            android:contentDescription="@string/search"
+            android:padding="4dp"
+            android:src="@drawable/lnch_ic_pseudo_search_vector" />
+
+        <ImageView
+            android:id="@+id/panel_search_clearUi"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="5dp"
+            android:contentDescription="@string/launcher_clear"
+            android:padding="9dp"
+            android:src="@drawable/ic_cross_vector"
+            app:tint="@android:color/white"
+            android:visibility="gone" />
+
+        <EditText
+            android:id="@+id/panel_searchUi"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_toStartOf="@+id/panel_search_clearUi"
+            android:layout_toEndOf="@+id/panel_search_iconUi"
+            android:background="@null"
+            android:ellipsize="end"
+            android:gravity="start|center_vertical"
+            android:hint="@string/launcher_search_apps_hint"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1"
+            android:paddingStart="5dp"
+            android:paddingEnd="0dp"
+            android:singleLine="true"
+            android:textColor="@android:color/white"
+            android:textColorHint="#B3FFFFFF"
+            android:textSize="15sp" />
+
+    </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/panel_native_frameUi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone" />
+
+    <ScrollView
+        android:id="@+id/panel_scrollUi"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/panel_search_holderUi"
+        android:clipToPadding="false"
+        android:paddingBottom="50dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:id="@+id/panel_results_headerUi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginHorizontal="12dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:padding="5dp"
+                    android:text="@string/launcher_apps"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/smaller_text_size" />
+
+                <TextView
+                    android:id="@+id/panel_see_moreUi"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="5dp"
+                    android:text="@string/launcher_see_more"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/smaller_text_size" />
+
+            </RelativeLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/panel_results_listUi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:layout_marginHorizontal="12dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:visibility="gone"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+            <TextView
+                android:id="@+id/panel_suggested_headerUi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginHorizontal="24dp"
+                android:drawablePadding="6dp"
+                android:drawableStart="@drawable/lnch_ic_section_sparkle"
+                android:drawableTint="#CCFFFFFF"
+                android:gravity="center_vertical"
+                android:letterSpacing="0.08"
+                android:text="@string/launcher_suggested_for_now"
+                android:textAllCaps="true"
+                android:textColor="#CCFFFFFF"
+                android:textSize="11sp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/panel_suggested_gridUi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/lnch_panel_glass_card"
+                android:layout_marginHorizontal="14dp"
+                android:nestedScrollingEnabled="false"
+                android:paddingTop="10dp"
+                android:paddingBottom="8dp"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="4" />
+
+            <FrameLayout
+                android:id="@+id/panel_mid_native_frameUi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/panel_recent_headerUi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginHorizontal="24dp"
+                android:drawablePadding="6dp"
+                android:drawableStart="@drawable/lnch_ic_section_recent"
+                android:drawableTint="#CCFFFFFF"
+                android:gravity="center_vertical"
+                android:letterSpacing="0.08"
+                android:text="@string/launcher_recent_apps"
+                android:textAllCaps="true"
+                android:textColor="#CCFFFFFF"
+                android:textSize="11sp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/panel_recent_gridUi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/lnch_panel_glass_card"
+                android:nestedScrollingEnabled="false"
+                android:paddingTop="10dp"
+                android:layout_marginHorizontal="14dp"
+                android:paddingBottom="8dp"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="4" />
+
+            <TextView
+                android:id="@+id/panel_search_in_headerUi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:padding="5dp"
+                android:text="@string/launcher_search_in_apps"
+                android:layout_marginHorizontal="12dp"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/smaller_text_size"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/panel_search_in_listUi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:nestedScrollingEnabled="false"
+                android:paddingTop="5dp"
+                android:layout_marginHorizontal="12dp"
+                android:paddingBottom="5dp"
+                android:visibility="gone"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</io.launcher.home.fragments.AppsPanelSurface>

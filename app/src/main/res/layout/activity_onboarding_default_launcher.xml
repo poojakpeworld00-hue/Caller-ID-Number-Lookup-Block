@@ -1,12 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-    Onboarding step 2, built to the reference screen. The illustration is a miniature
-    incoming-call screen with the shield mark overlapping its right edge, a verified
-    badge below, and sparkles scattered around — all decorative, so every piece is
-    contentDescription="@null" and the mock caller is invented, never a real contact.
--->
-<!-- fitsSystemWindows keeps Skip clear of the status bar and the footer clear of the
-     gesture bar; the theme draws both system bars transparent. -->
+<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
@@ -28,10 +23,18 @@
         android:textColor="@color/cid_onb_muted"
         android:textSize="15sp" />
 
-    <!-- ===== bottom stack · mid native above the CTA =====
-         Same arrangement as the Welcome screen: the ad is full-bleed and sits above the
-         CTA behind a hairline, so "Set as Default" stays the bottom-most control. The
-         horizontal inset therefore lives on the button and the footnote, not the footer. -->
+    <include
+        android:id="@+id/onboarding_step_header"
+        layout="@layout/view_onboarding_step_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@id/onboarding_skip"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="4dp"
+        android:visibility="gone" />
+
+
     <LinearLayout
         android:id="@+id/onboarding_footer"
         android:layout_width="match_parent"
@@ -40,34 +43,8 @@
         android:orientation="vertical"
         android:paddingBottom="16dp">
 
-        <View
-            android:id="@+id/ad_native_divider"
-            style="@style/AdDivider" />
 
-        <FrameLayout
-            android:id="@+id/ad_native_frame"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
 
-            <com.facebook.shimmer.ShimmerFrameLayout
-                android:id="@+id/ad_shimmer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="#ccc">
-
-                <include layout="@layout/googlemidnative" />
-
-            </com.facebook.shimmer.ShimmerFrameLayout>
-        </FrameLayout>
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/onboarding_set_default"
-            style="@style/OnboardingButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="24dp"
-            android:layout_marginTop="14dp"
-            android:text="@string/onboarding_set_default" />
 
         <org.fossify.commons.views.MyTextView
             android:id="@+id/onboarding_footnote"
@@ -87,7 +64,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/onboarding_footer"
-        android:layout_below="@id/onboarding_skip"
+        android:layout_below="@id/onboarding_step_header"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:fillViewport="true">
@@ -101,216 +78,27 @@
             android:orientation="vertical"
             android:paddingHorizontal="24dp">
 
-            <!-- ===== illustration =====
-                 The shield and its badge deliberately hang past this container's right
-                 edge, so clipping has to be off all the way up the chain. -->
-            <RelativeLayout
-                android:id="@+id/onboarding_hero"
+
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="278dp"
-                android:clipChildren="false"
-                android:clipToPadding="false">
-
-                <View
-                    android:layout_width="192dp"
-                    android:layout_height="192dp"
-                    android:layout_centerHorizontal="true"
-                    android:layout_marginTop="22dp"
-                    android:background="@drawable/bg_onb_blob" />
-
-                <!-- sparkles -->
-                <ImageView
-                    android:id="@+id/onboarding_sparkle_1"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_alignParentStart="true"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginTop="62dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_cid_sparkle"
-                    android:tint="@color/cid_onb_card_stroke" />
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:gravity="center"
+                android:orientation="horizontal">
 
                 <ImageView
-                    android:id="@+id/onboarding_sparkle_2"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_marginTop="34dp"
-                    android:layout_marginEnd="34dp"
+                    android:id="@+id/imageHero"
+                    android:layout_width="@dimen/_58sdp"
+                    android:layout_height="@dimen/_58sdp"
+                    android:background="@drawable/button_background_rounded"
                     android:contentDescription="@null"
-                    android:src="@drawable/ic_cid_sparkle"
-                    android:tint="@color/cid_onb_card_stroke" />
+                    android:padding="@dimen/_15sdp"
+                    android:layout_gravity="center"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/onb_home_unselected"
+                    app:tint="@color/white" />
 
-                <ImageView
-                    android:id="@+id/onboarding_sparkle_3"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_marginTop="108dp"
-                    android:layout_marginEnd="4dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_cid_sparkle"
-                    android:tint="@color/cid_onb_card_stroke" />
-
-                <!-- mock incoming-call screen -->
-                <LinearLayout
-                    android:id="@+id/onboarding_mock"
-                    android:layout_width="138dp"
-                    android:layout_height="252dp"
-                    android:layout_centerHorizontal="true"
-                    android:layout_marginStart="-22dp"
-                    android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_onb_phone_mock"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical"
-                    android:paddingHorizontal="12dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="16dp">
-
-                    <org.fossify.commons.views.MyTextView
-                        style="@style/OnbMockLabel"
-                        android:layout_gravity="start"
-                        android:alpha="0.6"
-                        android:text="@string/onb_mock_clock"
-                        android:textSize="7sp" />
-
-                    <org.fossify.commons.views.MyTextView
-                        style="@style/OnbMockLabel"
-                        android:layout_marginTop="16dp"
-                        android:alpha="0.75"
-                        android:text="@string/onb_mock_incoming"
-                        android:textSize="9sp" />
-
-                    <ImageView
-                        android:layout_width="46dp"
-                        android:layout_height="46dp"
-                        android:layout_marginTop="14dp"
-                        android:background="@drawable/bg_onb_mock_avatar"
-                        android:contentDescription="@null"
-                        android:padding="10dp"
-                        android:src="@drawable/ic_cid_person"
-                        android:tint="@color/cid_onb_on_mock" />
-
-                    <org.fossify.commons.views.MyTextView
-                        style="@style/OnbMockLabel"
-                        android:layout_marginTop="10dp"
-                        android:text="@string/onb_mock_unknown"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <org.fossify.commons.views.MyTextView
-                        style="@style/OnbMockLabel"
-                        android:layout_marginTop="3dp"
-                        android:alpha="0.7"
-                        android:text="@string/onb_mock_number"
-                        android:textSize="9sp" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
-                            android:layout_marginEnd="14dp"
-                            android:background="@drawable/bg_onb_mock_decline"
-                            android:contentDescription="@null"
-                            android:padding="8dp"
-                            android:src="@drawable/ic_cid_call_decline"
-                            android:tint="@color/cid_onb_on_mock" />
-
-                        <ImageView
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
-                            android:background="@drawable/bg_onb_mock_accept"
-                            android:contentDescription="@null"
-                            android:padding="8dp"
-                            android:src="@drawable/ic_cid_call_accept"
-                            android:tint="@color/cid_onb_on_mock" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- attribution chip, tilted across the mock's lower half -->
-                <LinearLayout
-                    android:id="@+id/onboarding_chip"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignStart="@id/onboarding_mock"
-                    android:layout_alignTop="@id/onboarding_mock"
-                    android:layout_marginStart="6dp"
-                    android:layout_marginTop="158dp"
-                    android:background="@drawable/bg_onb_mock_chip"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="9dp"
-                    android:paddingVertical="6dp"
-                    android:rotation="-4">
-
-                    <ImageView
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
-                        android:layout_marginEnd="6dp"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ph_shield_check"
-                        android:tint="@color/cid_onb_on_mock" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <org.fossify.commons.views.MyTextView
-                            style="@style/OnbMockLabel"
-                            android:alpha="0.6"
-                            android:text="@string/onb_mock_attribution"
-                            android:textSize="7sp" />
-
-                        <org.fossify.commons.views.MyTextView
-                            style="@style/OnbMockLabel"
-                            android:text="@string/onb_mock_brand"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- shield mark, overlapping the mock's right edge -->
-                <ImageView
-                    android:id="@+id/onboarding_shield"
-                    android:layout_width="72dp"
-                    android:layout_height="82dp"
-                    android:layout_alignEnd="@id/onboarding_mock"
-                    android:layout_alignTop="@id/onboarding_mock"
-                    android:layout_marginTop="116dp"
-                    android:layout_marginEnd="-46dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_cid_shield_phone" />
-
-                <ImageView
-                    android:id="@+id/onboarding_badge"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_alignEnd="@id/onboarding_shield"
-                    android:layout_below="@id/onboarding_shield"
-                    android:layout_marginTop="-16dp"
-                    android:layout_marginEnd="-10dp"
-                    android:background="@drawable/bg_onb_check_badge_light"
-                    android:contentDescription="@null"
-                    android:padding="13dp"
-                    android:src="@drawable/ic_cid_tick"
-                    android:tint="@color/cid_onb_accent" />
-
-            </RelativeLayout>
+            </LinearLayout>
 
             <org.fossify.commons.views.MyTextView
                 android:id="@+id/onboarding_title"
@@ -337,9 +125,34 @@
                 android:textColor="@color/cid_onb_muted"
                 android:textSize="15sp" />
 
-            <View
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/onboarding_set_default"
+                style="@style/OnboardingButton"
                 android:layout_width="match_parent"
-                android:layout_height="20dp" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="@string/onboarding_set_default" />
+
+            <View
+                android:id="@+id/ad_native_divider"
+                android:layout_marginTop="@dimen/_7ssp"
+                style="@style/AdDivider" />
+
+            <FrameLayout
+                android:id="@+id/ad_native_frame"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.facebook.shimmer.ShimmerFrameLayout
+                    android:id="@+id/ad_shimmer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#ccc">
+
+                    <include layout="@layout/googlemidnative2" />
+
+                </com.facebook.shimmer.ShimmerFrameLayout>
+            </FrameLayout>
 
         </LinearLayout>
 

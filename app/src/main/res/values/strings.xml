@@ -56,6 +56,7 @@
 
     <!-- Onboarding -->
     <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_step_counter">Step %1$d of %2$d</string>
     <string name="onboarding_next">Next</string>
     <string name="onboarding_title">Know who\'s calling</string>
     <string name="onboarding_desc">Instantly identify unknown numbers, see the caller\'s name and business, and block spam before it rings.</string>

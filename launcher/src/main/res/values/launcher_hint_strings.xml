@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Turn on \"Display over other apps\"</string>
+    <string name="launcher_hint_overlay_description">We\'ll bring you straight back once it\'s on.</string>
+    <string name="launcher_hint_default_home_title">Pick %1$s as Home</string>
+    <string name="launcher_hint_default_home_description">Choose it in the list to set your home screen.</string>
+    <string name="launcher_hint_default_sms_title">Set as your SMS app</string>
+    <string name="launcher_hint_default_sms_description">Tap \"Set as default\" to finish.</string>
+    <string name="launcher_hint_mock_row">Default Home App</string>
+    <string name="launcher_hint_mock_toggle_row">Permission</string>
+    <string name="launcher_hint_overlay_row">Allow display over other apps</string>
+</resources>

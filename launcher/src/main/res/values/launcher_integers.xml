@@ -1,0 +1,4 @@
+<resources>
+    <integer name="launcher_portrait_column_count">4</integer>
+    <integer name="launcher_landscape_column_count">8</integer>
+</resources>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/launcher_holderUi"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:paddingStart="@dimen/small_margin"
+    android:paddingTop="@dimen/medium_margin"
+    android:paddingEnd="@dimen/small_margin"
+    android:paddingBottom="@dimen/small_margin">
+
+    <!--
+        Sized by LaunchersLineup once laid out: as tall as the profile's icon plus its top padding
+        when a size is known (so a row is icon + label, and six of them fit a page), square by
+        width otherwise.
+    -->
+    <ImageView
+        android:id="@+id/launcher_iconUi"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/launcher_launcher_icon_size"
+        android:layout_gravity="center_horizontal|bottom"
+        android:contentDescription="@null"
+        android:scaleType="fitCenter" />
+
+    <!--
+        White, and stated here as well as in LaunchersLineup so a label is never left carrying the
+        theme's text colour: MyTextView starts from the theme, and the theme's colour follows the
+        wallpaper under Material You.
+
+        The shadow is what keeps it *reading* as white. The drawer is a 50% black scrim over the
+        wallpaper, so whatever the user has set shows through behind these labels; without a dark
+        shadow the thin antialiased glyphs pick up the colour behind them and the same white label
+        looks blue over a blue wallpaper and warm over a warm one. The home screen's labels have
+        carried the same shadow all along (HomeScreenGrid.textPaint).
+    -->
+    <org.fossify.commons.views.MyTextView
+        android:id="@+id/launcher_labelUi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/launcher_iconUi"
+        android:ellipsize="end"
+        android:gravity="center_horizontal|top"
+        android:maxLines="1"
+        android:shadowColor="@color/launcher_app_label_shadow"
+        android:shadowDx="0"
+        android:shadowDy="1"
+        android:shadowRadius="3"
+        android:singleLine="true"
+        android:textColor="@android:color/white"
+        android:textSize="12sp" />
+
+    <View
+        android:id="@+id/popup_anchorUi"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center_horizontal|top" />
+
+</RelativeLayout>

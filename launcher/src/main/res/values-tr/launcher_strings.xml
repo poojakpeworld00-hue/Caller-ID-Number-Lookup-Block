@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_app_launcher_name">Başlatıcı</string>
+    <string name="launcher_launcher_settings">Başlatıcı Ayarları</string>
+    <string name="launcher_app_info">Uygulama bilgisi</string>
+    <string name="launcher_touch_hold_widget">Widget\'a uzun basın ve ana ekranınıza sürükleyin</string>
+    <string name="launcher_uninstall">Kaldır</string>
+    <string name="launcher_manage_hidden_icons">Gizli simgeleri yönet</string>
+    <string name="launcher_hidden_icons">Gizli simgeler</string>
+    <string name="launcher_hidden_icons_placeholder">Bazı uygulamalar sistem kısıtlamaları nedeniyle kaldırılamaz, ancak bu uygulamaları görmemek için simgelerini gizleyebilirsiniz.</string>
+    <string name="launcher_app_drawer_settings">Uygulama çekmecesi</string>
+    <string name="launcher_close_app_drawer_on_app_open">Bir uygulama açıldığında uygulama çekmecesini kapat</string>
+    <string name="launcher_home_screen_settings">Ana ekran</string>
+    <string name="launcher_widget_too_big">Widget, şu anki ana ekran boyutu için çok büyük</string>
+    <string name="launcher_double_tap_to_lock">Ekranı kilitlemek için çift dokunun</string>
+    <string name="launcher_lock_device_admin_warning">Yönetici iznini devre dışı bırakmak, ekranı kilitlemek için çift dokunma özelliğini devre dışı bırakır.</string>
+    <string name="launcher_lock_device_admin_hint">Ekranı kilitlemek için çift dokunma özelliğini etkinleştirmek için yönetici izni vermeniz gerekir. Bu izin kaldırılmadığı sürece uygulamanın kaldırılamayacağını unutmayın.</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">Uygulama çekmecesinde otomatik olarak klavyeyi göster</string>
+</resources>

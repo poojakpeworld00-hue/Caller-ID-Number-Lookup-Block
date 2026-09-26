@@ -1,7 +1,9 @@
 package com.calleridapp.numberlookup.ui.home
 
+import android.app.Activity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.calleridapp.numberlookup.launcher.LauncherShellHost
 
 /**
  * Implemented by whichever Activity is hosting [HomeShellFragment].
@@ -63,7 +65,11 @@ interface HomeShellHost {
 }
 
 /** The shell host, for any fragment or dialog attached inside the home shell. */
-val Fragment.homeShellHost: HomeShellHost? get() = activity as? HomeShellHost
+/** ShellActivity itself, or the launcher's stand-in when the shell rides in the launcher panel. */
+val Activity.homeShellHost: HomeShellHost?
+    get() = this as? HomeShellHost ?: LauncherShellHost.of(this)
+
+val Fragment.homeShellHost: HomeShellHost? get() = activity?.homeShellHost
 
 /** The Activity-bound shell controller, or null when not hosted by a shell. */
 val Fragment.homeShellController: HomeShellController? get() = homeShellHost?.homeShellController

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+    The launcher module's right-hand panel: the caller-ID app's own home (HomeShellFragment),
+    committed into the container by LauncherShellFragment, with the same bottom banner the app's
+    standalone home carries. Clickable so touches on the panel never fall through to the home grid
+    parked underneath it.
+-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/callerPanelHolder"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface"
+    android:clickable="true"
+    android:focusable="true">
+
+    <include
+        android:id="@+id/bannerSlot"
+        layout="@layout/view_bottom_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
+
+    <!-- Hairline fencing off the advert; followAdContainer drops it when the slot is empty. -->
+    <View
+        android:id="@+id/callerAdBannerDivider"
+        style="@style/AdDivider"
+        android:layout_above="@id/bannerSlot" />
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/callerPanelContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/callerAdBannerDivider" />
+
+</RelativeLayout>

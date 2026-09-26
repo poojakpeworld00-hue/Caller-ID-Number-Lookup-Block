@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark-mode twin of values/launcher_hint_colors.xml: the reference's slate card and list. -->
+<resources>
+    <color name="hint_card_bg">#F7202433</color>
+    <color name="hint_card_stroke">#1AFFFFFF</color>
+    <color name="hint_text_primary">#FFFFFF</color>
+    <color name="hint_text_secondary">#B3FFFFFF</color>
+    <color name="hint_mock_list_bg">#4A4F66</color>
+    <color name="hint_mock_row_text">#F2F2F5</color>
+    <color name="hint_mock_row_icon">#B9BDCB</color>
+    <color name="hint_mock_row_ring">#D6D8E0</color>
+    <color name="hint_mock_app_bg">#FFFFFF</color>
+    <color name="hint_mock_app_text">#1E2433</color>
+    <color name="hint_mock_app_shadow">#992F7BF6</color>
+    <color name="hint_accent">#2F7BF6</color>
+    <color name="hint_switch_off">#5EFFFFFF</color>
+</resources>

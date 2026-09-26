@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The coach-mark card over system screens (DefaultHomeHintPanel). It is drawn over another
+     app's page, so it follows the system light / dark mode (values-night) rather than the app theme. -->
+<resources>
+    <color name="hint_card_bg">#F7FFFFFF</color>
+    <color name="hint_card_stroke">#14000000</color>
+    <color name="hint_text_primary">#1E2433</color>
+    <color name="hint_text_secondary">#6B7280</color>
+    <color name="hint_mock_list_bg">#E6EAF2</color>
+    <color name="hint_mock_row_text">#5B6170</color>
+    <color name="hint_mock_row_icon">#C4CAD6</color>
+    <color name="hint_mock_row_ring">#9AA1AF</color>
+    <color name="hint_mock_app_bg">#FFFFFF</color>
+    <color name="hint_mock_app_text">#1E2433</color>
+    <color name="hint_mock_app_shadow">#552F7BF6</color>
+    <color name="hint_accent">#2F7BF6</color>
+    <color name="hint_switch_off">#5E9AA1AF</color>
+</resources>

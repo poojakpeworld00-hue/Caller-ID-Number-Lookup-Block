@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The first page's time, top left: a large thin time with the full date centred under it. Drawn
+    by us (a pseudo widget), so it needs no provider, no bind permission and no setup screen.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="@dimen/launcher_time_widget_padding"
+    android:paddingEnd="@dimen/launcher_time_widget_padding">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|center_vertical"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextClock
+            android:id="@+id/widget_timeUi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-light"
+            android:format12Hour="h:mm"
+            android:format24Hour="H:mm"
+            android:includeFontPadding="false"
+            android:letterSpacing="-0.02"
+            android:maxLines="1"
+            android:shadowColor="#40000000"
+            android:shadowDy="1"
+            android:shadowRadius="4"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/launcher_time_widget_time_size" />
+
+        <TextClock
+            android:id="@+id/widget_time_dateUi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/launcher_time_widget_date_gap"
+            android:fontFamily="sans-serif"
+            android:format12Hour="EEEE, MMMM d"
+            android:format24Hour="EEEE, MMMM d"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:shadowColor="#40000000"
+            android:shadowDy="1"
+            android:shadowRadius="4"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/launcher_time_widget_date_size" />
+    </LinearLayout>
+
+</FrameLayout>

@@ -476,32 +476,7 @@ class SheetNativeAds {
 
             (binding.mainNativeadView.headlineView as TextView).text = nativeAd.headline
             binding.mainNativeadView.mediaView?.mediaContent = nativeAd.mediaContent
-            binding.mainNativeadView.backgroundTintList = ColorStateList.valueOf(
-                Color.parseColor(
-                    AdsVault.getInstance(context).getString("NativeBgColor")
-                )
-            )
-            binding.mainNativeadView.callToActionView?.backgroundTintList = ColorStateList.valueOf(
-                Color.parseColor(
-                    AdsVault.getInstance(context).getString("NativebtnColor")
-                )
-            )
-            val txtColor =
-                AdsVault.getInstance(context).getString("NativetxtColor") ?: "#000000"
-            val btntxtColor =
-                AdsVault.getInstance(context).getString("NativebtntxtColor") ?: "#000000"
-
-            (binding.mainNativeadView.headlineView as TextView).apply {
-                setTextColor(Color.parseColor(txtColor))
-            }
-
-            (binding.mainNativeadView.bodyView as TextView).apply {
-                setTextColor(Color.parseColor(txtColor))
-            }
-
-            (adCallToAction as TextView).apply {
-                setTextColor(Color.parseColor(btntxtColor))
-            }
+            // Remote Config ad colours (theme fallback) are applied in NativeAdLook.bind.
             binding.mainNativeadView.bodyView?.apply {
                 visibility = if (nativeAd.body == null) View.GONE else View.VISIBLE
                 (binding.mainNativeadView.bodyView as TextView).text = nativeAd.body
@@ -519,6 +494,7 @@ class SheetNativeAds {
             }
 
 
+            NativeAdLook.bind(binding.mainNativeadView, nativeAd)
             binding.mainNativeadView.setNativeAd(nativeAd)
         }
     }

@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        Visibility filters, not permissions. A launcher has to be able to see the apps it lists,
+        the shortcut creators it offers and the widget providers it hosts; QUERY_ALL_PACKAGES would
+        do the same job, needs a Play policy declaration, and is refused for a launcher that can
+        express its needs as <queries>.
+    -->
+    <queries>
+        <!-- Everything with a launcher icon: the drawer, the home grid, the dock. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <!-- Apps that can pin a shortcut onto the home screen. -->
+        <intent>
+            <action android:name="android.intent.action.CREATE_SHORTCUT" />
+        </intent>
+        <!-- Widget providers, for the widget picker. -->
+        <intent>
+            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent>
+        <!-- Home-profile match: the launcher this app replaces, so its grid can be copied. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.HOME" />
+        </intent>
+        <!-- The default browser, for the dock. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="http" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+        <!--
+            Home-profile match again: the everyday apps the first page is filled with when the
+            replaced launcher own layout leaves it short.
+        -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_BROWSER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_GALLERY" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_CONTACTS" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_EMAIL" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_CALENDAR" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_CALCULATOR" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_MUSIC" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_MAPS" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_MARKET" />
+        </intent>
+    </queries>
+
+    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
+    <uses-permission
+        android:name="android.permission.BIND_APPWIDGET"
+        tools:ignore="ProtectedPermissions" />
+
+    <application>
+
+        <!--
+            The home screen itself. CATEGORY_HOME + CATEGORY_DEFAULT is what puts the host app into
+            the system "Default home app" list; the host keeps its own launcher-icon Activity as it
+            is, so the app ends up with both a drawer icon and the home role.
+        -->
+        <activity
+            android:name="io.launcher.home.activities.LauncherPanel"
+            android:clearTaskOnLaunch="true"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:stateNotNeeded="true"
+            android:theme="@style/Launcher.LauncherTheme">
+            <intent-filter>
+                <action android:name="android.content.pm.action.CONFIRM_PIN_SHORTCUT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name="io.launcher.home.activities.LauncherPrefsPanel"
+            android:configChanges="orientation"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:label="@string/launcher_launcher_settings"
+            android:parentActivityName="io.launcher.home.activities.LauncherPanel"
+            android:theme="@style/Launcher.LauncherBaseTheme" />
+
+        <activity
+            android:name="io.launcher.home.activities.HiddenIconsPanel"
+            android:configChanges="orientation"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:parentActivityName="io.launcher.home.activities.LauncherPrefsPanel"
+            android:theme="@style/Launcher.LauncherBaseTheme" />
+
+        <activity
+            android:name="org.fossify.commons.activities.CustomizationActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:parentActivityName="io.launcher.home.activities.LauncherPrefsPanel" />
+
+        <!--
+            The coach-mark drawn over the system "Default home app" list. singleInstance with an
+            empty taskAffinity so it floats over Settings instead of joining the launcher task.
+        -->
+        <activity
+            android:name="io.launcher.home.activities.DefaultHomeHintPanel"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
+            android:theme="@style/Launcher.HintOverlayTheme" />
+
+        <receiver
+            android:name="io.launcher.home.receivers.LockDeviceAdminReceiver"
+            android:exported="true"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/lnch_device_admin_policies" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="io.launcher.home.widgets.AnalogClockWidgetProvider"
+            android:exported="true"
+            android:label="@string/launcher_analog_clock_widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/lnch_analog_clock_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name="io.launcher.home.widgets.DigitalClockWidgetProvider"
+            android:exported="true"
+            android:label="@string/launcher_digital_clock_widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/lnch_digital_clock_widget_info" />
+        </receiver>
+
+    </application>
+</manifest>

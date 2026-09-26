@@ -1,0 +1,39 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Launcher.LauncherBaseTheme" parent="AppTheme.Base" />
+
+    <style name="Launcher.LauncherTheme" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <!--
+        The theme the host's own Fragment runs under inside the right-hand panel.
+
+        It matters because the host's layouts read attributes only the host's theme defines, and the
+        launcher is not themed like the app it is embedded in - a panel inflated under the launcher's
+        own dark, wallpaper-showing theme comes out unreadable. A host redefines this style name in
+        its own res (app resources beat library resources) to hand the panel the theme its other
+        screens run under.
+    -->
+    <style name="LauncherHostPanelTheme" parent="AppTheme.Base" />
+
+    <!-- Coach-mark overlay drawn over the system "Default home app" list (DefaultHomeHintPanel). -->
+    <style name="Launcher.HintOverlayTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+</resources>

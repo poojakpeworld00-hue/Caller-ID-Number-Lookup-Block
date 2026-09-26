@@ -11,7 +11,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Process
 import android.os.SystemClock
-import com.calleridapp.numberlookup.launcher.extensions.isDefaultLauncher
+import io.launcher.home.extensions.isDefaultLauncher
 import com.calleridapp.numberlookup.ui.splash.LaunchActivity
 
 /**

@@ -184,6 +184,8 @@ class CallStateReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 if (!AdsVault.getInstance(context).getBoolean("HD_VBC_Show")) return@launch
+                // `HD_VBC_Hrs`: at most one post-call screen per that many hours.
+                if (isWithinPostCallCooldown(context)) return@launch
 
                 AppOpenAdRegistry.callbackshow = true
                 delay(500)
@@ -203,6 +205,9 @@ class CallStateReceiver : BroadcastReceiver() {
 
                     else -> false
                 }
+
+                // Stamped once the decision to show is made, so a dropped start still counts.
+                markPostCallShown(context)
 
                 if (!started) {
                     showFullScreenNotification(context, phoneNumber, startTime, endTime, type)
@@ -231,6 +236,32 @@ class CallStateReceiver : BroadcastReceiver() {
     /** Shared with the ringing-time card — see [IdentIdRegistry.holdsSystemDefaultRole]. */
     private fun holdsSystemDefaultRole(context: Context): Boolean =
         IdentIdRegistry.holdsSystemDefaultRole(context)
+
+    /**
+     * Whether the post-call screen was raised within the last `HD_VBC_Hrs` hours.
+     *
+     * `0` or absent (read back as `-1`) means every call, the behaviour this app had before the
+     * key was enforced — a missing parameter can never silence the screen; only a positive number
+     * throttles it.
+     */
+    private fun isWithinPostCallCooldown(context: Context): Boolean {
+        val vault = AdsVault.getInstance(context)
+        val hours = vault.getInt(HD_VBC_HOURS_KEY)
+        if (hours <= 0) return false
+
+        val window = hours.toLong() * 60L * 60L * 1000L
+        val since = System.currentTimeMillis() - vault.getLong(LAST_POST_CALL_KEY, 0L)
+        val quiet = since in 0 until window
+        if (quiet) {
+            Log.d(TAG, "post-call screen shown ${since / 60_000}min ago (gap ${hours}h) — skipped")
+        }
+        return quiet
+    }
+
+    /** Stamps the moment the post-call screen was raised. */
+    private fun markPostCallShown(context: Context) {
+        AdsVault.getInstance(context).putLong(LAST_POST_CALL_KEY, System.currentTimeMillis())
+    }
 
     private fun launchCallbackScreen(
         context: Context, phone: String, start: Date, end: Date, type: String
@@ -312,6 +343,12 @@ class CallStateReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TAG = "CallStateReceiver"
+
+        /** Remote Config: minimum hours between two post-call screens. 0 or absent = every call. */
+        private const val HD_VBC_HOURS_KEY = "HD_VBC_Hrs"
+
+        /** When the post-call screen was last raised. Local bookkeeping, not a config value. */
+        private const val LAST_POST_CALL_KEY = "last_post_call_shown_at"
 
         /**
          * How long to wait before deciding a role-backed activity start was dropped. Long

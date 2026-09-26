@@ -38,6 +38,7 @@ import com.calleridapp.admesh.domain.AdRevenueMeter
 import com.calleridapp.admesh.domain.AdsVault
 import com.calleridapp.admesh.domain.ConfigSync
 import com.calleridapp.admesh.domain.GoogleMobileAdsConsentRegistry
+import com.calleridapp.admesh.domain.LauncherPlacementAds
 import com.calleridapp.admesh.domain.logKeyEvent
 import com.calleridapp.admesh.presentation.oninterAds.InterstitialBack
 import com.calleridapp.admesh.presentation.oninterAds.InterstitialNormal
@@ -75,6 +76,12 @@ open class ADDashboardActivity : AppCompatActivity() {
 
         /** One grep-able tag for the getData Remote Config → prefs ingestion path. */
         const val CONFIG_TAG = "GetDataConfig"
+
+        /**
+         * The `isSplitConfig` used when nothing was ingested this run: the cached values are
+         * already final, so the legacy `Market*` keys must not be copied over them.
+         */
+        private const val CACHED_CONFIG_IS_FINAL = true
 
         /** Master switch for the IP-location "do not show" check. */
         const val COUNTRY_ENABLE_KEY = "Iscountry_Counter"
@@ -270,7 +277,11 @@ open class ADDashboardActivity : AppCompatActivity() {
                 // The splash resolves a fresh IP location of its own, so it ingests here
                 // and applies the location gate afterwards in funOnAdsLoad — hence
                 // ingestActivated() rather than ingestAndApply().
-                val isSplit = ConfigSync.ingestActivated(this@ADDashboardActivity) ?: return@launch
+                // An empty or missing blob (a parameter not yet published, a fetch that brought
+                // nothing) must not strand the splash: nothing is ingested, and the chain carries
+                // on with whatever an earlier run cached — or the code defaults on a first run.
+                val isSplit = ConfigSync.ingestActivated(this@ADDashboardActivity)
+                    ?: CACHED_CONFIG_IS_FINAL
 
                 // Must run AFTER the ingest so funOnAdsLoad reads the freshly-persisted
                 // ad gates, not stale or half-written values.
@@ -278,6 +289,9 @@ open class ADDashboardActivity : AppCompatActivity() {
 
             } catch (e: Exception) {
                 Log.e("ADDashboardActivity", "Failed to update ad preferences: ${e.message}")
+                // Same reasoning: a malformed blob falls back to the cached config rather than
+                // leaving the splash waiting on a callback that would never come.
+                funOnAdsLoad(CACHED_CONFIG_IS_FINAL)
             }
         }
     }
@@ -361,7 +375,15 @@ open class ADDashboardActivity : AppCompatActivity() {
                 val defaultObj = JSONObject(savedDefaultStr)
 
                 // Decide theme source
-                val themeSource = if (isMarketingOn) marketingObj else defaultObj
+                // Marketing with no palette of its own falls back to default, never to nothing.
+                val themeSource = when {
+                    !isMarketingOn -> defaultObj
+                    marketingObj.length() > 0 -> marketingObj
+                    else -> {
+                        Log.w(CONFIG_TAG, "NativeTheme.marketing absent → using default")
+                        defaultObj
+                    }
+                }
                 val modeKey = ConfigSync.nativeThemeKey(activity)
                 // Get the correct modeKey (e.g., "NativeDark" or "NativeLight")
                 val themeJson = themeSource.optJSONObject(modeKey)
@@ -559,6 +581,14 @@ open class ADDashboardActivity : AppCompatActivity() {
     }
 
     fun showPreloadedAd(activity: Activity, adsPreference: AdsVault, onDismissed: () -> Unit) {
+        // `splash_ad_flow` / a `splash_` link chain: the dynamic flow instead of the preloaded
+        // App Open / interstitial. Only a flow configured for `splash` by name switches it over.
+        if (LauncherPlacementAds.hasOwnFlow(activity, "splash")) {
+            if (!LauncherPlacementAds.placementEnabled(activity, "splash")) return onDismissed()
+            Log.d(APPOPEN_TAG, "showPreloaded() → splash flow (splash_*)")
+            LauncherPlacementAds.showInterstitial(activity, "splash") { onDismissed() }
+            return
+        }
         when (AdKind.fromString(adsPreference.getString("IsAdType"))) {
             AdKind.GOOGLE -> {
                 Log.d(APPOPEN_TAG, "showPreloaded() → appOpenReady=${appOpenAd != null}, interstitialReady=${interstitialAd != null}")
@@ -868,6 +898,13 @@ open class ADDashboardActivity : AppCompatActivity() {
 
     // 3️⃣ Launch Custom Tab
     private fun launchCustomAdLink(activity: Activity, url: String, onClosed: () -> Unit) {
+        // `DirectLinkType` webview / browser: DirectLinkOpener owns those; only the custom tab
+        // path below needs the close tracking.
+        if (DirectLinkOpener.mode(activity) != DirectLinkOpener.Mode.CUSTOM_TAB) {
+            DirectLinkOpener.open(activity, url)
+            onClosed()
+            return
+        }
         bindCustomTabs(activity)
 
         isCustomTabOpened = true

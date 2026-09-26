@@ -11,6 +11,7 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.calleridapp.admesh.data.AdKind
 import com.calleridapp.admesh.domain.AdCounterRegistry.interBackCounter
 import com.calleridapp.admesh.domain.AdsVault
+import com.calleridapp.admesh.domain.LauncherPlacementAds
 import com.calleridapp.admesh.domain.logKeyEvent
 import com.calleridapp.admesh.presentation.isNetworkConnected
 
@@ -113,6 +114,14 @@ class InterstitialBack {
             return safeClose("counter_skip")
         }
         interBackCounter = 0
+
+        // `back_ad_flow` / a `back_` link chain: the dynamic flow instead of the back interstitial.
+        // Only a flow configured *for back* switches it over — a global setting never does.
+        if (LauncherPlacementAds.hasOwnFlow(act, "back")) {
+            if (!LauncherPlacementAds.placementEnabled(act, "back")) return safeClose("back_ads_on_false")
+            LauncherPlacementAds.showInterstitial(act, "back") { safeClose("back_flow") }
+            return
+        }
 
         // ------------------------
         // SELECT AD TYPE

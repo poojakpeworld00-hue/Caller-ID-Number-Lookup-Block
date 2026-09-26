@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Double-chevron gesture arrow, rotated per direction on the welcome step's tiles. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@color/cid_onb_accent"
+        android:pathData="M4.6,6L10.6,12L4.6,18L6,19.4L13.4,12L6,4.6L4.6,6ZM11.6,6L17.6,12L11.6,18L13,19.4L20.4,12L13,4.6L11.6,6Z" />
+</vector>

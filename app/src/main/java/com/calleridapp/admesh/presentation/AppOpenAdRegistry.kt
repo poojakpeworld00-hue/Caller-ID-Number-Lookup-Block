@@ -31,6 +31,24 @@ object AppOpenAdRegistry {
     // the overlay-permission flow) so that programmatic return isn't monetised.
     var skipNextAppOpenAd: Boolean = false
 
+    /**
+     * Set when the launcher opens another app, so the *return* from that app is the moment an ad may
+     * show — the reference's `other_app_return`. Consumed once, on the first foreground after it is
+     * set, so it never leaks into an unrelated return. This is what lets the app-tap ad fire on the
+     * way back rather than alongside the app (e.g. the Play Store) it just launched.
+     */
+    private var expectReturnAd: Boolean = false
+
+    fun expectReturnAd() {
+        expectReturnAd = true
+    }
+
+    fun consumeExpectReturnAd(): Boolean {
+        val v = expectReturnAd
+        expectReturnAd = false
+        return v
+    }
+
     val isAdAvailable: Boolean
         get() = appOpenAd != null
 

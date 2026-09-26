@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One of the other rows in the overlay coach-mark's mock page: generic label, switch off. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="64dp"
+    android:gravity="center_vertical"
+    android:importantForAccessibility="no"
+    android:orientation="horizontal"
+    android:paddingStart="24dp"
+    android:paddingEnd="20dp">
+
+    <View
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/lnch_hint_mock_icon" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="18dp"
+        android:layout_weight="1"
+        android:text="@string/launcher_hint_mock_toggle_row"
+        android:textColor="@color/hint_mock_row_text"
+        android:textSize="15sp" />
+
+    <FrameLayout
+        android:layout_width="44dp"
+        android:layout_height="26dp"
+        android:background="@drawable/lnch_hint_mock_switch">
+
+        <View
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center_vertical|start"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/lnch_hint_mock_ring" />
+
+    </FrameLayout>
+
+</LinearLayout>

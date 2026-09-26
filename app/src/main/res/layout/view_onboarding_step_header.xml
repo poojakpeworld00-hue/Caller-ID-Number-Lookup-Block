@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+    Shared "STEP n OF m" indicator for the numbered onboarding steps (set-default,
+    language, welcome). Included under Skip on each step screen; the pill text and the
+    progress fill are set in code from LauncherFlow.bindStepHeader, so the count follows
+    the live onboarding order. Not shown on the intro slides (they carry their own page
+    dots) or on the language picker opened from Settings.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <ProgressBar
+        android:id="@+id/onboarding_step_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="6dp"
+        android:layout_weight="1"
+        android:max="100"
+        android:progressDrawable="@drawable/bg_onboarding_step_progress"
+        tools:progress="66" />
+
+    <TextView
+        android:id="@+id/onboarding_step_pill"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:background="@drawable/bg_onboarding_step_pill"
+        android:letterSpacing="0.08"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="5dp"
+        android:textAllCaps="true"
+        android:textColor="@color/cid_onb_accent"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        tools:text="STEP 2 OF 3" />
+</LinearLayout>

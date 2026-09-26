@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_app_launcher_name">Иницијатор</string>
+    <string name="launcher_launcher_settings">Подешавања покретача</string>
+    <string name="launcher_app_info">Информације о апликацији</string>
+    <string name="launcher_touch_hold_widget">Дуго притисните виџет и превуците га на почетни екран</string>
+    <string name="launcher_uninstall">Деинсталирај</string>
+    <string name="launcher_manage_hidden_icons">Управљајте скривеним иконама</string>
+    <string name="launcher_hidden_icons">Скривене иконе</string>
+    <string name="launcher_hidden_icons_placeholder">Неке апликације се не могу деинсталирати због системских ограничења, али можете барем сакрити њихове иконе да их не видите.</string>
+    <string name="launcher_close_app_drawer_on_app_open">Затвори фиоку апликација по отварању апликација</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">Аутоматски показуј тастатуру у фиоци</string>
+    <string name="launcher_home_screen_settings">Почетни екран</string>
+    <string name="launcher_widget_too_big">Виџет не може стати на почетни екран</string>
+    <string name="launcher_app_drawer_settings">Фиока апликација</string>
+    <string name="launcher_double_tap_to_lock">Двапут додирните за закључавање екрана</string>
+    <string name="launcher_lock_device_admin_hint">Да бисте омогућили функцију \"двапут додирните за закључавање екрана\", морате дати администраторску дозволу. Апликацију није могуће обрисати док се дозвола не уклони.</string>
+    <string name="launcher_lock_device_admin_warning">Уклањање администраторске дозволе онемогућиће функцију двоструког додира за закључавање екрана.</string>
+</resources>

@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The charging / discharging screen, ported from the reference app's activity_charging_status.
+    Shown by SystemEventAdManager on ACTION_POWER_CONNECTED / DISCONNECTED. The ChargingEnergyView is
+    this app's reconstruction of the reference's ring. Functional content sits in the top 55%; the ad
+    slot fills the bottom.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/chargingRoot"
+    android:background="@drawable/bg_charging_screen"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/chargingContentBoundary"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintGuide_percent="0.55" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/chargingFunctionalContent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        app:layout_constraintBottom_toTopOf="@+id/chargingContentBoundary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:id="@+id/chargingModeChip"
+            android:background="@drawable/bg_charging_mode_chip"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_marginTop="8dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="13dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <View
+                android:id="@+id/chargingLiveDot"
+                android:background="@drawable/bg_charging_status_dot"
+                android:layout_width="7dp"
+                android:layout_height="7dp" />
+
+            <TextView
+                android:id="@+id/chargingModeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/charging_live_energy"
+                android:textAllCaps="true"
+                android:textColor="@color/charging_chip_text"
+                android:textSize="10sp"
+                android:includeFontPadding="false"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.13" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnCloseCharging"
+            android:background="@drawable/bg_charging_close_button"
+            android:padding="11dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="4dp"
+            android:src="@drawable/ic_charging_close"
+            android:contentDescription="@string/charging_close"
+            android:elevation="5dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.calleridapp.numberlookup.ui.charging.ChargingEnergyView
+            android:id="@+id/chargingEnergyView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="6dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_percent="0.43"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chargingModeChip" />
+
+        <TextView
+            android:id="@+id/chargingPercentage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/charging_percentage_preview"
+            android:textColor="@color/charging_text_primary"
+            android:textSize="36sp"
+            android:includeFontPadding="false"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="-0.06"
+            app:layout_constraintBottom_toBottomOf="@+id/chargingEnergyView"
+            app:layout_constraintEnd_toEndOf="@+id/chargingEnergyView"
+            app:layout_constraintStart_toStartOf="@+id/chargingEnergyView"
+            app:layout_constraintTop_toTopOf="@+id/chargingEnergyView"
+            app:layout_constraintVertical_bias="0.5" />
+
+        <LinearLayout
+            android:id="@+id/chargingDetailsGroup"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingTop="10dp"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chargingEnergyView">
+
+            <TextView
+                android:id="@+id/chargingTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/charging_connected_title"
+                android:textColor="@color/charging_text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:id="@+id/chargingSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:gravity="center"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/charging_subtitle_text"
+                android:textSize="14sp"
+                android:includeFontPadding="false" />
+
+            <LinearLayout
+                android:id="@+id/chargingInfoCard"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="8dp">
+
+                <LinearLayout
+                    android:background="@drawable/bg_charging_metric_item"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp">
+
+                    <TextView
+                        android:id="@+id/chargingMetricLeftValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textColor="@color/charging_text_primary"
+                        android:textSize="18sp"
+                        android:includeFontPadding="false"
+                        android:fontFamily="sans-serif-medium" />
+
+                    <TextView
+                        android:id="@+id/chargingMetricLeftLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:textAllCaps="true"
+                        android:textColor="@color/charging_text_secondary"
+                        android:textSize="9sp"
+                        android:includeFontPadding="false"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.11" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:background="@drawable/bg_charging_metric_item"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp">
+
+                    <TextView
+                        android:id="@+id/chargingMetricRightValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textColor="@color/charging_text_primary"
+                        android:textSize="18sp"
+                        android:includeFontPadding="false"
+                        android:fontFamily="sans-serif-medium" />
+
+                    <TextView
+                        android:id="@+id/chargingMetricRightLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:textAllCaps="true"
+                        android:textColor="@color/charging_text_secondary"
+                        android:textSize="9sp"
+                        android:includeFontPadding="false"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.11" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:background="@drawable/bg_charging_status_chip"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="26dp"
+                android:layout_marginTop="6dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <View
+                    android:id="@+id/chargingStatusDot"
+                    android:background="@drawable/bg_charging_status_dot"
+                    android:layout_width="7dp"
+                    android:layout_height="7dp" />
+
+                <TextView
+                    android:id="@+id/chargingStatusText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@color/charging_chip_text"
+                    android:textSize="11sp"
+                    android:includeFontPadding="false"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <FrameLayout
+        android:id="@+id/chargingAdSlot"
+        android:paddingTop="7dp"
+        android:paddingBottom="10dp"
+        android:visibility="gone"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:importantForAccessibility="no"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/chargingContentBoundary" />
+</androidx.constraintlayout.widget.ConstraintLayout>

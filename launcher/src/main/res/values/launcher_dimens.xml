@@ -1,0 +1,63 @@
+<resources>
+    <dimen name="launcher_launcher_icon_size">55dp</dimen>
+    <!-- Largest size any list draws a cached app icon at; the decode renders no bigger than this. -->
+    <dimen name="launcher_icon_cache_size">72dp</dimen>
+    <dimen name="launcher_icon_long_press_anchor_offset_y">150dp</dimen>
+    <dimen name="launcher_long_press_anchor_button_offset_y">50dp</dimen>
+    <dimen name="launcher_widget_preview_size">140dp</dimen>
+    <dimen name="launcher_icon_side_margin">10dp</dimen>
+    <dimen name="launcher_resize_frame_dot_radius">8dp</dimen>
+    <dimen name="launcher_move_gesture_threshold">20dp</dimen>
+    <dimen name="launcher_swipe_hint_travel">40dp</dimen>
+    <dimen name="launcher_page_indicator_dot_radius">3dp</dimen>
+    <!-- A page that is not the current one is drawn a touch smaller as well as dimmer. -->
+    <dimen name="launcher_page_indicator_inactive_radius">2.5dp</dimen>
+    <dimen name="launcher_page_indicator_margin">7dp</dimen>
+    <!-- How far the current page's dot reaches past a circle when nothing is moving: enough to
+         read as a capsule, never enough to touch its neighbour. -->
+    <dimen name="launcher_page_indicator_active_extra">2.5dp</dimen>
+    <!-- What the dock keeps clear below its icons. It used to borrow the margin that centres an
+         icon in its cell horizontally, which on a wide dock left a dead band under the row and
+         squeezed the page dots above it. -->
+    <dimen name="launcher_dock_bottom_margin">8dp</dimen>
+    <!-- How far the scrolling drawer's rows fade out (the grid's own fading edge) where they meet
+         the search pill or the top of the sheet, instead of being cut off against a line. -->
+    <dimen name="launcher_drawer_fade">72dp</dimen>
+    <dimen name="launcher_drawer_search_z">8dp</dimen>
+    <!-- The least a page dot keeps from the labels above it and the dock icons below. -->
+    <dimen name="launcher_page_indicator_clearance">10dp</dimen>
+    <dimen name="launcher_min_folder_view_height">200dp</dimen>
+    <dimen name="launcher_max_folder_view_height">500dp</dimen>
+    <dimen name="launcher_menu_icon_size">24dp</dimen>
+    <!-- design px at the frame's own 0.541 scale: 10px, 28px, 10px, 10px, 5px -->
+    <dimen name="launcher_onboarding_dot_height">5.4dp</dimen>
+    <dimen name="launcher_onboarding_dot_gap">5.4dp</dimen>
+    <dimen name="launcher_onboarding_dot_radius">2.7dp</dimen>
+    <dimen name="launcher_drawer_page_dot">7dp</dimen>
+    <dimen name="launcher_drawer_page_dot_gap">4dp</dimen>
+    <!-- The drawer search's cards, measured against One UI's Finder on a Galaxy A35. -->
+    <dimen name="launcher_search_card_padding_top">18dp</dimen>
+    <dimen name="launcher_search_card_padding_bottom">12dp</dimen>
+    <dimen name="launcher_search_card_title_gap">12dp</dimen>
+    <dimen name="launcher_search_card_grid_padding">8dp</dimen>
+    <dimen name="launcher_search_card_row_gap">10dp</dimen>
+    <!-- Paged drawer: the page dots' bottom edge sits this far above the search pill (One UI:
+         ~25 dp from dot to pill on a Galaxy A35). -->
+    <dimen name="launcher_page_dots_search_gap">16dp</dimen>
+    <!-- Paged drawer: above the first row, the band One UI keeps for its apps-screen menu row
+         (48 dp + 4 dp - its cell_layout starts 249 px down at 420 dpi) ... -->
+    <dimen name="launcher_drawer_top_gap">52dp</dimen>
+    <!-- ... and below the last row, the gap it leaves above the page dots. Between the two the page
+         is split evenly over its rows (DrawerPagesLineup), as One UI's is. -->
+    <dimen name="launcher_drawer_page_bottom_gap">24dp</dimen>
+    <!-- Gap above the scrolling drawer list's first row when the search bar is at the bottom. -->
+    <dimen name="launcher_drawer_list_top_gap">20dp</dimen>
+    <!-- First page time widget: side inset, the large thin time, and the full date under it. -->
+    <dimen name="launcher_time_widget_padding">12dp</dimen>
+    <dimen name="launcher_time_widget_time_size">84sp</dimen>
+    <dimen name="launcher_time_widget_date_size">20sp</dimen>
+    <dimen name="launcher_time_widget_date_gap">2dp</dimen>
+    <!-- First page: our drawn Google bar (used when Google's own widget cannot be placed). -->
+    <dimen name="launcher_google_bar_height">48dp</dimen>
+    <dimen name="launcher_google_bar_side">8dp</dimen>
+</resources>

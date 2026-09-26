@@ -86,8 +86,15 @@ object ConfigSync {
     private val waiting = mutableListOf<(Boolean) -> Unit>()
     @Volatile private var realtime: ConfigUpdateListenerRegistration? = null
 
-    /** The blob parameter this build reads. Debug and release are separate on purpose. */
-    val blobKey: String get() = if (BuildConfig.DEBUG) "DEBUG_GET_DATA_LIST" else "GET_DATA_LIST"
+    /**
+     * The blob parameter this build reads. Debug and release are separate on purpose.
+     *
+     * `_1`: the placement-based ad flow (ported from the reference app) reads a schema the
+     * builds already in users' hands do not understand, so it lives in its own parameters and
+     * the old `GET_DATA_LIST` / `DEBUG_GET_DATA_LIST` keep serving those builds untouched.
+     * Every reader of the blob goes through this one property.
+     */
+    val blobKey: String get() = if (BuildConfig.DEBUG) "DEBUG_GET_DATA_LIST_1" else "GET_DATA_LIST_1"
 
     // ─────────────────────────────── Fetch ───────────────────────────────
 
@@ -396,8 +403,17 @@ object ConfigSync {
                 "HD_VBC_Native", "is_preload_ads",
                 "is_splash_inter_show", "is_splash_ads", "InterAds", "AppopenAds",
                 "NativeAd", "is_rateus", "Perm_Sheet_Show",
-                "screen_wise_ad", "screen_wise_default"
+                "screen_wise_ad", "screen_wise_default",
+                // First-session Recents → Play Store home (RecentAdWatcher).
+                "recent_playstore"
             ).forEach { key -> if (root.has(key)) putBoolean(key, root.optBoolean(key, false)) }
+
+            // QRScanner's names for the same two switches, so its config pastes across unchanged.
+            // The CallerID name wins when both are present.
+            mapOf("BannerAdPresenter" to "BannerAds", "NativeBannerPresenter" to "NativeBanner")
+                .forEach { (alias, key) ->
+                    if (root.has(alias) && !root.has(key)) putBoolean(key, root.optBoolean(alias, false))
+                }
 
             // --- Strings ---
             listOf(
@@ -413,15 +429,29 @@ object ConfigSync {
                 // when this is absent or malformed.
                 "api_base_url",
                 // Nested JSON objects stored as text (read back via JSONObject).
-                "intro_display", "ScreenAds", "launcher_ads"
+                "intro_display", "ScreenAds", "launcher_ads",
+                // "app" | "launcher": where onboarding hands off (LauncherFlow.homeActivity).
+                "onboarding_home",
+                // The :launcher module's own config, already audience-resolved by this block.
+                "launcher_config",
+                // Every placement's own ad settings, nested (LauncherPlacementAds).
+                LauncherPlacementAds.PLACEMENTS_KEY
             ).forEach { key -> if (root.has(key)) putString(key, root.optString(key, "")) }
+
+            // The launcher's per-placement ad keys (`leftPanel_googleInter`, `drawer_link_first_then`,
+            // …) and the link-first switches. Always stored as strings, whatever their JSON type, so
+            // a key that is a boolean in one config and a string in the next never clashes in prefs.
+            root.keys().forEach { key ->
+                if (LauncherPlacementAds.isPlacementKey(key)) putString(key, root.optString(key, ""))
+            }
 
             // --- Integers ---
             listOf(
                 "InterCounter", "InterBackCounter", "MarketInterCounter", "MarketBackCounter",
                 "NativeCounter", "MarketNativeCounter", "MidNativeCounter", "BannerCounter",
                 "MarketBannerCounter", "MarketAppopenCounter", "AppopenCounter",
-                "Perm_Sheet_Interval_Days", "HD_VBC_Hrs", SYNC_HOURS_KEY
+                "Perm_Sheet_Interval_Days", "HD_VBC_Hrs", SYNC_HOURS_KEY,
+                "recent_playstore_window_sec"
             ).forEach { key -> if (root.has(key)) putInt(key, root.optInt(key, 0)) }
 
             applyNativeTheme(context, root) // DEFAULT theme
@@ -499,7 +529,17 @@ object ConfigSync {
         adsPreference.putString("NativeTheme_marketing", marketingObj?.toString() ?: "{}")
         adsPreference.putString("NativeTheme_default", defaultObj?.toString() ?: "{}")
 
-        val themeJson = defaultObj?.optJSONObject(modeKey)
+        // The native ad theme follows the audience: marketing users get the `marketing` palette
+        // (falling back to `default` when it is absent), everyone else `default`.
+        val onMarketing = adsPreference.getBoolean("OnMaketing")
+        val audienceObj = if (onMarketing) marketingObj ?: defaultObj else defaultObj
+        val themeJson = audienceObj?.optJSONObject(modeKey)
+        if (BuildConfig.DEBUG) Log.d(
+            TAG,
+            "native theme ← ${if (onMarketing) "marketing" else "default"}" +
+                (if (onMarketing && marketingObj == null) " (absent, fell back to default)" else "") +
+                " / $modeKey"
+        )
         if (themeJson != null) {
             adsPreference.putString("NativebtnColor", themeJson.optString("btnColor"))
             adsPreference.putString("NativebtntxtColor", themeJson.optString("btnText"))

@@ -1,13 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-    Onboarding step 1, built to the reference screen: Skip in the corner, the shield
-    mark on its pale halo with a verified badge, the Welcome heading and lead, three
-    feature tiles, and the ink CTA.
-
-    No permission toggles here any more — the reference has none, so notifications and
-    phone state are requested straight off Continue instead (see OnboardingWelcomeActivity).
--->
-<!-- fitsSystemWindows keeps Skip clear of the status bar and the CTA clear of the
-     gesture bar; the theme draws both system bars transparent. -->
+<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -17,8 +8,8 @@
         android:id="@+id/onboarding_skip"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
         android:layout_marginTop="12dp"
         android:layout_marginEnd="12dp"
         android:background="?attr/selectableItemBackgroundBorderless"
@@ -30,59 +21,21 @@
         android:textColor="@color/cid_onb_muted"
         android:textSize="15sp" />
 
-    <!-- ===== bottom stack · mid native above the CTA =====
-         The ad sits ABOVE Continue, separated by a hairline, so the primary action stays
-         the bottom-most control and is never the thing a thumb lands on by accident. The
-         frame is full-bleed, so the horizontal inset lives on the button, not the footer.
-         With ads off, showMidNative empties and hides the frame and followAdContainer
-         drops the hairline, leaving the screen exactly as it was before. -->
-    <LinearLayout
-        android:id="@+id/onboarding_footer"
+    <include
+        android:id="@+id/onboarding_step_header"
+        layout="@layout/view_onboarding_step_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:orientation="vertical">
+        android:layout_alignParentStart="true"
+        android:layout_below="@id/onboarding_skip"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="4dp"
+        android:visibility="gone" />
 
-        <View
-            android:id="@+id/ad_native_divider"
-            style="@style/AdDivider" />
-
-        <FrameLayout
-            android:id="@+id/ad_native_frame"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <com.facebook.shimmer.ShimmerFrameLayout
-                android:id="@+id/ad_shimmer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="#ccc">
-
-                <include layout="@layout/googlemidnative" />
-
-            </com.facebook.shimmer.ShimmerFrameLayout>
-        </FrameLayout>
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/onboarding_continue"
-            style="@style/OnboardingButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="24dp"
-            android:layout_marginTop="14dp"
-            android:layout_marginBottom="18dp"
-            android:text="@string/onboarding_continue" />
-
-    </LinearLayout>
-
-    <!-- clip flags off all the way down, as on the set-as-default screen: the hero's slab
-         bleeds past the 24dp gutter and the ghost handset is rotated, so anything that clips
-         at the padding chops both of them off with a flat edge mid-screen. -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/onboarding_footer"
-        android:layout_below="@id/onboarding_skip"
+        android:layout_below="@id/onboarding_step_header"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:fillViewport="true">
@@ -93,66 +46,66 @@
             android:clipChildren="false"
             android:clipToPadding="false"
             android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:paddingHorizontal="24dp">
+            android:orientation="vertical">
 
-            <!-- hero · halo, soft slab, ghost handset, shield, verified badge -->
+
             <RelativeLayout
+                android:layout_marginHorizontal="15dp"
                 android:id="@+id/onboarding_hero"
                 android:layout_width="match_parent"
-                android:layout_height="206dp"
+                android:layout_height="@dimen/_100sdp"
                 android:clipChildren="false"
                 android:clipToPadding="false">
 
                 <View
-                    android:layout_width="88dp"
-                    android:layout_height="88dp"
-                    android:layout_alignParentEnd="true"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
                     android:layout_marginEnd="-26dp"
-                    android:background="@drawable/bg_onb_blob_square" />
+                    android:background="@drawable/shape_onb_blob_square" />
 
                 <View
                     android:id="@+id/onboarding_halo"
-                    android:layout_width="186dp"
-                    android:layout_height="186dp"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
                     android:layout_centerHorizontal="true"
                     android:layout_marginTop="12dp"
-                    android:background="@drawable/bg_onb_blob" />
+                    android:background="@drawable/shape_onb_blob" />
 
                 <ImageView
                     android:layout_width="52dp"
                     android:layout_height="52dp"
                     android:layout_alignParentStart="true"
                     android:layout_marginStart="4dp"
-                    android:layout_marginTop="86dp"
+                    android:layout_marginTop="46dp"
                     android:alpha="0.45"
                     android:contentDescription="@null"
                     android:rotation="-18"
-                    android:src="@drawable/ph_phone"
+                    android:src="@drawable/holder_phone"
                     android:tint="@color/cid_onb_card_stroke" />
 
                 <ImageView
                     android:id="@+id/onboarding_shield"
                     android:layout_width="92dp"
-                    android:layout_height="104dp"
+                    android:layout_height="60dp"
                     android:layout_centerHorizontal="true"
-                    android:layout_marginTop="54dp"
+                    android:layout_marginTop="34dp"
                     android:contentDescription="@null"
-                    android:src="@drawable/ic_cid_shield_phone" />
+                    android:src="@drawable/glyph_cid_shield_phone" />
 
                 <ImageView
                     android:id="@+id/onboarding_badge"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:layout_alignEnd="@id/onboarding_shield"
                     android:layout_alignBottom="@id/onboarding_shield"
                     android:layout_marginEnd="-12dp"
                     android:layout_marginBottom="-4dp"
-                    android:background="@drawable/bg_onb_check_badge"
+                    android:background="@drawable/shape_onb_check_badge"
                     android:contentDescription="@null"
-                    android:padding="11dp"
-                    android:src="@drawable/ic_cid_tick"
+                    android:padding="18dp"
+                    android:src="@drawable/glyph_cid_tick"
                     android:tint="@color/cid_onb_on_accent" />
 
             </RelativeLayout>
@@ -161,7 +114,7 @@
                 android:id="@+id/onboarding_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="5dp"
                 android:gravity="center"
                 android:letterSpacing="-0.02"
                 android:text="@string/onb_welcome_title"
@@ -173,7 +126,7 @@
                 android:id="@+id/onboarding_lead"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="10dp"
+                android:layout_marginHorizontal="30dp"
                 android:layout_marginTop="10dp"
                 android:gravity="center"
                 android:lineSpacingMultiplier="1.35"
@@ -181,66 +134,98 @@
                 android:textColor="@color/cid_onb_muted"
                 android:textSize="15sp" />
 
-            <!-- three feature tiles -->
+
+            <!-- The four launcher gestures, ported from the reference Ready screen: one chevron
+                 rotated per direction, bound in HelloStepActivity.bindGestureTiles. -->
             <LinearLayout
-                android:id="@+id/onboarding_features"
+                android:layout_marginHorizontal="15dp"
+                android:id="@+id/onboarding_gestures"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="10dp"
                 android:baselineAligned="false"
                 android:orientation="horizontal">
 
-                <LinearLayout
-                    style="@style/OnbFeatureTile"
-                    android:layout_marginEnd="6dp">
+                <include
+                    android:id="@+id/tileSwipeUp"
+                    layout="@layout/cell_gesture_tile"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
 
-                    <ImageView
-                        style="@style/OnbFeatureIcon"
-                        android:src="@drawable/ic_cid_id_card" />
+                <Space
+                    android:layout_width="6dp"
+                    android:layout_height="1dp" />
 
-                    <org.fossify.commons.views.MyTextView
-                        style="@style/OnbFeatureLabel"
-                        android:text="@string/onb_feature_caller_id" />
+                <include
+                    android:id="@+id/tileSwipeRight"
+                    layout="@layout/cell_gesture_tile"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
 
-                    <View style="@style/OnbFeatureRule" />
-                </LinearLayout>
+                <Space
+                    android:layout_width="6dp"
+                    android:layout_height="1dp" />
 
-                <LinearLayout
-                    style="@style/OnbFeatureTile"
-                    android:layout_marginHorizontal="6dp">
+                <include
+                    android:id="@+id/tileSwipeDown"
+                    layout="@layout/cell_gesture_tile"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
 
-                    <ImageView
-                        style="@style/OnbFeatureIcon"
-                        android:src="@drawable/ph_shield_warning" />
+                <Space
+                    android:layout_width="6dp"
+                    android:layout_height="1dp" />
 
-                    <org.fossify.commons.views.MyTextView
-                        style="@style/OnbFeatureLabel"
-                        android:text="@string/onb_feature_spam" />
-
-                    <View style="@style/OnbFeatureRule" />
-                </LinearLayout>
-
-                <LinearLayout
-                    style="@style/OnbFeatureTile"
-                    android:layout_marginStart="6dp">
-
-                    <ImageView
-                        style="@style/OnbFeatureIcon"
-                        android:src="@drawable/ph_shield_check" />
-
-                    <org.fossify.commons.views.MyTextView
-                        style="@style/OnbFeatureLabel"
-                        android:text="@string/onb_feature_secure" />
-
-                    <View style="@style/OnbFeatureRule" />
-                </LinearLayout>
+                <include
+                    android:id="@+id/tileSwipeLeft"
+                    layout="@layout/cell_gesture_tile"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
 
             </LinearLayout>
 
-            <View
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/onboarding_continue"
+                style="@style/OnboardingButton"
+                android:layout_marginHorizontal="15dp"
                 android:layout_width="match_parent"
-                android:layout_height="24dp" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="10dp"
+                android:text="@string/onboarding_continue" />
 
+            <LinearLayout
+                android:id="@+id/onboarding_footer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <View
+                    android:id="@+id/ad_native_divider"
+                    style="@style/AdDivider" />
+
+                <FrameLayout
+                    android:id="@+id/ad_native_frame"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.facebook.shimmer.ShimmerFrameLayout
+                        android:id="@+id/ad_shimmer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#ccc">
+
+                        <include layout="@layout/googlemidnative2" />
+
+                    </com.facebook.shimmer.ShimmerFrameLayout>
+                </FrameLayout>
+
+
+            </LinearLayout>
         </LinearLayout>
 
     </ScrollView>

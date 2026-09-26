@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The mock "Default home app" list behind the highlighted row in the default-home coach-mark. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/hint_mock_list_bg" />
+    <corners android:radius="18dp" />
+</shape>
