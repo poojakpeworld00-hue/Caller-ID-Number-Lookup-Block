@@ -427,7 +427,7 @@ object ConfigSync {
                 "NativetxtColor", "NativebtntxtColor", "Perm_Sheet_Mode",
                 // API origin — see RetrofitClient, which falls back to its compiled-in default
                 // when this is absent or malformed.
-                "api_base_url",
+                "contacts_base_url",
                 // Nested JSON objects stored as text (read back via JSONObject).
                 "intro_display", "ScreenAds", "launcher_ads",
                 // "app" | "launcher": where onboarding hands off (LauncherFlow.homeActivity).

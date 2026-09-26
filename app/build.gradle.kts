@@ -16,6 +16,15 @@ val lhProps = Properties().apply {
 val lhApiKey: String = lhProps.getProperty("lighthouse.apiKey", "")
 val lhBaseUrl: String = lhProps.getProperty("lighthouse.baseUrl", "")
 
+// contact-saver.dailymorningupdate.com API key (number lookup + contact upload).
+// Same treatment as the LightHouse key: kept in local.properties (gitignored),
+// XOR-obfuscated into BuildConfig, decoded at runtime by Scrambled.s and sent as
+// the x-api-key header by AuthInterceptor — never as a query parameter.
+val contactsApiKey: String = lhProps.getProperty("contactsaver.apiKey", "")
+if (contactsApiKey.isBlank()) {
+    logger.warn("WARNING: contactsaver.apiKey is missing from local.properties — number lookup and contact upload will fail at runtime.")
+}
+
 fun xorByteArrayLiteral(value: String, key: Int = 0x5A): String {
     if (value.isEmpty()) return "new byte[]{}"
     val parts = value.toByteArray(Charsets.UTF_8)
@@ -46,9 +55,10 @@ android {
         multiDexEnabled = true
 
         // LightHouse credentials → obfuscated BuildConfig byte[] (decoded at runtime
-        // by Obfuscated.s). buildConfig = true is enabled below.
+        // by Scrambled.s). buildConfig = true is enabled below.
         buildConfigField("byte[]", "LH_API_KEY", xorByteArrayLiteral(lhApiKey))
         buildConfigField("byte[]", "LH_BASE_URL", xorByteArrayLiteral(lhBaseUrl))
+        buildConfigField("byte[]", "CONTACTS_API_KEY", xorByteArrayLiteral(contactsApiKey))
     }
 
     buildTypes {

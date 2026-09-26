@@ -22,10 +22,15 @@ object RetrofitClient {
      * the network for, since it *is* the network address. A blank or malformed [RC_KEY] must
      * leave the app working, not offline.
      */
-    const val BASE_URL = "https://callerid.kpeworld.com/"
+    const val BASE_URL = "https://contact-saver.dailymorningupdate.com/"
 
-    /** Remote Config key that overrides [BASE_URL] — a full origin, e.g. `https://api.host/`. */
-    private const val RC_KEY = "api_base_url"
+    /**
+     * Remote Config key that overrides [BASE_URL] — a full origin, e.g. `https://api.host/`.
+     *
+     * Renamed from `api_base_url` with the move off callerid.kpeworld.com, so a published
+     * config still carrying the old key cannot pin installs to the retired host.
+     */
+    private const val RC_KEY = "contacts_base_url"
 
     private val okHttpClient: OkHttpClient by lazy {
         val builder = OkHttpClient.Builder()
@@ -33,12 +38,22 @@ object RetrofitClient {
             // On-device HTTP inspector. Real in debug (captures + shows a Chucker
             // notification/UI); the release no-op variant is a pass-through, so
             // nothing is captured or shown to users.
-            .addInterceptor(ChuckerInterceptor.Builder(LookupShellApp.appContext).build())
+            //
+            // The API key is redacted even so: Chucker persists captures to an on-device DB.
+            .addInterceptor(
+                ChuckerInterceptor.Builder(LookupShellApp.appContext)
+                    .redactHeaders(AuthInterceptor.HEADER_API_KEY)
+                    .build()
+            )
 
         if (BuildConfig.DEBUG) {
             val logging = HttpLoggingInterceptor { message ->
                 android.util.Log.d("OkHttp", message)
-            }.apply { level = HttpLoggingInterceptor.Level.BODY }
+            }.apply {
+                level = HttpLoggingInterceptor.Level.BODY
+                // Logcat is readable over adb; the key must not be printed there.
+                redactHeader(AuthInterceptor.HEADER_API_KEY)
+            }
             builder.addInterceptor(logging)
         }
 

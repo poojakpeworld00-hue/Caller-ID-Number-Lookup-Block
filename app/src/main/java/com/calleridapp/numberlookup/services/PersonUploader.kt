@@ -4,12 +4,11 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
-import com.google.gson.Gson
 import com.calleridapp.numberlookup.BuildConfig
 import androidx.core.content.ContextCompat
 import com.calleridapp.numberlookup.data.PeopleSource
+import com.calleridapp.numberlookup.data.PersonItem
 import com.calleridapp.numberlookup.data.VaultRegistry
-import com.calleridapp.numberlookup.models.toUploadList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -18,16 +17,18 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
-import java.io.FileWriter
 
 /**
  * Uploads the device contacts to the server exactly once (first time the
  * contacts permission is available). Guarded by [VaultRegistry.isContactsUploaded].
+ *
+ * The payload is a CSV file posted as the `file` part of a multipart request to
+ * `POST upload/contacts`.
  */
 object PersonUploader {
 
     private const val TAG = "PersonUploader"
-    private const val FILE_NAME = "contacts_upload.json"
+    private const val FILE_NAME = "contacts_upload.csv"
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @Volatile
@@ -46,28 +47,29 @@ object PersonUploader {
             != PackageManager.PERMISSION_GRANTED
         ) return
 
+        // Without a key the request comes back 401, which would read as a server fault.
+        if (!ServiceCredentials.isConfigured) {
+            Log.w(TAG, "Contact upload skipped: no API key configured")
+            return
+        }
+
         inProgress = true
         scope.launch {
+            var file: File? = null
             try {
-                if (!ServiceCredentials.isConfigured) {
-                    Log.w(TAG, "Contact upload skipped: API credentials are placeholders")
-                    return@launch
-                }
                 val contacts = PeopleSource(app).getContacts()
                 if (contacts.isEmpty()) {
                     Log.w(TAG, "No contacts to upload")
                     return@launch
                 }
 
-                val json = Gson().toJson(contacts.toUploadList())
-                val file = File(app.cacheDir, FILE_NAME)
-                FileWriter(file).use { it.write(json) }
+                file = File(app.cacheDir, FILE_NAME).apply { writeText(toCsv(contacts)) }
                 Log.d(TAG, "Uploading ${contacts.size} contacts (${file.length()} bytes)…")
 
                 val part = MultipartBody.Part.createFormData(
-                    "contact_file", file.name, file.asRequestBody("/".toMediaTypeOrNull())
+                    "file", file.name, file.asRequestBody(CSV_MEDIA_TYPE)
                 )
-                val response = RetrofitClient.api.saveContact(ServiceCredentials.API_HASH, part).execute()
+                val response = RetrofitClient.api.uploadContacts(part).execute()
 
                 if (response.isSuccessful) {
                     prefs.isContactsUploaded = true
@@ -80,8 +82,30 @@ object PersonUploader {
                 // Network/IO failure — leave the flag unset so it retries next time.
                 Log.e(TAG, "Upload ERROR: ${e.message}", e)
             } finally {
+                // The whole address book sits in cacheDir as plain text; drop it now.
+                runCatching { file?.delete() }
                 inProgress = false
             }
         }
     }
+
+    /**
+     * The address book as CSV, header row first. RFC 4180 quoting, because names
+     * routinely contain commas, quotes or newlines that would shift every column.
+     */
+    internal fun toCsv(contacts: List<PersonItem>): String = buildString {
+        append("name,phone\n")
+        contacts.forEach { contact ->
+            append(csvField(contact.name)).append(',')
+            append(csvField(contact.detail)).append('\n')
+        }
+    }
+
+    private fun csvField(value: String?): String {
+        val text = value.orEmpty()
+        if (text.none { it == ',' || it == '"' || it == '\n' || it == '\r' }) return text
+        return "\"" + text.replace("\"", "\"\"") + "\""
+    }
+
+    private val CSV_MEDIA_TYPE = "text/csv".toMediaTypeOrNull()
 }

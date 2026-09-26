@@ -1,9 +1,23 @@
 package com.calleridapp.numberlookup.models
 
+/**
+ * `GET similar-phone-number` response. contact-saver puts the number-level facts
+ * (ISO country, location, spam flag) at the top level and only names in [data].
+ */
 data class DialResponse(
     val success: Boolean,
     val count: Int = 0,
+    /** ISO 3166 region code of the number, e.g. `IN`. */
+    val country: String? = null,
+    val location: DialLocation? = null,
+    val spam: Boolean = false,
     val data: List<DialData>?
+)
+
+data class DialLocation(
+    val city: String? = null,
+    val state: String? = null,
+    val pincode: String? = null
 )
 
 data class DialData(

@@ -1,18 +1,24 @@
 package com.calleridapp.numberlookup.services
 
-/** Credentials for the similar-phone-number API used by [ApiService]. */
+import com.calleridapp.numberlookup.BuildConfig
+import com.calleridapp.numberlookup.Scrambled
+
+/**
+ * Credential for the contact-saver API used by [ApiService].
+ *
+ * Comes from `contactsaver.apiKey` in local.properties, XOR-obfuscated into
+ * BuildConfig and decoded here at runtime. [AuthInterceptor] attaches it as the
+ * `x-api-key` header, so it never appears in an endpoint signature or a URL.
+ *
+ * `val ... by lazy` rather than `const val` on purpose: a `const` String is inlined
+ * at every call site and would put the key straight back into the decompiled APK.
+ */
 object ServiceCredentials {
-    /** Path id for /api/similar-phone-number/{id}. */
-    const val API_ID = "1433"
 
-    /** hash_key query parameter. */
-    const val API_HASH = "o9rRirgwnsAVIivUG3T0OVjpwTE="
+    /** `x-api-key` header value for contact-saver.dailymorningupdate.com. */
+    val API_KEY: String by lazy { Scrambled.s(BuildConfig.CONTACTS_API_KEY) }
 
-    /** Authorization header value (already includes the "Bearer " prefix). */
-    const val API_TOKEN =
-        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNDMzLCJpYXQiOjE3NzQyNjAwNDF9.PrHzeB_P3hv-FEo87k8yOGVA2YMdNLdrra_ix7uSt0w"
-
-    /** Guards the network calls so a build with placeholders never fires them. */
+    /** Guards the network calls so a build without a key never fires them (they would only 401). */
     val isConfigured: Boolean
-        get() = listOf(API_ID, API_HASH, API_TOKEN).none { it.startsWith("REPLACE_ME") }
+        get() = API_KEY.isNotBlank()
 }
