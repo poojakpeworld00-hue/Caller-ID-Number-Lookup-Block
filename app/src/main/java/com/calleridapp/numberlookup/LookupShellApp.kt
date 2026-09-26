@@ -153,13 +153,23 @@ class LookupShellApp : Application() , Application.ActivityLifecycleCallbacks,
         // Release normally keeps real attribution and never gets here; the second branch is the
         // deliberate test-build override, and is dead code whenever
         // FORCE_RELEASE_AUDIENCE_MARKETING is false, which is how it ships.
-        if (BuildConfig.DEBUG) {
+        //
+        // The forced source alone is not enough: a device the SDK has flagged as a reinstall /
+        // cross-app install is classified ORGANIC *before* the forced source is consulted
+        // ("installSource → ORGANIC (device flagged …)" under LH_Disclosure). On any phone that has
+        // had this app installed before — every test device — that silently turned the pinned
+        // MARKETING audience into an organic disclosure decision, and the organic disclosure spec
+        // is the one that shows the screen. Clearing the flag makes the forced source win, so the
+        // SDK and ADDashboardActivity settle on the same audience.
+        /*if (BuildConfig.DEBUG) {
+            LightHouse.debugForceFlagged(false)
             LightHouse.debugForceInstallSource(
                 if (ADDashboardActivity.DEBUG_AUDIENCE_MARKETING) "paid" else "organic"
             )
         } else if (ADDashboardActivity.FORCE_RELEASE_AUDIENCE_MARKETING) {
+            LightHouse.debugForceFlagged(false)
             LightHouse.debugForceInstallSource("paid")
-        }
+        }*/
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 FirebaseApp.initializeApp(this@LookupShellApp)
