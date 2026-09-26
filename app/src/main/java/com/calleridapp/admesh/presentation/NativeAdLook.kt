@@ -57,12 +57,20 @@ object NativeAdLook {
 
     private fun fitSideMargins(adView: NativeAdView, target: Int) {
         val parent = adView.parent as? View ?: return
-        val windowWidth = adView.rootView.width
+        val root = adView.rootView
+        val windowWidth = root.width
         if (parent.width <= 0 || windowWidth <= 0) return
-        val loc = IntArray(2)
-        parent.getLocationInWindow(loc)
-        val insetLeft = loc[0]
-        val insetRight = windowWidth - loc[0] - parent.width
+        // Layout position, not getLocationInWindow: that one includes translationX, and the
+        // launcher's side panels are still sliding in when their ad binds - a frame caught 50dp
+        // short of its place got a 0 left margin and a wide right one, a card off-centre for good.
+        var x = 0
+        var v: View? = parent
+        while (v != null && v !== root) {
+            x += v.left
+            v = v.parent as? View
+        }
+        val insetLeft = x.coerceAtLeast(0)
+        val insetRight = (windowWidth - x - parent.width).coerceAtLeast(0)
         val params = adView.layoutParams as? android.view.ViewGroup.MarginLayoutParams ?: return
         val left = (target - insetLeft).coerceAtLeast(0)
         val right = (target - insetRight).coerceAtLeast(0)

@@ -1338,6 +1338,11 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         }
 
         widgetView.tag = item.widgetId
+        widgetView.itemId = item.id
+        // One view per row: a second one would be the one left behind, never moved again.
+        val stale = widgetViews.filter { it.tag == item.widgetId || (item.id != null && it.itemId == item.id) }
+        stale.forEach { removeView(it) }
+        widgetViews.removeAll(stale.toSet())
         widgetView.longPressListener = { x, y ->
             val activity = context as? LauncherPanel
             if (activity?.isAllAppsFragmentExpanded() == false) {
@@ -1507,10 +1512,25 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         // the database missed - the items arrive on a background thread, usually after that draw -
         // so it was never given a view and the home kept a hole where it belonged until something
         // else forced a full redraw, which took 15-25 seconds.
+        // A host view whose row is gone (a layout switch reseeds the first page's widgets under new
+        // ids) is never repositioned again, so it stayed where it was drawn - over the app icons
+        // of every page. Taken off after this pass, not during it.
+        val liveIds = gridItems.mapNotNullTo(HashSet()) { it.id }
+        val orphans = widgetViews.filter { it.itemId != null && it.itemId !in liveIds }
+        if (orphans.isNotEmpty()) {
+            widgetViews.removeAll(orphans.toSet())
+            post { orphans.forEach { removeView(it) } }
+        }
+
         gridItems
             .filter { it.type == ITEM_TYPE_WIDGET && !it.outOfBounds() }
             .forEach { item ->
+                // By row as well as by id: a seeded widget's id is written from a background thread,
+                // and a refetch that beat the write hands its row back still at -1. Matched by id
+                // alone, that view was orphaned and left stuck over the icons of every page.
                 val placed = widgetViews.firstOrNull { it.tag == item.widgetId }
+                    ?: widgetViews.firstOrNull { it.itemId != null && it.itemId == item.id }
+                        ?.also { view -> (view.tag as? Int)?.let { item.widgetId = it } }
                 if (placed != null) {
                     updateWidgetPositionAndSize(placed, item)
                     return@forEach
