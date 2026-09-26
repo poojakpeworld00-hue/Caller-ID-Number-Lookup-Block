@@ -2,9 +2,6 @@
 <!-- linear-gradient(135deg, #12B76A, #067647) r14 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <gradient
-        android:angle="315"
-        android:endColor="@color/ad_green_deep"
-        android:startColor="@color/ad_green" />
-    <corners android:radius="14dp" />
+    <solid android:color="@color/primary" />
+    <corners android:radius="@dimen/_26sdp" />
 </shape>

@@ -98,8 +98,6 @@
             android:layout_height="46dp"
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_ad_cta_green"
-            android:drawableStart="@drawable/ic_ad_download"
-            android:drawablePadding="7dp"
             android:elevation="4dp"
             android:outlineAmbientShadowColor="@color/ad_green"
             android:outlineSpotShadowColor="@color/ad_green"
