@@ -33,51 +33,22 @@
             android:id="@+id/viewPager"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@id/btnNext"
+            app:layout_constraintBottom_toTopOf="@id/dots"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btnSkip" />
 
-        <!-- Dots ride the CTA's row: the button is the taller of the two, so it
-             owns the vertical slot and the dots centre on it. -->
+        <!-- Page dots, centred under the pager and above the ad. -->
         <LinearLayout
             android:id="@+id/dots"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/_16sdp"
+            android:layout_marginBottom="@dimen/_10sdp"
             android:gravity="center"
             android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="@id/btnNext"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/btnNext" />
-
-        <!-- CTA. Anchored to the ad (not to the 8dp dots) so it keeps a real
-             10sdp gap above the advert at any system font scale; constrained
-             against the dots so a long label can never ride over them. -->
-        <TextView
-            android:id="@+id/btnNext"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="@dimen/_16sdp"
-            android:layout_marginBottom="@dimen/_10sdp"
-            android:background="@drawable/bg_btn_primary"
-            android:foreground="?attr/selectableItemBackground"
-            android:gravity="center"
-            android:minHeight="@dimen/_36sdp"
-            android:minWidth="@dimen/_72sdp"
-            android:paddingHorizontal="@dimen/_18sdp"
-            android:paddingVertical="@dimen/_5sdp"
-            android:text="@string/onboarding_next"
-            android:textColor="@color/white"
-            android:textSize="@dimen/_12ssp"
-            android:textStyle="bold"
-            app:layout_constrainedWidth="true"
-            app:layout_constraintBottom_toTopOf="@id/adNativeFrame"
+            app:layout_constraintBottom_toTopOf="@id/adNativeDivider"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1"
-            app:layout_constraintStart_toEndOf="@id/dots" />
-
-
+            app:layout_constraintStart_toStartOf="parent" />
 
         <!-- Full-bleed hairline separating the pager content from the ad below -->
         <View
@@ -88,13 +59,13 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <!-- Big native ad pinned at the bottom. -->
+        <!-- Native ad, between the pager and the CTA. -->
         <FrameLayout
             android:id="@+id/adNativeFrame"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/_5sdp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="@dimen/_8sdp"
+            app:layout_constraintBottom_toTopOf="@id/btnNext"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
 
@@ -107,6 +78,27 @@
                 <include layout="@layout/googlemidnative2" />
             </com.facebook.shimmer.ShimmerFrameLayout>
         </FrameLayout>
+
+        <!-- CTA: full width, pinned to the bottom edge, below the ad. -->
+        <TextView
+            android:id="@+id/btnNext"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/_16sdp"
+            android:layout_marginBottom="@dimen/_12sdp"
+            android:background="@drawable/bg_btn_primary"
+            android:foreground="?attr/selectableItemBackground"
+            android:gravity="center"
+            android:minHeight="@dimen/_40sdp"
+            android:paddingHorizontal="@dimen/_18sdp"
+            android:paddingVertical="@dimen/_5sdp"
+            android:text="@string/onboarding_next"
+            android:textColor="@color/white"
+            android:textSize="@dimen/_13ssp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

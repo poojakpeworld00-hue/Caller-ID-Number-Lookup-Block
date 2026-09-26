@@ -105,6 +105,7 @@
                     android:background="@drawable/shape_onb_check_badge"
                     android:contentDescription="@null"
                     android:padding="18dp"
+                    android:visibility="gone"
                     android:src="@drawable/glyph_cid_tick"
                     android:tint="@color/cid_onb_on_accent" />
 
