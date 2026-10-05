@@ -2,7 +2,7 @@ package io.launcher.home.adapters
 
 import android.annotation.SuppressLint
 import android.graphics.Color
-import android.graphics.drawable.Drawable
+import android.os.Looper
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
@@ -15,24 +15,24 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.target.DrawableImageViewTarget
-import com.bumptech.glide.request.transition.Transition
 import com.qtalk.recyclerviewfastscroller.RecyclerViewFastScroller
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getColoredDrawableWithColor
 import org.fossify.commons.extensions.realScreenSize
 import io.launcher.home.R
+import io.launcher.home.promo.SponsoredTiles
+import com.bumptech.glide.Glide
 import io.launcher.home.activities.LauncherBasePanel
 import io.launcher.home.databinding.LnchItemLauncherLabelBinding
 import io.launcher.home.extensions.animateScale
 import io.launcher.home.extensions.launcherConfig
+import io.launcher.home.helpers.IconLoader
+import io.launcher.home.helpers.LogoShape
 import io.launcher.home.interfaces.AllAppsListener
 import io.launcher.home.models.AppLauncher
-import io.launcher.home.promo.SponsoredTiles
 
 /**
  * The drawer's grid.
@@ -55,10 +55,30 @@ class LaunchersLineup(
     private var iconPadding = 0
     private var iconPx = 0
 
+    /** The tile's own horizontal padding each side (lnch_item_launcher_label's paddingStart/End). */
+    private val tilePadding = activity.resources.getDimensionPixelSize(org.fossify.commons.R.dimen.small_margin)
+
+    /** The grid this adapter draws into, for its measured width - see [knownIconWidth]. */
+    private var recycler: RecyclerView? = null
+
+    /**
+     * The grid's width changed (first measure, rotation, split screen): every tile is re-sized
+     * against the new width. Posted, so the rebind lands after the layout pass, not inside it.
+     */
+    private val gridSizeListener = View.OnLayoutChangeListener { v, left, _, right, _, oldLeft, _, oldRight, _ ->
+        if (right - left > 0 && right - left != oldRight - oldLeft) {
+            v.post { if (itemCount > 0) notifyItemRangeChanged(0, itemCount) }
+        }
+    }
+
     /** The search query whose first occurrence in a label is tinted with the accent (One UI Finder style); empty = plain labels. */
     var highlight: String = ""
         set(value) { field = value.trim() }
     private var labelTextSp = 0f
+
+    /** A sponsored logo's decode size and shape: an app icon's cache size, so Glide caches one bitmap per logo. */
+    private val logoPx = activity.resources.getDimensionPixelSize(R.dimen.launcher_icon_cache_size)
+    private val logoShape = LogoShape(activity.resources, activity.launcherConfig.legacyIconTray)
 
     /**
      * The paged drawer's row height: the page split evenly over its rows, with icon and label
@@ -106,6 +126,34 @@ class LaunchersLineup(
             LayoutInflater.from(parent.context), parent, false
         )
         return ViewHolder(binding.root)
+    }
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        recycler = recyclerView
+        recyclerView.addOnLayoutChangeListener(gridSizeListener)
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        recyclerView.removeOnLayoutChangeListener(gridSizeListener)
+        if (recycler === recyclerView) recycler = null
+        super.onDetachedFromRecyclerView(recyclerView)
+    }
+
+    /**
+     * Inflates [count] app cells into [grid]'s pool ahead of the first scroll, one per idle moment
+     * of the main thread. Without it the first fling after the process starts inflates a fresh cell
+     * for every row that scrolls in (2-9 ms each), which shows as a stutter; afterwards cells are
+     * only ever recycled.
+     */
+    fun prewarm(grid: RecyclerView, count: Int) {
+        val pool = grid.recycledViewPool
+        pool.setMaxRecycledViews(VIEW_TYPE_LAUNCHER, count)
+        Looper.myQueue().addIdleHandler {
+            if (grid.adapter !== this || pool.getRecycledViewCount(VIEW_TYPE_LAUNCHER) >= count) return@addIdleHandler false
+            pool.putRecycledView(createViewHolder(grid, VIEW_TYPE_LAUNCHER))
+            true
+        }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
@@ -198,6 +246,38 @@ class LaunchersLineup(
         }
     }
 
+    /**
+     * The icon view's width, worked out from the grid's own measured width rather than the
+     * screen's: its content width split over the spans, less the tile's padding. That is exactly
+     * what GridLayoutManager gives each cell, and it holds in split screen and on a foldable,
+     * where the screen width does not. 0 while the grid has not been measured.
+     */
+    private fun knownIconWidth(): Int {
+        val grid = recycler ?: return 0
+        val content = grid.width - grid.paddingLeft - grid.paddingRight
+        val spans = (grid.layoutManager as? GridLayoutManager)?.spanCount ?: return 0
+        if (content <= 0 || spans <= 0) return 0
+        return (content / spans - 2 * tilePadding).coerceAtLeast(0)
+    }
+
+    /**
+     * Sizes the icon view at bind time from [knownIconWidth], so a tile is right in the frame it is
+     * first drawn - the first tiles used to be bound before they had a width and sat clipped until a
+     * scroll rebound them. The layout listener stays as the fallback: it covers a grid not yet
+     * measured, and is a no-op whenever the computed width was right.
+     */
+    private fun sizeIcon(view: View) {
+        val width = knownIconWidth().takeIf { it > 0 } ?: view.width
+        if (iconPx > 0) {
+            padToIconSize(view, width)
+        } else {
+            view.setPadding(iconPadding, iconPadding, iconPadding, 0)
+            squareByWidth(view, width)
+        }
+        view.removeOnLayoutChangeListener(iconSizeListener)
+        view.addOnLayoutChangeListener(iconSizeListener)
+    }
+
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private fun fitToCell() {
             val holder = itemView as? RelativeLayout ?: return
@@ -226,44 +306,51 @@ class LaunchersLineup(
                 // Same label size as the home screen when the profile resolved one; else the layout's 12sp.
                 labelTextSp.takeIf { it > 0f }?.let { binding.launcherLabelUi.setTextSize(TypedValue.COMPLEX_UNIT_SP, it) }
                 binding.launcherLabelUi.beVisibleIf(activity.launcherConfig.showDrawerAppLabels)
-                if (iconPx > 0) {
-                    padToIconSize(binding.launcherIconUi, binding.launcherIconUi.width)
-                    binding.launcherIconUi.removeOnLayoutChangeListener(iconSizeListener)
-                    binding.launcherIconUi.addOnLayoutChangeListener(iconSizeListener)
-                } else {
-                    binding.launcherIconUi.setPadding(iconPadding, iconPadding, iconPadding, 0)
-                    squareByWidth(binding.launcherIconUi, binding.launcherIconUi.width)
-                    binding.launcherIconUi.removeOnLayoutChangeListener(iconSizeListener)
-                    binding.launcherIconUi.addOnLayoutChangeListener(iconSizeListener)
-                }
+                sizeIcon(binding.launcherIconUi)
 
+                val icon = binding.launcherIconUi
+                // A recycled tile may still have a sponsored logo on its way in; it must not land
+                // on the app now bound here.
+                Glide.with(activity).clear(icon)
+                val ready = if (sponsored) null
+                    else launcher.drawable ?: IconLoader.cached(launcher.packageName, launcher.activityName)
                 if (sponsored) {
-                    binding.launcherIconUi.tag = null
+                    // Shaped like every other drawer icon (the device's mask, same size), not the
+                    // raw square the logo URL serves; see LogoShape.
+                    icon.tag = null
                     Glide.with(activity)
                         .load(SponsoredTiles.logo(launcher))
+                        .override(logoPx)
+                        .transform(logoShape)
                         .placeholder(R.drawable.lnch_placeholder_drawable)
                         .error(R.drawable.lnch_placeholder_drawable)
-                        .into(binding.launcherIconUi)
-                } else if (launcher.drawable != null && binding.launcherIconUi.tag == true) {
-                    binding.launcherIconUi.setImageDrawable(launcher.drawable)
+                        .into(icon)
+                } else if (ready != null) {
+                    // Already decoded and in memory: set it in this frame. Going through Glide put
+                    // the coloured placeholder up first and swapped the icon in a frame or more
+                    // later, which showed as every icon "refreshing" on each re-bind.
+                    launcher.drawable = ready
+                    icon.setImageDrawable(ready)
+                    icon.tag = null
                 } else {
-                    val placeholderDrawable = activity.resources.getColoredDrawableWithColor(
-                        drawableId = R.drawable.lnch_placeholder_drawable,
-                        color = launcher.thumbnailColor
+                    // No icon yet (a cold start): the tile's tint for the moment, and its own icon
+                    // decoded right now - not after every other app's, which is what the full scan
+                    // waits for. The tag says which app this (recycled) view is waiting on.
+                    val wanted = launcher.packageName + "/" + launcher.activityName
+                    icon.tag = wanted
+                    icon.setImageDrawable(
+                        activity.resources.getColoredDrawableWithColor(
+                            drawableId = R.drawable.lnch_placeholder_drawable,
+                            color = launcher.thumbnailColor
+                        )
                     )
-                    Glide.with(activity)
-                        .load(launcher.drawable)
-                        .placeholder(placeholderDrawable)
-                        .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
-                        .into(object : DrawableImageViewTarget(binding.launcherIconUi) {
-                            override fun onResourceReady(
-                                resource: Drawable,
-                                transition: Transition<in Drawable>?
-                            ) {
-                                super.onResourceReady(resource, transition)
-                                view.tag = true
-                            }
-                        })
+                    IconLoader.load(activity, launcher.packageName, launcher.activityName) { loaded ->
+                        if (icon.tag == wanted) {
+                            launcher.drawable = loaded
+                            icon.setImageDrawable(loaded)
+                            icon.tag = null
+                        }
+                    }
                 }
 
                 setOnClickListener { itemClick(launcher) }

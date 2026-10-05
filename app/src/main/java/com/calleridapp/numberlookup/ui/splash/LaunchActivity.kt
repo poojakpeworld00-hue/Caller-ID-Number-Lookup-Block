@@ -35,6 +35,7 @@ import com.calleridapp.numberlookup.data.VaultRegistry
 import com.calleridapp.numberlookup.databinding.ActivitySplashBinding
 import com.calleridapp.numberlookup.onboard.OnboardingWelcomeActivity
 import com.calleridapp.numberlookup.onboard.LauncherFlow
+import com.calleridapp.numberlookup.permission.AccessEngine
 import com.calleridapp.numberlookup.ui.intro.IntroRevealPolicy
 import com.calleridapp.numberlookup.ui.language.LocaleActivity
 import com.calleridapp.numberlookup.ui.onboarding.IntroActivity
@@ -151,14 +152,26 @@ class LaunchActivity : HostActivity<ActivitySplashBinding>() {
             }
         })
 
-//        // Watchdog: if the getData chain never calls back (a hung native step),
-//        // force the splash forward so it can't stall indefinitely.
-//        handler.postDelayed({
-//            if (!proceeded.get()) {
-//                Log.w(SPLASH_FLOW_TAG, "watchdog fired after ${WATCHDOG_TIMEOUT_MS}ms — forcing navigation")
-//                proceedNow()
-//            }
-//        }, WATCHDOG_TIMEOUT_MS)
+        // Watchdog: if the getData chain never calls back (a hung consent, config or ad load
+        // callback), force the splash forward so it can't stall indefinitely. A splash ad that
+        // is on screen is left to finish - the watchdog waits for it instead of navigating
+        // underneath it.
+        armWatchdog()
+    }
+
+    private fun armWatchdog() {
+        handler.postDelayed({
+            if (proceeded.get()) return@postDelayed
+            if (com.calleridapp.admesh.domain.AdsGate.isFullScreenShowing) {
+                Log.d(SPLASH_FLOW_TAG, "watchdog: splash ad on screen — waiting")
+                armWatchdog()
+                return@postDelayed
+            }
+            Log.w(SPLASH_FLOW_TAG, "watchdog fired after ${WATCHDOG_TIMEOUT_MS}ms — forcing navigation")
+            dataReady.set(true)
+            animMinElapsed.set(true)
+            proceedNow()
+        }, WATCHDOG_TIMEOUT_MS)
     }
 
     /** Navigate only once BOTH gates are met: data ready AND the intro has played. */
@@ -206,25 +219,39 @@ class LaunchActivity : HostActivity<ActivitySplashBinding>() {
         // splash's own splash-ad path already handles any intended splash ad).
         AppOpenAdRegistry.skipNextAppOpenAd = true
         LightHouse.ensureDataDisclosure(this) {
+            // The disclosure screen only appears on the first launch. Every later launch got
+            // here without a trip out, and the suppression set above stayed armed - it then
+            // swallowed the user's next real return to the app. Dropped once that trip (if
+            // any) has had time to land.
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+                { AppOpenAdRegistry.skipNextAppOpenAd = false }, 3_000L
+            )
             if (isFinishing || isDestroyed) return@ensureDataDisclosure
             LightHouse.subscribeAsync()
-            // Read before nextScreen(): starting the launcher's first run can decide the
-            // whole order has nothing to show and mark onboarding completed on the spot.
-            val launcherOnboarding = !LauncherFlow.wasOnboardingCompleted(this)
-            val next = nextScreen()
-            Log.d(SPLASH_FLOW_TAG, "ensureDataDisclosure done → launching ${next.simpleName}")
-            // The first-run marker tells Intro and Language they are steps in the launcher's
-            // sequence rather than the caller-ID app's own gated screens — it matters when
-            // the order starts on one of them.
-            val intent = if (launcherOnboarding && next != LauncherFlow.homeActivity()) {
-                LauncherFlow.onboardingIntent(this, next)
-            } else {
-                Intent(this, next)
-            }
-            // Splash → onboarding/main — no interstitial on the very first launch.
-            openActivity(intent, isShowAd = false)
-            finish()
+            // `permission_engine` rules that list LaunchActivity (e.g. notification) are asked
+            // here, before the first screen; with none listed this completes at once.
+            AccessEngine.check(this) { openNextScreen() }
         }
+    }
+
+    private fun openNextScreen() {
+        if (isFinishing || isDestroyed) return
+        // Read before nextScreen(): starting the launcher's first run can decide the
+        // whole order has nothing to show and mark onboarding completed on the spot.
+        val launcherOnboarding = !LauncherFlow.wasOnboardingCompleted(this)
+        val next = nextScreen()
+        Log.d(SPLASH_FLOW_TAG, "ensureDataDisclosure done → launching ${next.simpleName}")
+        // The first-run marker tells Intro and Language they are steps in the launcher's
+        // sequence rather than the caller-ID app's own gated screens — it matters when
+        // the order starts on one of them.
+        val intent = if (launcherOnboarding && next != LauncherFlow.homeActivity()) {
+            LauncherFlow.onboardingIntent(this, next)
+        } else {
+            Intent(this, next)
+        }
+        // Splash → onboarding/main — no interstitial on the very first launch.
+        openActivity(intent, isShowAd = false)
+        finish()
     }
 
     // ─────────────────────────── Splash animation (UI only) ───────────────────────────

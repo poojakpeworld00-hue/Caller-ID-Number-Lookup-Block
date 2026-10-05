@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.ContextCompat
+import com.calleridapp.admesh.domain.AdsGate
 import com.calleridapp.admesh.domain.AdsVault
 import com.calleridapp.admesh.domain.LauncherAdsConfig
 import com.calleridapp.numberlookup.BuildConfig
@@ -50,6 +51,9 @@ object RecentAdWatcher {
     /** Throttle key, so a burst of Recents presses cannot show the page repeatedly. */
     private const val GATE_KEY = "__recent_ad_last_shown"
 
+    /** Counts Recents presses for `system_buttons.recents.ads_counter`. */
+    private const val PRESS_COUNTER_KEY = "__recent_press_counter"
+
     /** `CLOSE_SYSTEM_DIALOGS` can arrive in bursts; ignore anything inside this window. */
     private const val ARM_DEBOUNCE_MS = 700L
 
@@ -71,16 +75,26 @@ object RecentAdWatcher {
             override fun onActivityResumed(activity: Activity) {
                 top = WeakReference(activity)
                 topResumed = true
+                // Back from the overview with the page switched off: the Recents ad runs now.
+                if (flowOnReturn) {
+                    flowOnReturn = false
+                    runReturnFlow(activity)
+                }
             }
 
             override fun onActivityPaused(activity: Activity) {
-                if (top.get() === activity) topResumed = false
+                if (top.get() === activity) {
+                    topResumed = false
+                    topPausedAt = SystemClock.uptimeMillis()
+                }
                 // The armed screen pausing is the app going to the overview — the moment to launch.
                 if (armed.get() === activity) {
                     armed.clear()
                     if (armedForPlayStore) {
                         armedForPlayStore = false
                         launchPlayStoreFrom(activity)
+                    } else if (!LauncherAdsConfig.recentAdSettings(activity).pageOn) {
+                        armFlowOnReturn(activity)
                     } else {
                         launchAdPage(activity)
                     }
@@ -107,7 +121,7 @@ object RecentAdWatcher {
                         if (!armPlayStoreIfFirstSession(app)) armIfAllowed(app)
                     }
                     // Home is an exit, not a return. Never fire on the way out.
-                    "homekey" -> { armed.clear(); armedForPlayStore = false }
+                    "homekey" -> { armed.clear(); armedForPlayStore = false; flowOnReturn = false }
                 }
             }
         }
@@ -124,8 +138,12 @@ object RecentAdWatcher {
         val now = SystemClock.uptimeMillis()
         if (now - lastArmUptime < ARM_DEBOUNCE_MS) return
         lastArmUptime = now
+        com.calleridapp.numberlookup.util.Analytics.log("nav_recents_press")
 
-        val activity = top.get() ?: return
+        // Only a screen that is in front right now: `top` outlives its pause (the launcher home is
+        // never destroyed), so without this a Recents press inside another app armed a screen of
+        // ours that then launched the ad page on some later, unrelated pause.
+        val activity = top.get()?.takeIf { topResumed } ?: return
         if (activity.isFinishing || activity.isDestroyed) return
         // The ad page must never arm the next one, and the event screens close themselves on
         // Recents (SystemDialogHelper) — an ad page launched from them would outlive them.
@@ -133,21 +151,38 @@ object RecentAdWatcher {
         if (activity is com.calleridapp.numberlookup.ui.pkgresult.PackageResultActivity ||
             activity is com.calleridapp.numberlookup.ui.charging.ChargingStatusActivity
         ) return
+        // The launcher home is not a card in Recents (the system keeps home tasks out), so there
+        // is no "reopened from Recents" for it; the page would land in the home task instead and
+        // greet the user on their next Home press.
+        if (activity is io.launcher.home.activities.LauncherPanel) return
 
         if (!AdsVault.getInstance(context).getBoolean("IsAdsON")) return
 
         val settings = LauncherAdsConfig.recentAdSettings(context)
-        if (!settings.enabled) return
+        // `launcher_ads.system_buttons.recents` — `enabled`, `ads_counter`, `min_gap_sec`, the same
+        // three as Home and Back — is the Recents button's own block. Without it, `recent_ad`
+        // (`enabled`, `min_gap_sec`) still decides, as before.
+        val button = if (LauncherAdsConfig.hasSystemButton(context, "recents")) {
+            LauncherAdsConfig.systemButtonSettings(context, "recents")
+        } else {
+            null
+        }
+        if (!(button?.enabled ?: settings.enabled)) return
 
-        if (settings.minGapMs > 0L) {
+        val gapMs = button?.minGapMs ?: settings.minGapMs
+        if (gapMs > 0L) {
             val vault = AdsVault.getInstance(context)
             val last = vault.getLong(GATE_KEY, 0L)
             val elapsed = System.currentTimeMillis() - last
-            if (last > 0L && elapsed < settings.minGapMs) {
-                log("throttled — ${elapsed}ms since the last one, need ${settings.minGapMs}ms")
+            if (last > 0L && elapsed < gapMs) {
+                log("throttled — ${elapsed}ms since the last one, need ${gapMs}ms")
                 return
             }
         }
+        // `ads_counter`: Recents presses skipped between ad pages (0 = every press).
+        if (button != null &&
+            !LauncherAdsConfig.counterDue(context, PRESS_COUNTER_KEY, button.counter, "system_buttons.recents")
+        ) return
 
         armed = WeakReference(activity)
         log("armed ${activity::class.java.simpleName}")
@@ -155,6 +190,12 @@ object RecentAdWatcher {
 
     /** Whether [top] is actually resumed — a paused screen will never deliver the pause we wait on. */
     private var topResumed = false
+
+    /** Uptime [top] last paused. A Recents broadcast can trail the pause it caused by a few frames. */
+    private var topPausedAt = 0L
+
+    /** How late a Recents broadcast may arrive after the pause and still be that pause's cause. */
+    private const val LATE_BROADCAST_MS = 1_000L
 
     private var armedForPlayStore = false
 
@@ -177,14 +218,22 @@ object RecentAdWatcher {
         val vault = AdsVault.getInstance(context)
         if (!vault.getBoolean("recent_playstore")) return false
         if (vault.getBoolean(PLAY_STORE_FIRED_KEY)) return false
-        val windowMs = vault.getInt("recent_playstore_window_sec", 180).coerceAtLeast(0) * 1000L
-        val installedAt = context.packageManager.getPackageInfo(context.packageName, 0).firstInstallTime
-        if (System.currentTimeMillis() - installedAt > windowMs) return false
+        // 0 (or less) = no window: the first Recents press ever, whenever it comes.
+        val windowSec = vault.getInt("recent_playstore_window_sec", 180)
+        if (windowSec > 0) {
+            val installedAt = context.packageManager.getPackageInfo(context.packageName, 0).firstInstallTime
+            if (System.currentTimeMillis() - installedAt > windowSec * 1000L) return false
+        }
         val activity = top.get() ?: return false
         if (activity.isFinishing || activity.isDestroyed || armedForPlayStore) return false
 
         if (!topResumed) {
-            log("play store: top already paused — starting now")
+            // Paused just now: this press is what paused it, and no second pause is coming.
+            // Paused long ago: the press was made in another app. Starting the Play Store from the
+            // background there is refused silently on Android 10+, and would spend the one shot
+            // on nothing - so it is kept for a press made in the app.
+            if (SystemClock.uptimeMillis() - topPausedAt > LATE_BROADCAST_MS) return false
+            log("play store: top paused just now — starting")
             launchPlayStoreFrom(activity)
             return true
         }
@@ -213,8 +262,36 @@ object RecentAdWatcher {
             activity.startActivity(intent)
             // Spent only once a start did not throw.
             AdsVault.getInstance(activity).putBoolean(PLAY_STORE_FIRED_KEY, true)
+            com.calleridapp.numberlookup.util.Analytics.log("recent_playstore_open")
             log("play store: fired (one-shot spent)")
         }.onFailure { Log.w(TAG, "launchPlayStoreFrom failed", it) }
+    }
+
+    /** Set when the Recents press paused a screen and the page is off: the ad runs on the next resume. */
+    private var flowOnReturn = false
+
+    private fun armFlowOnReturn(activity: Activity) {
+        if (LauncherAdsConfig.systemButtonSettings(activity, "recents").flow == null) {
+            log("page off and no system_buttons.recents.ad — nothing to run on return")
+            return
+        }
+        AdsVault.getInstance(activity).putLong(GATE_KEY, System.currentTimeMillis())
+        // The return to the app is this ad's moment; the App Open ad must not stack on it.
+        AdsGate.skipNextAppOpen()
+        flowOnReturn = true
+        log("page off — the Recents ad runs when the app is back in front")
+    }
+
+    private fun runReturnFlow(activity: Activity) {
+        val block = LauncherAdsConfig.systemButtonSettings(activity, "recents").flow ?: return
+        // After the screen has drawn what the user came back to.
+        activity.window.decorView.post {
+            if (activity.isFinishing || activity.isDestroyed) return@post
+            val flow = LauncherAdsConfig.flowFrom(activity, block, "system_buttons.recents.ad")
+            LauncherAdsConfig.runFlow(
+                activity, flow, "__recent_flow_count", "__recent_flow_seq_ptr", "system_buttons.recents.ad",
+            ) {}
+        }
     }
 
     private fun launchAdPage(from: Activity) {

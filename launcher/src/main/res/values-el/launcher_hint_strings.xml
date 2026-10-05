@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Ενεργοποίηση \"Εμφάνιση πάνω από άλλες εφαρμογές\"</string>
+    <string name="launcher_hint_overlay_description">Θα σε επαναφέρουμε αμέσως μόλις ενεργοποιηθεί.</string>
+    <string name="launcher_hint_default_home_title">Επίλεξε το %1$s ως αρχική οθόνη</string>
+    <string name="launcher_hint_default_home_description">Επίλεξέ το από τη λίστα για να ορίσεις την αρχική σου οθόνη.</string>
+    <string name="launcher_hint_default_sms_title">Ορισμός ως εφαρμογή SMS</string>
+    <string name="launcher_hint_default_sms_description">Πάτησε \"Ορισμός ως προεπιλογή\" για να ολοκληρώσεις.</string>
+    <string name="launcher_hint_mock_row">Προεπιλεγμένη εφαρμογή αρχικής οθόνης</string>
+    <string name="launcher_hint_mock_toggle_row">Άδεια</string>
+    <string name="launcher_hint_overlay_row">Να επιτρέπεται η εμφάνιση πάνω από άλλες εφαρμογές</string>
+</resources>

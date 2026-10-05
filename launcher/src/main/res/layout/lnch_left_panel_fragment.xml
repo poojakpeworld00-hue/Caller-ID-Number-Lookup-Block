@@ -23,7 +23,7 @@
         android:id="@+id/panel_scrollUi"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/panel_native_frameUi"
+        android:layout_above="@id/panel_native_frameUi"
         android:layout_alignWithParentIfMissing="true"
         android:clipToPadding="false"
         android:paddingBottom="16dp">

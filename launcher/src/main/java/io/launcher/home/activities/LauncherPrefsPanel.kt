@@ -13,9 +13,9 @@ import org.fossify.commons.extensions.updateTextColors
 import org.fossify.commons.extensions.viewBinding
 import org.fossify.commons.helpers.NavigationIcon
 import org.fossify.commons.helpers.isTiramisuPlus
-import org.fossify.commons.models.FAQItem
 import org.fossify.commons.models.RadioItem
 import io.launcher.home.R
+import io.launcher.home.helpers.FaqIntentGuard
 import io.launcher.home.databinding.LnchActivitySettingsBinding
 import io.launcher.home.profile.DrawerMode
 import io.launcher.home.extensions.launcherConfig
@@ -329,22 +329,7 @@ class LauncherPrefsPanel : LauncherBasePanel() {
 
     private fun launchAbout() {
         val licenses = 0L
-        val faqItems = ArrayList<FAQItem>()
-
-        if (!resources.getBoolean(org.fossify.commons.R.bool.hide_google_relations)) {
-            faqItems.add(
-                FAQItem(
-                    title = org.fossify.commons.R.string.faq_2_title_commons,
-                    text = org.fossify.commons.R.string.faq_2_text_commons
-                )
-            )
-            faqItems.add(
-                FAQItem(
-                    title = org.fossify.commons.R.string.faq_6_title_commons,
-                    text = org.fossify.commons.R.string.faq_6_text_commons
-                )
-            )
-        }
+        val faqItems = FaqIntentGuard.launcherFaqItems(this)
 
         startAboutActivity(
             appNameId = R.string.launcher_app_launcher_name,

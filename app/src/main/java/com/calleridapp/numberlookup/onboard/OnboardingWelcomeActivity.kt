@@ -1,5 +1,7 @@
 package com.calleridapp.numberlookup.onboard
 
+import com.calleridapp.numberlookup.util.Analytics
+
 import android.animation.ValueAnimator
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
@@ -39,9 +41,16 @@ class OnboardingWelcomeActivity : OnboardBaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         excludeAppFromRecents()
+        Analytics.screen("welcome")
 
-        binding.onboardingContinue.setOnClickListener { requestOnboardingPermissions() }
-        binding.onboardingSkip.setOnClickListener { goToNextStep() }
+        binding.onboardingContinue.setOnClickListener {
+            Analytics.log("welcome_continue_click")
+            requestOnboardingPermissions()
+        }
+        binding.onboardingSkip.setOnClickListener {
+            Analytics.log("welcome_skip_click")
+            goToNextStep()
+        }
 
         // `onboarding.welcome.skip_enabled: false` makes the screen a required step —
         // Continue is then the only way on (and Back, for paid users).

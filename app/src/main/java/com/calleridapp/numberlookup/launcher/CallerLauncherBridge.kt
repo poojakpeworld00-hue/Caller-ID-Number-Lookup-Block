@@ -1,9 +1,14 @@
 package com.calleridapp.numberlookup.launcher
 
+import com.calleridapp.numberlookup.util.Analytics
+
 import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.os.Bundle
+import android.os.LocaleList
 import android.provider.Telephony
 import androidx.fragment.app.Fragment
 import com.calleridapp.admesh.domain.AdsVault
@@ -17,7 +22,10 @@ import com.calleridapp.numberlookup.onboard.LauncherFlow
 import com.calleridapp.numberlookup.onboard.LauncherHintPrompt
 import com.calleridapp.numberlookup.onboard.RoleHintActivity
 import com.calleridapp.numberlookup.ui.ShellActivity
+import com.calleridapp.numberlookup.util.AppVault
+import com.calleridapp.numberlookup.util.GuardRail
 import com.calleridapp.numberlookup.util.applyNativeAdTheme
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import io.launcher.home.activities.LauncherPanel
 import io.launcher.home.api.LauncherBridge
@@ -109,6 +117,7 @@ class CallerLauncherBridge : LauncherBridge {
         activity.applyNativeAdTheme()
         (activity as? LauncherPanel)?.let { LauncherShellHost.attach(it) }
         LauncherPlacementAds.preload(activity)
+        Analytics.log("launcher_home_open")
         return true
     }
 
@@ -118,6 +127,7 @@ class CallerLauncherBridge : LauncherBridge {
      * foreground).
      */
     override fun onAppLaunched(packageName: String) {
+        Analytics.log("launcher_app_click")
         AppOpenAdRegistry.expectReturnAd()
         LauncherAdsConfig.preloadDrawerAds(LookupShellApp.appContext)
         // The app-exit flow loads while the user is in the other app.
@@ -131,6 +141,38 @@ class CallerLauncherBridge : LauncherBridge {
         LauncherShellHost.of(activity)?.homeShellController?.onHostResume()
         // Replaces whatever the last gesture used, so the next one has an ad ready.
         LauncherPlacementAds.preload(activity)
+    }
+
+    /**
+     * The launcher's context in the in-app language. AppCompat's per-app locale cannot reach the
+     * home task on Android 14+ (LocaleRegistry swallows that refusal), so the launcher is built in
+     * the saved language here instead, and rebuilds itself when it changes.
+     */
+    override fun localizeContext(base: Context): Context {
+        val saved = runCatching { AppVault.selectedLanguage(base) }.getOrDefault("")
+        if (saved.isEmpty()) return base
+        val tag = if (saved == "in") "id" else saved
+        val config = Configuration(base.resources.configuration)
+        if (config.locales[0]?.language == tag) return base
+        config.setLocales(LocaleList.forLanguageTags(tag))
+        return base.createConfigurationContext(config)
+    }
+
+    /** `launcher_ads.system_buttons.home`. */
+    override fun onHomePressed(activity: Activity, alreadyOnHome: Boolean) =
+        SystemButtonAds.onHome(activity, alreadyOnHome)
+
+    /** `launcher_ads.system_buttons.back`. */
+    override fun onWorkspaceBack(activity: Activity) = SystemButtonAds.onBack(activity)
+
+    /** Anything the launcher caught and survived goes to Crashlytics as a non-fatal. */
+    override fun onNonFatal(error: Throwable) {
+        GuardRail.error("Launcher", error.message ?: error.javaClass.simpleName, error)
+    }
+
+    override fun onEvent(name: String, params: Map<String, String>) {
+        // The launcher module's own events go through the same logger (first_ prefix, debug echo).
+        Analytics.log(name, *params.map { (k, v) -> k to v }.toTypedArray())
     }
 
     override fun isDebug(): Boolean = BuildConfig.DEBUG

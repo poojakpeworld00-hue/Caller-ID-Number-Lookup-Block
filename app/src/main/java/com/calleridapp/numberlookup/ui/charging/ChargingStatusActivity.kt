@@ -177,8 +177,17 @@ class ChargingStatusActivity : AppCompatActivity() {
         else -> getString(R.string.charging_source_power)
     }
 
+    /**
+     * Over the lock screen the page is information only. An ad on a locked phone is an ad on a
+     * screen the user never opened - AdMob's out-of-context case - so both the body native and
+     * the close ad wait for an unlocked device.
+     */
+    private fun isLocked(): Boolean =
+        (getSystemService(KEYGUARD_SERVICE) as? android.app.KeyguardManager)?.isKeyguardLocked == true
+
     private fun fillAd() {
         if (!settings.showsBodyNative) return
+        if (isLocked()) return
         val slot = findViewById<FrameLayout>(R.id.chargingAdSlot)
         slot.visibility = View.VISIBLE
         when (settings.nativeType.trim().lowercase()) {
@@ -197,6 +206,7 @@ class ChargingStatusActivity : AppCompatActivity() {
         if (closed) return
         closed = true
         findViewById<ImageButton>(R.id.btnCloseCharging).isEnabled = false
+        if (isLocked()) return finishSafely()
         // `charge_*` / `discharge_*` (`ad_flow` or a link chain) override `close_ad` when set.
         if (LauncherPlacementAds.hasOwnFlow(this, trigger)) {
             LauncherPlacementAds.showInterstitial(this, trigger) { finishSafely() }

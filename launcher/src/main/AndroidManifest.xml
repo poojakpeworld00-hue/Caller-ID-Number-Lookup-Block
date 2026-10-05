@@ -81,6 +81,9 @@
     </queries>
 
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
+    <!-- The Uninstall menu item fires ACTION_DELETE; from Android 9 the system installer drops that
+         request without a word unless the caller holds this (normal, install-time) permission. -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <uses-permission
         android:name="android.permission.BIND_APPWIDGET"
         tools:ignore="ProtectedPermissions" />
@@ -96,7 +99,6 @@
             android:name="io.launcher.home.activities.LauncherPanel"
             android:clearTaskOnLaunch="true"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:excludeFromRecents="true"
             android:exported="true"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"

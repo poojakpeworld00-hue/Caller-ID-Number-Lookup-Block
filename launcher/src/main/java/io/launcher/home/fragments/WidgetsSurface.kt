@@ -2,14 +2,19 @@ package io.launcher.home.fragments
 
 import android.annotation.SuppressLint
 import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
+import android.graphics.ImageDecoder
+import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Process
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.ViewConfiguration
+import kotlin.math.max
 import org.fossify.commons.extensions.beGone
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
@@ -121,12 +126,45 @@ class WidgetsSurface(context: Context, attributeSet: AttributeSet) :
         return shouldIntercept
     }
 
+    /**
+     * A widget's preview decoded no larger than [maxSide]. `loadPreviewImage` decodes the full
+     * resource, and some apps ship multi-megapixel previews (one is 3780x4099, ~62 MB) - every widget
+     * is loaded at start-up, so that churn ran GC pauses into the drawer's first scroll. Bitmap
+     * previews are decoded straight at the bounded size; anything else (a vector, a drawable XML)
+     * goes through the framework as before.
+     */
+    private fun loadPreview(info: AppWidgetProviderInfo, maxSide: Int): Drawable? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && info.previewImage != 0) {
+            runCatching {
+                val res = context.packageManager.getResourcesForApplication(info.provider.packageName)
+                return ImageDecoder.decodeDrawable(ImageDecoder.createSource(res, info.previewImage)) { decoder, image, _ ->
+                    // A hardware bitmap (the default) cannot be read back, and both the list's
+                    // Glide transform and the drag shadow do; such a preview drew blank.
+                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                    val longest = max(image.size.width, image.size.height)
+                    if (longest > maxSide) {
+                        val scale = maxSide.toFloat() / longest
+                        decoder.setTargetSize(
+                            (image.size.width * scale).toInt().coerceAtLeast(1),
+                            (image.size.height * scale).toInt().coerceAtLeast(1),
+                        )
+                    }
+                }
+            }
+        }
+        return info.loadPreviewImage(context, resources.displayMetrics.densityDpi)
+    }
+
+    /** True once the widget list has been built at least once. */
+    fun hasWidgets() = binding.widgetsListUi.adapter != null
+
     @SuppressLint("WrongConstant")
     fun getAppWidgets() {
         ensureBackgroundThread {
             // get the casual widgets
             var appWidgets = ArrayList<AppWidget>()
             appWidgets.addAll(getPseudoWidgets())
+            val previewMaxPx = resources.getDimensionPixelSize(R.dimen.launcher_widget_preview_size) * PREVIEW_OVERSAMPLE
             val manager = AppWidgetManager.getInstance(context)
             val packageManager = context.packageManager
             val infoList = manager.installedProviders
@@ -136,8 +174,7 @@ class WidgetsSurface(context: Context, attributeSet: AttributeSet) :
                 val appTitle = appMetadata.appTitle
                 val appIcon = appMetadata.appIcon
                 val widgetTitleUi = info.loadLabel(packageManager)
-                val widgetPreviewImage =
-                    info.loadPreviewImage(context, resources.displayMetrics.densityDpi) ?: appIcon
+                val widgetPreviewImage = loadPreview(info, previewMaxPx) ?: appIcon
                 val cellSize = context.getInitialCellSize(info, info.minWidth, info.minHeight)
                 val widthCells = cellSize.width
                 val heightCells = cellSize.height
@@ -363,5 +400,10 @@ class WidgetsSurface(context: Context, attributeSet: AttributeSet) :
 
         activity?.widgetLongPressedOnList(gridItem)
         ignoreTouches = true
+    }
+
+    private companion object {
+        /** Previews are kept at twice the list's tile so the drag shadow on the home screen stays sharp. */
+        const val PREVIEW_OVERSAMPLE = 2
     }
 }

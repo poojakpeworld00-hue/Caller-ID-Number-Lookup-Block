@@ -1,5 +1,6 @@
 package io.launcher.home.adapters
 
+import io.launcher.home.helpers.IconLoader
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,8 +32,20 @@ class PanelAppsLineup(
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         fun bindView(launcher: AppLauncher) {
             itemView.findViewById<TextView>(R.id.item_titleUi).text = launcher.title
-            // the icons are already loaded in memory by the drawer, no need for Glide here
-            itemView.findViewById<ImageView>(R.id.item_iconUi).setImageDrawable(launcher.drawable)
+            // the icons are already loaded in memory by the drawer, no need for Glide here; one that
+            // is not yet (a cold start) is decoded on its own instead of waiting for the full scan
+            val icon = itemView.findViewById<ImageView>(R.id.item_iconUi)
+            val ready = launcher.drawable ?: IconLoader.cached(launcher.packageName, launcher.activityName)
+            icon.setImageDrawable(ready)
+            if (ready == null) {
+                val wanted = launcher.packageName + "/" + launcher.activityName
+                icon.tag = wanted
+                IconLoader.load(itemView.context, launcher.packageName, launcher.activityName) { loaded ->
+                    if (icon.tag == wanted) icon.setImageDrawable(loaded)
+                }
+            } else {
+                icon.tag = null
+            }
             itemView.setOnClickListener { itemClick(launcher) }
         }
     }

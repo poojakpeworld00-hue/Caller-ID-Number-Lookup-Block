@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">فعّل \"العرض فوق التطبيقات الأخرى\"</string>
+    <string name="launcher_hint_overlay_description">سنعيدك مباشرة بعد تفعيلها.</string>
+    <string name="launcher_hint_default_home_title">اختر %1$s كشاشة رئيسية</string>
+    <string name="launcher_hint_default_home_description">اختره من القائمة لتعيينه كشاشتك الرئيسية.</string>
+    <string name="launcher_hint_default_sms_title">اجعله تطبيق الرسائل النصية الافتراضي</string>
+    <string name="launcher_hint_default_sms_description">اضغط \"تعيين كافتراضي\" للإنهاء.</string>
+    <string name="launcher_hint_mock_row">تطبيق الشاشة الرئيسية الافتراضي</string>
+    <string name="launcher_hint_mock_toggle_row">إذن</string>
+    <string name="launcher_hint_overlay_row">السماح بالعرض فوق التطبيقات الأخرى</string>
+</resources>

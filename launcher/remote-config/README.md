@@ -53,6 +53,12 @@ os_style                  bool   true lays the home out like the launcher being 
 search_widget             str    the first page's search bar: "google" (and unset, or anything
                                  unrecognised) or "chrome". A change swaps the bar on homes
                                  already built.
+should_show_time_widget   bool   the time widget at the top left of the first page; default true.
+                                 Drawn by the launcher, so it never asks for widget permission.
+                                 false removes it from homes already built, true puts it back
+should_show_search_widget bool   the search bar above the dock; default true. It is Google's (or
+                                 Chrome's) own widget, so true asks for widget permission once;
+                                 false removes it and asks nothing
 default_launcher_prompt   bool   the "set as default home" card on the workspace
 panels.apps               bool   the app-search panel (fling left)
 panels.host               bool   the host app's panel (fling right); off = the gesture does nothing
@@ -64,7 +70,18 @@ gestures.<name>           obj    left_swipe | right_swipe | drawer_open
   .url_enabled            bool   open a promo link instead of an ad
   .url                    str    the link
 unlock_ads                obj    optional; passed through to the host untouched as raw JSON
+drawerAppAdEnabled        bool   sponsored tiles in the app drawer; default false
+drawerAppAdEvery          int    one tile after every N apps; default 8, minimum 1
+drawerAppAds              array  the tiles, each used once, in order
+  .logo                   str    image URL; shaped like an app icon
+  .landing_url            str    opened on tap via LauncherAds.openSponsored; an entry without one is dropped
+  .label                  str    shown as "Ad · <label>"
 ```
+
+Sponsored tiles are left out of search results, cannot be long-pressed (nothing to drag or
+uninstall), and skip the `drawer_open` gesture promo. The logos are loaded over the network, so the
+host needs the `INTERNET` permission. Tapping one calls `LauncherAds.openSponsored`, which defaults
+to `ACTION_VIEW`; override it to open the link in your own WebView or Custom Tab.
 
 `panels.host` was spelled `messages` while the launcher lived in a messaging app. Both spellings
 are read; `host` wins when a blob carries both.

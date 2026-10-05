@@ -1,15 +1,13 @@
 package com.calleridapp.admesh.domain
 
 import android.content.Context
-import android.content.res.Configuration
+import android.content.SharedPreferences
 import android.util.Log
 import com.calleridapp.admesh.presentation.CustomAdsRegistry
 import com.calleridapp.numberlookup.BuildConfig
 import com.calleridapp.numberlookup.permission.AccessSource
-import com.calleridapp.numberlookup.util.AppVault
-import com.calleridapp.numberlookup.util.AppVault.THEME_DARK
-import com.calleridapp.numberlookup.util.AppVault.THEME_LIGHT
-import com.calleridapp.numberlookup.util.AppVault.THEME_SYSTEM
+import com.calleridapp.numberlookup.util.NATIVE_THEME_KEY
+import com.calleridapp.numberlookup.util.applyNativeAdTheme
 import com.facebook.FacebookSdk
 import com.facebook.LoggingBehavior
 import com.facebook.appevents.AppEventsLogger
@@ -224,8 +222,18 @@ object ConfigSync {
         val isSplit = ingestActivated(context) ?: return null
         val adsPref = AdsVault.getInstance(context)
         applyLocationGate(context, adsPref.userCountry, adsPref.userRegion, adsPref.userCity)
+        onApplied?.let { listener -> mainHandler.post { runCatching(listener) } }
         return isSplit
     }
+
+    /**
+     * Run on the main thread after every successful [ingestAndApply] — the Application uses it to
+     * re-apply the launcher config on a launcher that is already on screen.
+     */
+    @Volatile
+    var onApplied: (() -> Unit)? = null
+
+    private val mainHandler by lazy { android.os.Handler(android.os.Looper.getMainLooper()) }
 
     /**
      * Fetch + ingest, but only when the last sync is older than the [SYNC_HOURS_KEY]
@@ -299,13 +307,18 @@ object ConfigSync {
             remoteConfig().addOnConfigUpdateListener(object : ConfigUpdateListener {
                 override fun onUpdate(configUpdate: ConfigUpdate) {
                     Log.d(TAG, "realtime update: ${configUpdate.updatedKeys}")
-                    // Only re-ingest when something we actually read moved.
-                    if (configUpdate.updatedKeys.none { it == blobKey || it == "permission_engine" }) {
-                        Log.d(TAG, "realtime: none of those is $blobKey → ignored")
-                        return
-                    }
+                    // Always activated: the top-level `launcher_config` / `ads_config` are read
+                    // straight from Remote Config (CallerLauncherBridge), so activating is all a
+                    // change to them needs. Returning before activate() left those waiting for the
+                    // next stale fetch.
+                    val ingest = configUpdate.updatedKeys.any { it == blobKey || it == "permission_engine" }
                     remoteConfig().activate().addOnCompleteListener {
-                        Thread { ingestAndApply(app) }.start()
+                        if (ingest) {
+                            Thread { ingestAndApply(app) }.start()
+                        } else {
+                            Log.d(TAG, "realtime: activated; $blobKey unchanged → no re-ingest")
+                            onApplied?.let { listener -> mainHandler.post { runCatching(listener) } }
+                        }
                     }
                 }
 
@@ -397,7 +410,7 @@ object ConfigSync {
         adsPref.update {
             // --- Booleans ---
             listOf(
-                "IsAdsON", "IsFail_FB", "isLoaderForFB", "IsCustomADS", "IsBack",
+                "IsAdsON", "IsFail_FB", "isLoaderForFB", "inter_loader", "IsCustomADS", "IsBack",
                 "NativeBanner", "BannerAds", "In_App_Update_Show", "In_App_Update_Force_Show",
                 "Iscountry_Counter", "HD_VBC_Show",
                 "HD_VBC_Native", "is_preload_ads",
@@ -423,13 +436,16 @@ object ConfigSync {
                 "googleS_Inter", "googleBackInter", "googleInter", "googleAppopen",
                 "googleNative", "googleBanner", "googleRewarded", "faceB_InterAds",
                 "faceB_NativeAds", "faceB_NativeBannerAds", "faceB_BannerAds",
-                "NativeTheme", "HD_VBC_Type", "NativeBgColor", "NativebtnColor",
-                "NativetxtColor", "NativebtntxtColor", "Perm_Sheet_Mode",
+                // NativeTheme is not here: storeNativeTheme resolves it, and the four
+                // Native*Color keys are only ever derived from it (applyNativeAdTheme).
+                "HD_VBC_Type", "Perm_Sheet_Mode",
                 // API origin — see RetrofitClient, which falls back to its compiled-in default
                 // when this is absent or malformed.
                 "contacts_base_url",
                 // Nested JSON objects stored as text (read back via JSONObject).
                 "intro_display", "ScreenAds", "launcher_ads",
+                // App Home's game-quiz icon (QuizIcon).
+                "quiz_icon",
                 // "app" | "launcher": where onboarding hands off (LauncherFlow.homeActivity).
                 "onboarding_home",
                 // The :launcher module's own config, already audience-resolved by this block.
@@ -437,6 +453,12 @@ object ConfigSync {
                 // Every placement's own ad settings, nested (LauncherPlacementAds).
                 LauncherPlacementAds.PLACEMENTS_KEY
             ).forEach { key -> if (root.has(key)) putString(key, root.optString(key, "")) }
+
+            // How a direct link opens (webview / custom_tab / browser) is one setting, `link_open_in`.
+            // DirectLinkOpener reads it from the flat `DirectLinkType` pref, so that pref follows it;
+            // a config that still sends only `DirectLinkType` is stored as before.
+            if (root.has("DirectLinkType")) putString("DirectLinkType", root.optString("DirectLinkType", ""))
+            if (root.has("link_open_in")) putString("DirectLinkType", root.optString("link_open_in", ""))
 
             // The launcher's per-placement ad keys (`leftPanel_googleInter`, `drawer_link_first_then`,
             // …) and the link-first switches. Always stored as strings, whatever their JSON type, so
@@ -454,7 +476,7 @@ object ConfigSync {
                 "recent_playstore_window_sec"
             ).forEach { key -> if (root.has(key)) putInt(key, root.optInt(key, 0)) }
 
-            applyNativeTheme(context, root) // DEFAULT theme
+            storeNativeTheme(this, adsPref, root)
 
             // --- Custom Ads ---
             val customAdsArray = root.optJSONArray("custom_ads")
@@ -463,6 +485,8 @@ object ConfigSync {
                 CustomAdsRegistry.clearCache()
             }
         }
+        // After the batch above is applied, so it reads the palette just stored.
+        context.applyNativeAdTheme()
 
         // Facebook Ad initialization parameters
         val fbAppId = root.optString("FbAppId", "")
@@ -504,48 +528,31 @@ object ConfigSync {
         return response
     }
 
-    /** `NativeLight` / `NativeDark`, per the user's theme choice. */
-    fun nativeThemeKey(context: Context): String = when (AppVault.selectedTheme(context)) {
-        THEME_DARK -> "NativeDark"
-        THEME_LIGHT -> "NativeLight"
-        THEME_SYSTEM -> {
-            val isSystemDark = (context.resources.configuration.uiMode and
-                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-            if (isSystemDark) "NativeDark" else "NativeLight"
+    /**
+     * Stores [root]'s native-ad palette under [NATIVE_THEME_KEY]. [root] is already the user's
+     * audience block, so its `NativeTheme` is that audience's own palette:
+     * `{ "NativeLight": {…}, "NativeDark": {…} }` — organic and marketing are configured apart.
+     *
+     * A config still in the old shape (`NativeTheme: { "marketing": {…}, "default": {…} }`, the
+     * same two palettes repeated in both audiences) is reduced to the same thing here: marketing
+     * users take `marketing` (else `default`), organic users `default`.
+     */
+    private fun storeNativeTheme(editor: SharedPreferences.Editor, adsPref: AdsVault, root: JSONObject) {
+        val theme = root.optJSONObject(NATIVE_THEME_KEY) ?: return
+        val onMarketing = adsPref.getBoolean("OnMaketing")
+        val palette = if (theme.has("NativeLight") || theme.has("NativeDark")) {
+            theme
+        } else {
+            val legacy = if (onMarketing) theme.optJSONObject("marketing") ?: theme.optJSONObject("default")
+            else theme.optJSONObject("default")
+            if (BuildConfig.DEBUG) Log.d(TAG, "native theme: legacy marketing/default wrapper")
+            legacy ?: return
         }
-
-        else -> "NativeLight"
-    }
-
-    private fun applyNativeTheme(context: Context, response: JSONObject) {
-        val adsPreference = AdsVault.getInstance(context)
-        val nativeThemeRoot = response.optJSONObject("NativeTheme") ?: return
-        val modeKey = nativeThemeKey(context)
-
-        val marketingObj = nativeThemeRoot.optJSONObject("marketing")
-        val defaultObj = nativeThemeRoot.optJSONObject("default")
-
-        // Convert JSONObjects to strings before storing in AdsVault
-        adsPreference.putString("NativeTheme_marketing", marketingObj?.toString() ?: "{}")
-        adsPreference.putString("NativeTheme_default", defaultObj?.toString() ?: "{}")
-
-        // The native ad theme follows the audience: marketing users get the `marketing` palette
-        // (falling back to `default` when it is absent), everyone else `default`.
-        val onMarketing = adsPreference.getBoolean("OnMaketing")
-        val audienceObj = if (onMarketing) marketingObj ?: defaultObj else defaultObj
-        val themeJson = audienceObj?.optJSONObject(modeKey)
-        if (BuildConfig.DEBUG) Log.d(
-            TAG,
-            "native theme ← ${if (onMarketing) "marketing" else "default"}" +
-                (if (onMarketing && marketingObj == null) " (absent, fell back to default)" else "") +
-                " / $modeKey"
-        )
-        if (themeJson != null) {
-            adsPreference.putString("NativebtnColor", themeJson.optString("btnColor"))
-            adsPreference.putString("NativebtntxtColor", themeJson.optString("btnText"))
-            adsPreference.putString("NativeBgColor", themeJson.optString("bgColor"))
-            adsPreference.putString("NativetxtColor", themeJson.optString("textColor"))
-        }
+        editor.putString(NATIVE_THEME_KEY, palette.toString())
+        // The per-audience copies the old shape kept; nothing reads them any more.
+        editor.remove("NativeTheme_marketing")
+        editor.remove("NativeTheme_default")
+        if (BuildConfig.DEBUG) Log.d(TAG, "native theme ← ${if (onMarketing) "marketing" else "organic"} palette")
     }
 
     private fun initFacebook(context: Context, fbAppId: String, fbClientToken: String) {

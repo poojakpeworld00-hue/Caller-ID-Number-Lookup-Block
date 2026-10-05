@@ -40,5 +40,7 @@ object IconCache {
         launchers = emptyList()
         installedSignature = null
         sourceDirs = emptyMap()
+        // The on-demand cache holds the same icons; it must not hand an old one back.
+        IconLoader.clear()
     }
 }

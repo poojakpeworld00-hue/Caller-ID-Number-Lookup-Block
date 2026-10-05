@@ -1,5 +1,7 @@
 package com.calleridapp.numberlookup.onboard
 
+import com.calleridapp.numberlookup.util.Analytics
+
 import android.app.role.RoleManager
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -11,6 +13,7 @@ import com.calleridapp.admesh.presentation.OverlayGuideActivity
 import com.calleridapp.numberlookup.databinding.ActivityOnboardingDefaultLauncherBinding
 import io.launcher.home.extensions.isDefaultLauncher
 import io.launcher.home.extensions.roleManager
+import io.launcher.home.helpers.LauncherScan
 import com.calleridapp.numberlookup.permission.AccessEngine
 import com.calleridapp.numberlookup.util.followAdContainer
 import org.fossify.commons.extensions.beVisibleIf
@@ -62,6 +65,7 @@ class OnboardingDefaultLauncherActivity : OnboardBaseActivity() {
 
     /** The decline-time permission ask runs once per visit, not on every decline. */
     private var askedOnDecline = false
+    private var grantLogged = false
 
     /** Whether Skip is on screen — without it, a cancelled role dialog has to move on. */
     private var skipEnabled = true
@@ -72,12 +76,17 @@ class OnboardingDefaultLauncherActivity : OnboardBaseActivity() {
         // also keeps the settings page and role dialog we launch out of recents — they run
         // in this task, so they inherit its recents state
         excludeAppFromRecents()
+        Analytics.screen("set_default")
 
         // Once the role is held (auto_next off), the CTA is how the user moves on.
         binding.onboardingSetDefault.setOnClickListener {
+            Analytics.log("set_default_cta_click")
             if (isDefaultLauncher()) goHome() else openHomeSettings()
         }
-        binding.onboardingSkip.setOnClickListener { goToNextStep() }
+        binding.onboardingSkip.setOnClickListener {
+            Analytics.log("set_default_skip_click")
+            goToNextStep()
+        }
 
         // `onboarding.set_default.skip_enabled: false` takes the opt-out away: the CTA is the
         // only button left (and, for paid users, Back's role dialog below).
@@ -117,7 +126,14 @@ class OnboardingDefaultLauncherActivity : OnboardBaseActivity() {
         // for the CTA — the user's first decision is made in the place it can actually be made.
         // Spent by the first onResume, and skipped on a restore so the page is not reopened
         // underneath the user.
-        if (savedInstanceState == null) autoOpenPending = true
+        // `onboarding.set_default.auto_open: false` keeps the user on this screen until the CTA.
+        if (savedInstanceState == null) {
+            autoOpenPending = LauncherAdsConfig.onboardingAutoOpen(this, LauncherAdsConfig.OnboardScreen.SET_DEFAULT)
+        }
+
+        // The user is about to make us the home screen: build the app list and its icons now,
+        // so the launcher's first frame has them instead of placeholder tiles.
+        LauncherScan.prewarm(this)
 
         playEntrance()
     }
@@ -214,6 +230,7 @@ class OnboardingDefaultLauncherActivity : OnboardBaseActivity() {
     private fun askOnDecline() {
         if (askedOnDecline) return
         askedOnDecline = true
+        Analytics.log("set_default_declined")
         AccessEngine.check(this)
     }
 
@@ -227,6 +244,10 @@ class OnboardingDefaultLauncherActivity : OnboardBaseActivity() {
         // Covers every way the role can arrive: the settings page, the role dialog, or the
         // user wandering off and setting it somewhere else entirely.
         if (isDefaultLauncher()) {
+            if (!grantLogged) {
+                grantLogged = true
+                Analytics.log("set_default_granted")
+            }
             advanceAfterGrant()
             return
         }
@@ -263,6 +284,8 @@ class OnboardingDefaultLauncherActivity : OnboardBaseActivity() {
     private fun goHome() {
         if (leaving) return
         leaving = true
+        // This screen shows the ad itself; nothing is owed to the next screen.
+        LauncherFlow.clearGrantAd(this)
         LauncherAdsConfig.runOnboardingInter(this, LauncherAdsConfig.OnboardScreen.SET_DEFAULT) {
             LauncherFlow.advance(
                 activity = this,
@@ -275,6 +298,12 @@ class OnboardingDefaultLauncherActivity : OnboardBaseActivity() {
     private fun goToNextStep() {
         if (leaving) return
         leaving = true
+        LauncherFlow.clearGrantAd(this)
+        // `inter_on_decline: false`: no ad for a user who did not make us the home screen.
+        if (!LauncherAdsConfig.onboardingInterOnDecline(this, LauncherAdsConfig.OnboardScreen.SET_DEFAULT)) {
+            LauncherFlow.advance(this)
+            return
+        }
         LauncherAdsConfig.runOnboardingInter(this, LauncherAdsConfig.OnboardScreen.SET_DEFAULT) {
             LauncherFlow.advance(this)
         }

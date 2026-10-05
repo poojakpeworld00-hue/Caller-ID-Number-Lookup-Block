@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">「他のアプリの上に表示」をオンにする</string>
+    <string name="launcher_hint_overlay_description">オンになったら、すぐにここへ戻ります。</string>
+    <string name="launcher_hint_default_home_title">%1$sをホームに選択</string>
+    <string name="launcher_hint_default_home_description">リストから選択してホーム画面を設定してください。</string>
+    <string name="launcher_hint_default_sms_title">SMSアプリに設定</string>
+    <string name="launcher_hint_default_sms_description">「デフォルトに設定」をタップして完了させてください。</string>
+    <string name="launcher_hint_mock_row">デフォルトのホームアプリ</string>
+    <string name="launcher_hint_mock_toggle_row">権限</string>
+    <string name="launcher_hint_overlay_row">他のアプリの上に表示することを許可</string>
+</resources>

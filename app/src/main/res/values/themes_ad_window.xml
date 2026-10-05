@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        Window of the SDKs' full-screen ad activities (Google's AdActivity, Meta's
+        AudienceNetworkActivity).
+
+        The SDKs declare them with plain Theme.Translucent. Since targetSdk 35 the window is
+        edge-to-edge: an ad lays its content out below the status bar and nothing paints the strip
+        above it, so the screen underneath ("Good morning" and the settings icon of the Caller-ID
+        panel) showed through along the top of every interstitial. An opaque black window
+        background fills that strip, and the bottom edge behind the navigation bar the same way.
+        It stays a translucent window, so the SDKs' transitions and the activity underneath keep
+        behaving exactly as before.
+    -->
+    <style name="Theme.AdWindow" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+    </style>
+
+</resources>

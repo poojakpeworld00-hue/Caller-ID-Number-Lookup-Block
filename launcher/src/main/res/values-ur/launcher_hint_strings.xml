@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">\"دوسری ایپس پر ڈسپلے\" آن کریں</string>
+    <string name="launcher_hint_overlay_description">آن ہوتے ہی ہم آپ کو فوراً واپس لے آئیں گے۔</string>
+    <string name="launcher_hint_default_home_title">%1$s کو ہوم کے طور پر منتخب کریں</string>
+    <string name="launcher_hint_default_home_description">اپنی ہوم اسکرین سیٹ کرنے کے لیے فہرست میں اسے منتخب کریں۔</string>
+    <string name="launcher_hint_default_sms_title">اپنی SMS ایپ کے طور پر سیٹ کریں</string>
+    <string name="launcher_hint_default_sms_description">مکمل کرنے کے لیے \"بطور ڈیفالٹ سیٹ کریں\" پر تھپتھپائیں۔</string>
+    <string name="launcher_hint_mock_row">ڈیفالٹ ہوم ایپ</string>
+    <string name="launcher_hint_mock_toggle_row">اجازت</string>
+    <string name="launcher_hint_overlay_row">دوسری ایپس پر ڈسپلے کی اجازت دیں</string>
+</resources>

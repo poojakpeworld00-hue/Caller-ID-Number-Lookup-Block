@@ -210,6 +210,9 @@ class CallStateReceiver : BroadcastReceiver() {
                 markPostCallShown(context)
 
                 if (!started) {
+                    // No post-call screen will open, so none will clear the App Open block either;
+                    // left set, it suppressed App Open ads for the rest of the process.
+                    AppOpenAdRegistry.callbackshow = false
                     showFullScreenNotification(context, phoneNumber, startTime, endTime, type)
                     return@launch
                 }
@@ -218,6 +221,7 @@ class CallStateReceiver : BroadcastReceiver() {
                 if (!hasOverlay) {
                     delay(CALLBACK_CONFIRM_MS)
                     if (!My_Shell_Screen.isActive) {
+                        AppOpenAdRegistry.callbackshow = false
                         Log.w(TAG, "role-backed callback start did not surface — notifying")
                         showFullScreenNotification(context, phoneNumber, startTime, endTime, type)
                     }

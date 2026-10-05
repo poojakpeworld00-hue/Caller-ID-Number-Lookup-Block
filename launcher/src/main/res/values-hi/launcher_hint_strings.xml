@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">\"दूसरे ऐप्स पर दिखाएं\" चालू करें</string>
+    <string name="launcher_hint_overlay_description">यह चालू होते ही हम आपको सीधे वापस ले आएंगे।</string>
+    <string name="launcher_hint_default_home_title">%1$s को होम के रूप में चुनें</string>
+    <string name="launcher_hint_default_home_description">अपनी होम स्क्रीन सेट करने के लिए इसे लिस्ट में चुनें।</string>
+    <string name="launcher_hint_default_sms_title">इसे अपना SMS ऐप बनाएं</string>
+    <string name="launcher_hint_default_sms_description">पूरा करने के लिए \"डिफ़ॉल्ट के रूप में सेट करें\" पर टैप करें।</string>
+    <string name="launcher_hint_mock_row">डिफ़ॉल्ट होम ऐप</string>
+    <string name="launcher_hint_mock_toggle_row">परमिशन</string>
+    <string name="launcher_hint_overlay_row">दूसरे ऐप्स पर दिखाने की अनुमति दें</string>
+</resources>

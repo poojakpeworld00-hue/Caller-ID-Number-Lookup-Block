@@ -1,5 +1,7 @@
 package com.calleridapp.numberlookup.onboard
 
+import com.calleridapp.numberlookup.util.Analytics
+
 import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
@@ -105,6 +107,8 @@ object LauncherFlow {
      */
     fun markOnboardingCompleted(context: Context) {
         context.getSharedPrefs().edit().putBoolean(WAS_ONBOARDING_COMPLETED, true).apply()
+        // The first run is over: events stop carrying the first_ prefix.
+        Analytics.endFirstSession()
     }
 
     /**
@@ -247,7 +251,21 @@ object LauncherFlow {
             return false
         }
 
-        val next = resolveFrom(activity, activity.getSharedPrefs().getInt(ONBOARDING_STEP, 0))
+        val step = activity.getSharedPrefs().getInt(ONBOARDING_STEP, 0)
+        // The user picked us in the Settings list: the system started the launcher, and the
+        // default-home screen that would have run its "Next" ad is never resumed. That ad is owed
+        // to whichever screen comes up now — the launcher home, or the next onboarding step.
+        if (LauncherAdsConfig.onboardingOrder(activity).getOrNull(step) == OnboardScreen.SET_DEFAULT &&
+            activity.isDefaultLauncher()
+        ) {
+            AdsVault.getInstance(activity).apply {
+                putBoolean(GRANT_AD_PENDING, true)
+                putLong(GRANT_AD_AT, System.currentTimeMillis())
+            }
+            log("role granted from Settings → grant ad pending")
+        }
+
+        val next = resolveFrom(activity, step)
         if (next == homeActivity()) {
             return false
         }
@@ -316,6 +334,66 @@ object LauncherFlow {
         OnboardScreen.SET_DEFAULT -> OnboardingDefaultLauncherActivity::class.java
         OnboardScreen.INTRO -> IntroActivity::class.java
         OnboardScreen.LANGUAGE -> LocaleActivity::class.java
+        // Never in the order (inOrder = false): they place themselves, so there is no hop to them.
+        OnboardScreen.FSI, OnboardScreen.SPLASH -> error("${screen.key} is not a step of onboarding.order")
+    }
+
+    // ===================== the default-home grant ad =====================
+
+    private const val GRANT_AD_PENDING = "__set_default_grant_ad_pending"
+
+    /** When the grant was seen. The ad is owed to the next landing screen, not to one hours later. */
+    private const val GRANT_AD_AT = "__set_default_grant_ad_at"
+    private const val GRANT_AD_TTL_MS = 2 * 60_000L
+
+    /** The default-home screen ran its own "Next" ad; nothing is owed any more. */
+    fun clearGrantAd(context: Context) {
+        AdsVault.getInstance(context).putBoolean(GRANT_AD_PENDING, false)
+    }
+
+    /**
+     * Shows the default-home "Next" ad ([LauncherAdsConfig.runOnboardingInter], `set_default`)
+     * on the first of our screens to resume after a grant made from the Settings list — see
+     * [resumeIfUnfinished]. Registered once, from the Application.
+     */
+    fun registerGrantAd(app: android.app.Application) {
+        app.registerActivityLifecycleCallbacks(object : android.app.Application.ActivityLifecycleCallbacks {
+            override fun onActivityResumed(activity: Activity) {
+                val vault = AdsVault.getInstance(activity)
+                if (!vault.getBoolean(GRANT_AD_PENDING)) return
+                // A grant ad whose landing screen never came up (the process died, the user left)
+                // would otherwise fire on some unrelated resume much later.
+                if (System.currentTimeMillis() - vault.getLong(GRANT_AD_AT, 0L) > GRANT_AD_TTL_MS) {
+                    vault.putBoolean(GRANT_AD_PENDING, false)
+                    return
+                }
+                // Only on a screen the user is meant to land on: the launcher home, or an
+                // onboarding step. Never on the coach-mark over Settings or an ad page.
+                val landing = activity is LauncherPanel || activity is ShellActivity ||
+                    activity.intent?.getBooleanExtra(EXTRA_LAUNCHER_ONBOARDING, false) == true
+                // The default-home screen shows this very ad itself once it sees the role (its
+                // onResume → goHome). Running it here as well started a second chain for the same
+                // moment: two ads, and a rewarded step over the first one.
+                if (activity is OnboardingDefaultLauncherActivity) {
+                    vault.putBoolean(GRANT_AD_PENDING, false)
+                    return
+                }
+                if (!landing || activity.isFinishing) return
+                vault.putBoolean(GRANT_AD_PENDING, false)
+                log("grant ad → ${activity::class.java.simpleName}")
+                activity.window.decorView.post {
+                    if (activity.isFinishing || activity.isDestroyed) return@post
+                    LauncherAdsConfig.runOnboardingInter(activity, OnboardScreen.SET_DEFAULT) {}
+                }
+            }
+
+            override fun onActivityCreated(activity: Activity, state: android.os.Bundle?) = Unit
+            override fun onActivityStarted(activity: Activity) = Unit
+            override fun onActivityPaused(activity: Activity) = Unit
+            override fun onActivityStopped(activity: Activity) = Unit
+            override fun onActivitySaveInstanceState(activity: Activity, state: android.os.Bundle) = Unit
+            override fun onActivityDestroyed(activity: Activity) = Unit
+        })
     }
 
     private fun log(message: String) {
@@ -323,11 +401,22 @@ object LauncherFlow {
     }
 }
 
-/** Drops this app's task from Recents; the onboarding steps are not somewhere to come back to. */
+/**
+ * Drops this app's task from Recents; the onboarding steps are not somewhere to come back to.
+ *
+ * The launcher's home task is left alone: excluding it is what left the fallback Recents half
+ * drawn on Android 16 / ColorOS 16 (the module stopped excluding it in its manifest for the same
+ * reason), and the system keeps home tasks out of the cards anyway.
+ */
 fun Activity.excludeAppFromRecents() {
     try {
         val manager = getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return
-        manager.appTasks.forEach { task -> task.setExcludeFromRecents(true) }
+        val home = LauncherPanel::class.java.name
+        manager.appTasks.forEach { task ->
+            val info = runCatching { task.taskInfo }.getOrNull()
+            if (info?.baseActivity?.className == home || info?.topActivity?.className == home) return@forEach
+            task.setExcludeFromRecents(true)
+        }
     } catch (e: Exception) {
         GuardRail.error("Recents", "could not exclude task from recents", e)
     }

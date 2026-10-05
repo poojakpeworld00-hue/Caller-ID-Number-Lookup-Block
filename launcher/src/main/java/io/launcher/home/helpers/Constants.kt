@@ -13,6 +13,7 @@ const val DOCK_HOST_PACKAGE = "dock_sms_package"
 const val SELF_ICON_HIDDEN = "self_icon_hidden"
 const val WAS_ONBOARDING_COMPLETED = "was_onboarding_completed"
 const val WAS_SEARCH_BAR_PURGED = "was_search_bar_purged"
+const val WERE_STRAY_HOST_ICONS_PURGED = "were_stray_host_icons_purged"
 // One per guide step, keyed by LauncherGuideStep.name. Deliberately a new key rather than a reuse
 // of the old `was_swipe_hint_shown`: that flag meant "the combined overlay was displayed", which is
 // not the same question, and reusing it would mark the whole new guide done for every existing
@@ -63,6 +64,11 @@ const val LAUNCHER_STYLE = "launcher_style"
 const val HOME_REBUILD_PENDING = "home_rebuild_pending"
 // Which search widget (launcher_config.search_widget) the first page's row was built for.
 const val SEARCH_WIDGET = "search_widget"
+// Whether the first page's time / search widget is laid down (launcher_config.should_show_*), as last applied.
+const val TIME_WIDGET_SHOWN = "time_widget_shown"
+const val SEARCH_WIDGET_SHOWN = "search_widget_shown"
+// The time widget has been moved back (or seeded) on the top row, above the default-home banner.
+const val TIME_WIDGET_AT_TOP = "time_widget_at_top"
 
 // default home screen grid size
 const val ROW_COUNT = 6
@@ -103,6 +109,10 @@ const val FIRST_APPS_PAGE = 1
 
 // An app installed or removed reaches the launcher this long after the last change in a burst.
 const val PACKAGE_REFRESH_DELAY_MS = 300L
+
+// After our uninstall dialog opens, the app is checked this often, for this long, until it is gone.
+const val UNINSTALL_WATCH_STEP_MS = 500L
+const val UNINSTALL_WATCH_MS = 10_000L
 
 const val WIDGET_HOST_ID = 12345
 const val MAX_CLICK_DURATION = 150

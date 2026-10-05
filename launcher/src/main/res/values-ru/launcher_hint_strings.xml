@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Включите \"Отображение поверх других приложений\"</string>
+    <string name="launcher_hint_overlay_description">Мы сразу же вернём вас обратно, как только это будет включено.</string>
+    <string name="launcher_hint_default_home_title">Выберите %1$s в качестве главного экрана</string>
+    <string name="launcher_hint_default_home_description">Выберите его в списке, чтобы установить как главный экран.</string>
+    <string name="launcher_hint_default_sms_title">Установите как SMS-приложение</string>
+    <string name="launcher_hint_default_sms_description">Нажмите \"Установить по умолчанию\", чтобы завершить.</string>
+    <string name="launcher_hint_mock_row">Приложение для главного экрана по умолчанию</string>
+    <string name="launcher_hint_mock_toggle_row">Разрешение</string>
+    <string name="launcher_hint_overlay_row">Разрешить отображение поверх других приложений</string>
+</resources>

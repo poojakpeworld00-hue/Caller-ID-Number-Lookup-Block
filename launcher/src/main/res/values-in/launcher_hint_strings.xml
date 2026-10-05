@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Aktifkan \"Tampilkan di atas aplikasi lain\"</string>
+    <string name="launcher_hint_overlay_description">Kami akan langsung membawamu kembali setelah diaktifkan.</string>
+    <string name="launcher_hint_default_home_title">Pilih %1$s sebagai Beranda</string>
+    <string name="launcher_hint_default_home_description">Pilih dari daftar untuk mengatur layar beranda kamu.</string>
+    <string name="launcher_hint_default_sms_title">Jadikan sebagai aplikasi SMS kamu</string>
+    <string name="launcher_hint_default_sms_description">Ketuk \"Jadikan default\" untuk selesai.</string>
+    <string name="launcher_hint_mock_row">Aplikasi Beranda Default</string>
+    <string name="launcher_hint_mock_toggle_row">Izin</string>
+    <string name="launcher_hint_overlay_row">Izinkan tampil di atas aplikasi lain</string>
+</resources>

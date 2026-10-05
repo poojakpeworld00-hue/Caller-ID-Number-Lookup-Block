@@ -9,41 +9,6 @@ and `ScreenAds`.
 
 ```json
 {
-  "app_click": {
-    "enabled": true,
-    "ad_type": "inter",
-    "inter_enabled": true,
-    "ads_counter": 3,
-    "fallback_link_enabled": true,
-    "fallback_link": "https://980.mark.qureka.com/intro"
-  },
-
-  "swipe_right": {
-    "enabled": true,
-    "ad_type": "inter",
-    "inter_enabled": true,
-    "ads_counter": 3,
-    "fallback_link_enabled": false,
-    "fallback_link": ""
-  },
-
-  "swipe_left": {
-    "enabled": true,
-    "ad_type": "inter",
-    "inter_enabled": true,
-    "ads_counter": 3,
-    "fallback_link_enabled": false,
-    "fallback_link": ""
-  },
-
-  "home_hint": {
-    "enabled": true,
-    "swipeHints": ["right", "left", "up"],
-    "show_mode": "once",
-    "interval": 0,
-    "auto_hide_sec": 0
-  },
-
   "right_panel": {
     "bottom_native": {
       "enabled": true,
@@ -85,12 +50,10 @@ and `ScreenAds`.
   },
 
   "defaultHome": {
-    "swipe_right": { "ads_counter": 1 },
-    "home_hint": { "swipeHints": ["right", "left", "up"] }
+    "app_drawer": { "ad_counter": 1 }
   },
 
   "notDefaultHome": {
-    "home_hint": { "enabled": false },
     "right_panel": { "bottom_native": { "ad_type": "banner" } }
   }
 }
@@ -105,53 +68,23 @@ the base per read, chosen by `isDefaultLauncher()`:
 - app does not → `notDefaultHome`
 
 The overlay is a **deep merge, key by key**. A key present in the variant wins; a key absent
-inherits from the base — at every level, so `{"swipe_right": {"ads_counter": 1}}` changes only
-the counter and leaves `enabled`, `ad_type`, `inter_enabled` and the fallback link alone.
+inherits from the base — at every level, so `{"app_drawer": {"ad_counter": 1}}` changes only
+the counter and leaves the rest of `app_drawer` alone.
 `{}` (or a missing variant) means "use the base unchanged". Arrays are replaced whole, not
-merged — `swipeHints` in a variant fully replaces the base list.
+merged — `sequence` in a variant fully replaces the base list.
 
 So: change one field inside either block and only that field flips. That is the
 "any one change inside automatically override" behaviour.
 
 ## Key reference
 
-### Gesture surfaces — `app_click`, `swipe_right`, `swipe_left`
+### Not in `launcher_ads` — gestures and the coach mark
 
-| key | type | meaning |
-|---|---|---|
-| `enabled` | bool | master kill-switch for the gesture. Off → gesture does its normal thing, nothing ad-related attempted. |
-| `ad_type` | `inter` \| `link` \| `none` | what fills the ad moment. `inter` = interstitial (falls back to the link only if the interstitial is switched off), `link` = open `fallback_link` directly, `none` = nothing. Absent → derived from `inter_enabled` (back-compat). |
-| `inter_enabled` | bool | legacy switch, still honoured. `ad_type` wins when both are present. |
-| `ads_counter` | int | events SKIPPED before the ad moment lands. `3` → fires on the 4th, `0` → every time. Counted in prefs, so it survives the launcher process being killed. Never advances when nothing is showable. |
-| `fallback_link_enabled` | bool | allow the link to stand in. |
-| `fallback_link` | string | URL opened when the link is the chosen filler. |
-
-`swipe_left` is the new one: the left fling that slides the app-search panel in from the
-right. Same shape, its own independent counter.
-
-Gate order is unchanged — these sit on top of `InterstitialNormal.showInterAds`, which still
-applies the network check, `IsAdsON`, `InterAds` and the global `InterCounter`. The gesture
-always completes: the ad callback fires on every path (shown, skipped, no fill, no network).
-
-### `home_hint` — the home-screen coach mark
-
-| key | type | meaning |
-|---|---|---|
-| `enabled` | bool | show the hint overlay at all. |
-| `swipeHints` | array | which gestures to teach, **one at a time, in this order**: `right` (opens the caller-ID app), `left` (app-search panel), `up` (app drawer), `down` (notification shade). An empty array behaves like `enabled: false`. |
-| `show_mode` | `once` \| `always` \| `app_launches` | `once` = one pass through the list, ever; `always` = a fresh pass each launch; `app_launches` = skip-then-show pacing on `interval`. |
-| `interval` | int | the X for `app_launches`: launches SKIPPED before a new pass starts (`3` → the 4th). `0` = every launch. Ignored for the other modes. |
-| `auto_hide_sec` | int | take the current hint off the screen after N seconds. The run does not advance — the same gesture is offered again next time the home screen comes back. `0` = stays until the user swipes. |
-
-**One gesture at a time.** The first entry is shown alone and stays until the user actually
-makes that swipe; the next entry appears once they are back on the bare home screen (returning
-from the caller-ID app, closing the panel or the drawer), and so on until the list is done.
-Any other gesture leaves the hint where it is. How far the run has got lives in
-`Config.swipeHintIndex`, so an interrupted `once` run resumes rather than starting over, and
-`Config.wasSwipeHintShown` latches only when the whole list has been taught.
-
-A chevron trio plus caption, drifting the way it is teaching. The captions are
-`swipe_right_hint` / `swipe_left_hint` / `swipe_up_hint` / `swipe_down_hint`.
+Home-screen gesture ads live in one place, `launcher_config.gestures.{left_swipe, right_swipe,
+drawer_open, app_launch, app_exit}` (`inter_enabled`, `inter_counter`, `url_enabled`, `url`), with
+the matching `placements.{leftPanel, rightPanel, drawer, appExit}`. The coach mark is
+`launcher_config.guide`. The old `app_click` / `swipe_right` / `swipe_left` / `home_hint` blocks
+repeated those settings without being read, and have been removed.
 
 ### `right_panel.bottom_native` — the slot at the bottom of the swipe-in panel
 
@@ -222,8 +155,9 @@ Screens: `welcome`, `set_default`, `intro`, `language`.
 
 | key | type | meaning |
 |---|---|---|
-| `inter_enabled` | bool | interstitial on that screen's continue/skip action, per screen. |
-| `ads_counter` | int | skip-then-show pacing for that screen's interstitial, own counter. |
+| `inter_enabled` | bool | the ad on that screen's continue/skip action, per screen. |
+| `ads_counter` | int | skip-then-show pacing for that screen's ad, own counter. |
+| `ad_type` | `inter` \| `app_open` \| `reward` \| `link` \| `full_native` \| `custom` | which format that ad is. Blank / `inter` = the interstitial (or `placements.onboarding_<screen>.ad_flow` when that is set, e.g. `"app_open,reward,inter"`). `link` opens `placements.onboarding_<screen>.DirectLink` (falls back to `placements.onboarding`, then the global `DirectLink`). A link-first chain (`DirectLink` + `link_first_then`) still wins over all of these. |
 | `skip_enabled` | bool | show the Skip button. `false` makes the screen a required step — the CTA is the only way forward (Back still behaves as it did). Default `true`. |
 | `back_action` | `next_page` \| `next_screen` | `intro` only. `next_page` (default) = Back walks forward through the carousel, so every page is seen. `next_screen` = any Back leaves for the next screen straight away. **Paid (`OnMaketing`) users only** — for organic users Back is always plain Back on every onboarding screen (previous slide, then leave the screen). |
 | `auto_next` | bool | `set_default` only. Role granted → move on by itself (default `true`); `false` waits for the CTA. |
@@ -234,11 +168,84 @@ Screens: `welcome`, `set_default`, `intro`, `language`.
 | `slot.banner_type` | `adaptive` \| `inline` \| `normal` \| `collapsible` | banner size / collapsible. |
 | `slot.ad_unit_id` | string | banner only (see above); a native slot keeps the global id. |
 
+**Granting the role from the Settings list.** Picking this app in the system "Default home
+app" list makes Android start the launcher, and the `set_default` screen is never resumed to
+run its "Next" ad. That ad is then shown, once, on whichever screen comes up instead — the
+launcher home, or the next onboarding step (`LauncherFlow.registerGrantAd`). Same
+`onboarding.set_default` settings either way.
+
+### `system_buttons` — ads on the system Home and Back buttons
+
+```json
+"system_buttons": {
+  "home":    { "enabled": false, "ad_type": "", "ads_counter": 0, "min_gap_sec": 30 },
+  "back":    { "enabled": false, "ad_type": "", "ads_counter": 0, "min_gap_sec": 30 },
+  "recents": { "enabled": false }
+}
+```
+
+Each button is switched on its own; a block that is absent is off.
+
+| key | type | meaning |
+|---|---|---|
+| `enabled` | bool | that button's ad at all. |
+| `ad_type` | `inter` \| `app_open` \| `reward` \| `link` \| `full_native` \| `custom` | one format. Blank = the button's placement chain: `placements.home` / `placements.back` (`ad_flow`, `DirectLink` + `link_first_then`, `googleInter` + `inter_fallback`). |
+| `ads_counter` | int | presses skipped before the ad shows (`0` = every press that passes the gap). |
+| `min_gap_sec` | int | minimum time between two ads on that button. Default `30`. |
+
+- **home** — a Home press while the user was already in the app: on the launcher home itself,
+  or from one of the app's own screens. Coming home from *another* app is the app-exit moment
+  (`launcher_config.gestures.app_exit`, `placements.appExit`), never this one.
+- **back** — Back on the bare launcher workspace (nothing open to close). Back inside the app's
+  own screens, including the caller-ID home (`ShellActivity`) on its way out to the launcher, is
+  the app-wide back ad: `IsBack`, `InterBackCounter`, `placements.back`.
+- **recents** — only `enabled`. When present it replaces `recent_ad.enabled` as the switch for
+  the Recents page below.
+
+`placements.home.ads_on: false` mutes the Home ad without touching this block.
+
+### `recent_ad` — the page shown when the app is reopened from Recents
+
+`{ "enabled": false, "native": "off", "close_ad": "none", "min_gap_sec": 0 }`. A Recents press
+in one of the app's own screens arms it; reopening the app's card shows the page. `close_ad`:
+`inter` (with `placements.recent.ad_flow` / `inter_fallback`), `full_native`, `custom`,
+`directlink`, `none`. Never armed from the launcher home — the home is not a Recents card.
+
+### Recents → Play Store (audience root, outside `launcher_ads`)
+
+| key | type | meaning |
+|---|---|---|
+| `recent_playstore` | bool | the first Recents press made inside the app opens the Play Store home instead. Once per install. Takes priority over `recent_ad`. |
+| `recent_playstore_window_sec` | int | only within this many seconds of install. **`0` = no window**: the first Recents press whenever it comes. Default `180`. |
+
+A press made while another app is in front never fires it and never spends it.
+
+### `launcher_config.unlock_ads` — the ad after unlock
+
+`{ "enabled": false, "start_after_hours": 24, "gap_minutes": 30, "max_per_day": 5, "format": "inter", "countries": { "IN": { "enabled": false } } }`.
+Shown only on the launcher home or the app home, after onboarding. `format`: `inter`
+(`placements.unlock.ad_flow` / link-first / `inter_fallback`), `full_native`, or one of
+`app_open` / `reward` / `link` / `custom`. The App Open ad stands down for that foreground, so
+an unlock never shows two ads.
+
+### Outside `launcher_ads` — related switches
+
+| key | where | meaning |
+|-----|-------|---------|
+| `panels.apps` | `launcher_config` | the whole apps panel (swipe + tap). `false` = it never opens. Default `true`. |
+| `panels.apps_list` | `launcher_config` | the app list inside that panel: its Suggested and Recent grids. `false` hides both; greeting, search and the panel's ads stay. Default `true`. |
+| `panels.host` | `launcher_config` | the panel holding this app's own screens. Default `true`. |
+| `gestures.app_launch.inter_enabled` / `inter_counter` | `launcher_config` | master on/off and "every Nth tap" for the ad on an app tap (drawer, home grid, apps panel). |
+| `placements.drawer.ads_on` | audience root | mutes the app-tap ad without touching the gesture. |
+| `placements.drawer.ad_flow` | audience root | the app-tap chain, in order, e.g. `"inter,app_open,reward,full_native,directlink"`. A format left out is off. Names: `inter`, `app_open`, `reward`, `full_native`, `directlink`, `custom`. |
+| `placements.drawer.ad_flow_show_all` | audience root | `true` = show every ready format in the chain back to back; `false` = the first one that is ready (waterfall). |
+| `placements.drawer.link_first_then` | audience root | direct links first, then these formats. **Takes over from `ad_flow` when set** (and `DirectLink` + `IsCustomADS` are on) — remove it to use `ad_flow`. |
+| `inter_loader` | audience root | the full-screen "loading ad" spinner while an interstitial / full-screen ad loads on demand. Falls back to the old `isLoaderForFB` when absent. |
+
 ## Notes
 
-- Key naming keeps the exact spellings already in use: `snake_case` for the gesture blocks
-  that shipped in v1, and `swipeHints` / `defaultHome` / `notDefaultHome` as written in the
-  console.
+- Key naming keeps the exact spellings already in use: `snake_case` for the blocks, and
+  `defaultHome` / `notDefaultHome` as written in the console.
 - A missing block resolves to everything-off for that surface, and a missing key falls back to
   the default in the tables above — so a partial JSON never crashes the launcher.
 - In DEBUG every resolution is logged under `LauncherAdsConfig`, including which variant
@@ -257,10 +264,6 @@ Welcome → set as default → Home. No language picker, no intro carousel.
 
 ```json
 "launcher_ads": {
-  "app_click":   { "enabled": false },
-  "swipe_right": { "enabled": true, "ad_type": "inter", "ads_counter": 10, "fallback_link_enabled": false, "fallback_link": "" },
-  "swipe_left":  { "enabled": true, "ad_type": "inter", "ads_counter": 10, "fallback_link_enabled": false, "fallback_link": "" },
-  "home_hint":   { "enabled": true, "swipeHints": ["right", "left", "up"], "show_mode": "once", "interval": 0, "auto_hide_sec": 0 },
   "right_panel": { "bottom_native": { "enabled": true,  "ad_type": "native", "native_type": "mid2", "banner_type": "adaptive", "ad_unit_id": "" } },
   "app_drawer":  { "bottom_native": { "enabled": false, "ad_type": "none",   "native_type": "mid2", "banner_type": "adaptive", "ad_unit_id": "" } },
   "default_home_screen": { "enabled": true, "skip_if_default": true, "skip_rest_on_grant": true },
@@ -281,10 +284,6 @@ role is granted (`skip_rest_on_grant: false`).
 
 ```json
 "launcher_ads": {
-  "app_click":   { "enabled": true, "ad_type": "inter", "ads_counter": 6, "fallback_link_enabled": false, "fallback_link": "" },
-  "swipe_right": { "enabled": true, "ad_type": "inter", "ads_counter": 3, "fallback_link_enabled": false, "fallback_link": "" },
-  "swipe_left":  { "enabled": true, "ad_type": "inter", "ads_counter": 3, "fallback_link_enabled": false, "fallback_link": "" },
-  "home_hint":   { "enabled": true, "swipeHints": ["right", "left", "up"], "show_mode": "once", "interval": 0, "auto_hide_sec": 0 },
   "right_panel": { "bottom_native": { "enabled": true, "ad_type": "native", "native_type": "mid2", "banner_type": "adaptive", "ad_unit_id": "" } },
   "app_drawer":  { "bottom_native": { "enabled": true, "ad_type": "native", "native_type": "mid2", "banner_type": "adaptive", "ad_unit_id": "" } },
   "default_home_screen": { "enabled": true, "skip_if_default": true, "skip_rest_on_grant": false },
@@ -323,8 +322,13 @@ Two things in these funnels live outside `launcher_ads`:
 | part | code |
 |---|---|
 | parsing, variant merge, pacing, slot rendering | `admesh/domain/LauncherAdsConfig.kt` |
-| gesture hooks | `MainActivity.onFlingRight` / `onFlingLeft`, `AllAppsFragment`, `LeftPanelFragment` |
-| coach mark | `MainActivity.maybeShowSwipeHint` + `res/layout/item_swipe_hint.xml` |
-| panel slot | `LeftPanelFragment.onPanelShown` |
-| first-run order | `launcher/helpers/LauncherFlow.kt` (step index in `Config.onboardingStep`) |
+| placement engine (`placements.*`, `ad_flow`, link-first) | `admesh/domain/LauncherPlacementAds.kt` → `admesh/presentation/DrawerAdRunner.kt` |
+| gesture hooks | `launcher/…/activities/LauncherPanel.kt` (`onFlingRight` / `onFlingLeft`) → `launcher/…/promo/LauncherPromoController.kt` (`launcher_config.gestures`) |
+| coach mark | `LauncherPanel.maybeShowGuide` (`launcher_config.guide`) |
+| panel / drawer slots | `numberlookup/launcher/CallerLauncherAds.kt` |
+| Home / Back buttons | `numberlookup/launcher/SystemButtonAds.kt`, via `LauncherBridge.onHomePressed` / `onWorkspaceBack` |
+| Recents page, Recents → Play Store | `numberlookup/ui/recent/RecentAdWatcher.kt` |
+| unlock | `numberlookup/launcher/UnlockAdWatcher.kt` |
+| return from an app | `numberlookup/launcher/AppExitAd.kt`, from `LookupShellApp.handleAppForeground` |
+| first-run order | `numberlookup/onboard/LauncherFlow.kt` (step index in fossify prefs `onboarding_step`) |
 | onboarding screens | `OnboardingWelcomeActivity`, `OnboardingDefaultLauncherActivity`, `IntroActivity`, `LocaleActivity` |

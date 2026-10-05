@@ -185,6 +185,8 @@ abstract class HostActivity<DB : ViewDataBinding> : ADDashboardActivity() {
 
     /** Places the call directly (CALL_PHONE), requesting the permission if needed. */
     protected fun placeCall(number: String) {
+        // Our own trip out (a call, an SMS, a share sheet): no App Open ad on the way back.
+        com.calleridapp.admesh.domain.AdsGate.skipNextAppOpen()
         if (number.isBlank()) return
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
             == PackageManager.PERMISSION_GRANTED

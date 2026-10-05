@@ -1,5 +1,7 @@
 package com.calleridapp.numberlookup.launcher
 
+import com.calleridapp.numberlookup.util.Analytics
+
 import android.app.Activity
 import android.util.Log
 import com.calleridapp.admesh.domain.LauncherPlacementAds
@@ -29,6 +31,7 @@ object AppExitAd {
 
     /** True when `app_exit` owns this return (an ad ran, or its counter skipped this one). */
     fun run(activity: Activity): Boolean {
+        Analytics.log("launcher_app_close")
         val gate = runCatching {
             JSONObject(LauncherRegistry.bridge.configString(LauncherKeys.LAUNCHER_CONFIG, ""))
                 .optJSONObject("gestures")?.optJSONObject("app_exit")

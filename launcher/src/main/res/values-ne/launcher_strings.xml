@@ -1,2 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="launcher_app_launcher_name">म्यासेज</string>
+    <string name="launcher_launcher_settings">लन्चर सेटिङ</string>
+    <string name="launcher_app_info">एप जानकारी</string>
+    <string name="launcher_touch_hold_widget">विजेटलाई थिचिराख्नुहोस् र आफ्नो होम स्क्रिनमा तान्नुहोस्</string>
+    <string name="launcher_uninstall">अनइन्स्टल गर्नुहोस्</string>
+    <string name="launcher_manage_hidden_icons">लुकेका आइकन व्यवस्थापन गर्नुहोस्</string>
+    <string name="launcher_hidden_icons">लुकेका आइकन</string>
+    <string name="launcher_hidden_icons_placeholder">सिस्टम प्रतिबन्धका कारण केही एप अनइन्स्टल गर्न सकिँदैन, तर तपाईं तिनका आइकन देखाबाट बच्न लुकाउन सक्नुहुन्छ।</string>
+    <string name="launcher_app_drawer_settings">एप ड्रअर</string>
+    <string name="launcher_app_drawer_enabled">एप ड्रअरका लागि माथि सर्नुहोस्</string>
+    <string name="launcher_drawer_style">ड्रअर शैली</string>
+    <string name="launcher_drawer_style_vertical">स्क्रोल गर्ने सूची</string>
+    <string name="launcher_drawer_style_paged">पृष्ठहरू</string>
+    <string name="launcher_app_drawer_disabled_hint">बन्द: सबै एप होम स्क्रिनमा नै रहन्छन्, नयाँ एप अन्तिम पृष्ठमा थपिन्छन्</string>
+    <string name="launcher_close_app_drawer_on_app_open">एप खोल्दा एप ड्रअर बन्द गर्नुहोस्</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">ड्रअरमा स्वतः किबोर्ड देखाउनुहोस्</string>
+    <string name="launcher_show_app_labels">एप लेबल देखाउनुहोस्</string>
+    <string name="launcher_home_screen_settings">होम स्क्रिन</string>
+    <string name="launcher_widget_too_big">हालको होम स्क्रिन आकारका लागि विजेट धेरै ठूलो छ</string>
+    <string name="launcher_double_tap_to_lock">स्क्रिन लक गर्न डबल ट्याप गर्नुहोस्</string>
+    <string name="launcher_lock_device_admin_hint">डबल ट्याप स्क्रिन लक सुविधा सक्षम गर्न, तपाईंले एडमिन अनुमति दिनुपर्छ। यो अनुमति नहटाउँदासम्म एप अनइन्स्टल गर्न सकिँदैन।</string>
+    <string name="launcher_lock_device_admin_warning">एडमिन अनुमति निष्क्रिय गर्दा डबल ट्याप स्क्रिन लक सुविधा बन्द हुनेछ।</string>
+    <string name="launcher_pseudo_widget_clock">घडी</string>
+    <string name="launcher_pseudo_widget_search_bar">खोज पट्टी</string>
+    <string name="launcher_pseudo_widget_search_bar_hint">जे पनि सोध्नुहोस्…</string>
+    <string name="launcher_digital_clock_widget">डिजिटल घडी</string>
+    <string name="launcher_analog_clock_widget">एनालग घडी</string>
+    <string name="launcher_apps">एपहरू</string>
+    <string name="launcher_clear">हटाउनुहोस्</string>
+    <string name="launcher_suggested_for_now">अहिलेका लागि सुझाव</string>
+    <string name="launcher_recent_apps">हालैका एप</string>
+    <string name="launcher_search_in_apps">एपहरूमा खोज्नुहोस्</string>
+    <string name="launcher_see_more">थप हेर्नुहोस्</string>
+    <string name="launcher_see_less">कम हेर्नुहोस्</string>
+    <string name="launcher_default_launcher_banner_title">सेटअप पूरा भएको छैन</string>
+    <string name="launcher_swipe_left_hint">खोजका लागि बायाँ सर्नुहोस्</string>
+    <string name="launcher_swipe_up_hint">सबै एपका लागि माथि सर्नुहोस्</string>
+    <string name="launcher_swipe_hint_tap">वा प्रयास गर्न जहाँ पनि ट्याप गर्नुहोस्</string>
+    <string name="launcher_greeting_morning">शुभ प्रभात</string>
+    <string name="launcher_greeting_afternoon">शुभ दिउँसो</string>
+    <string name="launcher_greeting_evening">शुभ साँझ</string>
+    <string name="launcher_search_apps_hint">एप खोज्नुहोस्</string>
+    <string name="launcher_suggested_apps">सुझाव गरिएका एप</string>
+    <string name="launcher_searched_apps">खोजिएका एप</string>
+</resources>

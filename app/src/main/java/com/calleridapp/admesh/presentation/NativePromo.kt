@@ -18,6 +18,7 @@ import com.calleridapp.admesh.data.AdKind
 import com.calleridapp.admesh.data.AdKind.*
 import com.calleridapp.admesh.domain.AdCounterRegistry.nativeCounter
 import com.calleridapp.admesh.domain.AdRevenueMeter
+import com.calleridapp.admesh.domain.AdsGate
 import com.calleridapp.admesh.domain.AdsVault
 import com.calleridapp.admesh.domain.ScreenPromoConfig
 import com.calleridapp.admesh.domain.logKeyEvent
@@ -49,7 +50,39 @@ class NativePromo() {
     }
 
     companion object {
-        private var nativeAd: NativeAd? = null
+        private var cachedAd: NativeAd? = null
+        private var cachedAt = 0L
+
+        /** A native kept longer than this is destroyed and treated as absent. */
+        private const val MAX_AGE_MS = 60 * 60_000L
+
+        /** The pooled native, or null when there is none or it went stale. */
+        private var nativeAd: NativeAd?
+            get() {
+                if (cachedAd != null && android.os.SystemClock.elapsedRealtime() - cachedAt > MAX_AGE_MS) {
+                    Log.d("NativeAds", "pooled native expired (older than 1h) — dropped")
+                    runCatching { cachedAd?.destroy() }
+                    cachedAd = null
+                }
+                return cachedAd
+            }
+            set(value) {
+                cachedAd = value
+                if (value != null) cachedAt = android.os.SystemClock.elapsedRealtime()
+            }
+
+        /**
+         * Observers asking while a load is in flight. They used to be dropped without an answer,
+         * so a slot that asked at that moment (the launcher's drawer and panel frames) stayed
+         * blank for good; now they hear the outcome of the load already running.
+         */
+        private val waiting = mutableListOf<NativeAdObserver>()
+
+        private fun answerWaiting(loaded: Boolean) {
+            val observers = waiting.toList()
+            waiting.clear()
+            observers.forEach { runCatching { if (loaded) it.onNativeAdLoaded() else it.onNativeAdFailed() } }
+        }
 
         /**
          * A load is in flight. The pool is one static slot and every `show*` kicks a refill,
@@ -112,16 +145,23 @@ class NativePromo() {
         // global googleNative when screen_wise_ad is off.
         val adUnit = ScreenPromoConfig.nativeAdUnitId(context)
         if (adUnit.isEmpty()) {
+            // Answered rather than left hanging: a caller waiting to paint gives up cleanly.
+            observer?.onNativeAdFailed()
             return
         }
-        // One request at a time — see [isLoading].
+        if (!AdsGate.canRequestAds(context)) {
+            observer?.onNativeAdFailed()
+            return
+        }
+        // One request at a time — see [isLoading]. A caller arriving meanwhile waits on it.
         if (isLoading) {
-            Log.d("NativeAds", "load already in flight — skipped")
+            Log.d("NativeAds", "load already in flight — waiting on it")
+            observer?.let { waiting += it }
             return
         }
         loadingSince = System.currentTimeMillis()
         val adLoader =
-            AdLoader.Builder(context, adUnit)
+            AdLoader.Builder(context.applicationContext, adUnit)
                 .forNativeAd { nativeAds ->
                     // Always cache the ad — even when the activity that
                     // triggered this load is destroyed by the time the ad
@@ -131,9 +171,10 @@ class NativePromo() {
                     // which is why "1 load → then nothing" was the symptom:
                     // the splash refill landed after splash was gone, got
                     // destroyed, and every subsequent show found null.
-                    nativeAd?.destroy()
+                    cachedAd?.destroy()
                     nativeAd = nativeAds
                     loadingSince = 0L
+                    answerWaiting(loaded = true)
 
                     if (context.isActivityDestroyedCompat()) {
                         // Originating activity is gone — cache only, skip
@@ -154,6 +195,7 @@ class NativePromo() {
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         super.onAdFailedToLoad(loadAdError)
                         loadingSince = 0L
+                        answerWaiting(loaded = false)
                         if (context.isActivityDestroyedCompat()) return
                         observer?.onNativeAdFailed()
                         Log.e(

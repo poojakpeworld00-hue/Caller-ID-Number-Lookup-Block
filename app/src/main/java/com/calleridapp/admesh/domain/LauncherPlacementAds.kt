@@ -26,6 +26,9 @@ import org.json.JSONObject
  * | `link_first_then`                  | e.g. `"reward,inter,app_open"`: open the DirectLink first, then these once it closes. Needs `IsCustomADS` |
  * | `link_first_show_all`              | `true` shows every follow-up that is ready; default is a waterfall (first that shows ends it) |
  * | `link_open_in`                     | `webview` / `custom_tab` / `browser`                      |
+ * | `ad_flow`                          | the chain for the placement: `["inter","directlink","appopen","fullnative","rewarded"]` (or the same as a comma list), any order |
+ * | `ad_flow_mode`                     | how a show walks the chain: `one` (first ready format, every time), `all` (every ready format, back to back), `sequence` (one per show, each starting after the one shown last). Without it, `ad_flow_show_all` true = `all`, else `one` |
+ * | `counter`                          | shows SKIPPED between ads on this placement (0 = every time). Only for placements whose caller does not count itself: `recent`, `unlock`, `install`, `uninstall`, `charge`, `discharge`; the gestures count in `launcher_config.gestures`, the nav buttons in `system_buttons` |
  * | `inter_fallback`                   | what an interstitial that cannot show falls back to, in order: `rewarded`, `full_native` (`custom` is QRScanner's house ad and is skipped here) |
  *
  * Placements (the launcher's gesture names are mapped the way QRScanner maps them):
@@ -48,12 +51,12 @@ object LauncherPlacementAds {
     // their own `ad_flow` / link chain (see hasOwnFlow).
     private val PLACEMENTS = listOf(
         "leftPanel", "rightPanel", "drawer", "onboarding", "recent", "appExit", "unlock",
-        "splash", "back", "appOpen", "install", "uninstall", "charge", "discharge",
+        "splash", "back", "appOpen", "install", "uninstall", "charge", "discharge", "home",
     )
 
     private val GLOBAL_KEYS = setOf(
         "link_first_then", "link_first_show_all", "link_open_in", "inter_fallback", "RewardedAds",
-        "googleFullNative", "ad_flow", "ad_flow_show_all",
+        "googleFullNative", "ad_flow", "ad_flow_show_all", "ad_flow_mode",
     )
 
     /**
@@ -93,11 +96,19 @@ object LauncherPlacementAds {
      * from `placements.<name>.<key>`, else the flat `<name>_<key>`; null when neither is set.
      */
     private fun own(vault: AdsVault, name: String, key: String): String? {
-        val nested = placementsBlock(vault)?.optJSONObject(name)
+        val nested = section(placementsBlock(vault), name)
             ?.takeIf { it.has(key) && !it.isNull(key) }?.get(key)?.toString()
         return nested?.takeIf { it.isNotBlank() }
             ?: vault.getString("${name}_$key")?.takeIf { it.isNotBlank() }
     }
+
+    /** `placements.<a>.<b>` for the path `"a.b"`; null when any step is missing. */
+    private fun section(root: JSONObject?, path: String): JSONObject? =
+        path.split('.').fold(root) { node, step -> node?.optJSONObject(step) }
+
+    /** The object at `placements.<path>` (`"drawer.bottom_native"`), for the callers that read a slot from it. */
+    fun section(context: Context, path: String): JSONObject? =
+        section(placementsBlock(AdsVault.getInstance(context)), path)
 
     /** The audience-block key [PromoConfigLoader] stores the `placements` object under. */
     const val PLACEMENTS_KEY = "placements"
@@ -116,7 +127,15 @@ object LauncherPlacementAds {
      */
     private fun names(placement: String?): List<String> {
         val name = normalize(placement)?.takeIf { it.isNotBlank() } ?: return emptyList()
-        return if (name.startsWith("onboarding_")) listOf(name, "onboarding") else listOf(name)
+        return when {
+            name.startsWith("onboarding_") -> listOf(name, "onboarding")
+            // One `drawer` block, two sides: `app_click` (leaving for an app) and `app_close` (back
+            // from it). Each side's own keys first, then the block's shared `ads_on`. The older
+            // flat `drawer` / `appExit` blocks still read, after the new ones.
+            name == "drawer" -> listOf("drawer.app_click", "drawer")
+            name == "appExit" -> listOf("drawer.app_close", "appExit", "drawer")
+            else -> listOf(name)
+        }
     }
 
     private fun resolve(vault: AdsVault, placement: String?, key: String): String {
@@ -157,7 +176,7 @@ object LauncherPlacementAds {
             // This app's house ad; needs `IsCustomADS`, like QRScanner's `custom` step.
             "custom", "custom_ads" ->
                 if (vault.getBoolean("IsCustomADS")) DrawerAdSpec(DrawerAdType.CUSTOM, "custom") else null
-            "directlink", "direct_link", "browser" -> directLinks(vault, placement).takeIf { it.isNotEmpty() }
+            "directlink", "direct_link", "link", "browser" -> directLinks(vault, placement).takeIf { it.isNotEmpty() }
                 ?.let { DrawerAdSpec(DrawerAdType.DIRECTLINK, it.first(), it, resolve(vault, placement, "link_open_in")) }
             else -> null
         }?.takeIf { it.adUnitId.isNotBlank() }
@@ -194,11 +213,56 @@ object LauncherPlacementAds {
      * waterfall. Null when not configured, so the placement keeps its default chain.
      */
     private fun adFlow(vault: AdsVault, placement: String?): DrawerAdFlow? {
-        val steps = resolve(vault, placement, "ad_flow").split(',').map { it.trim() }.filter { it.isNotEmpty() }
+        val raw = resolve(vault, placement, "ad_flow").trim()
+        val steps = if (raw.startsWith("[")) {
+            runCatching {
+                val arr = JSONArray(raw)
+                (0 until arr.length()).map { arr.optString(it).trim() }
+            }.getOrDefault(emptyList())
+        } else {
+            raw.split(',').map { it.trim() }
+        }.filter { it.isNotEmpty() }
         if (steps.isEmpty()) return null
         val sequence = steps.mapNotNull { followUp(vault, placement, it) }
-        val showAll = resolve(vault, placement, "ad_flow_show_all").trim().toBoolean()
-        return DrawerAdFlow(true, 0, sequence, showAll = showAll, startFromFirst = true, onDemand = true)
+        val mode = flowMode(vault, placement)
+        return DrawerAdFlow(
+            true, 0, sequence,
+            showAll = mode == "all",
+            // `sequence` resumes after the format shown last; `one` / `all` start at the top.
+            startFromFirst = mode != "sequence",
+            onDemand = true,
+        )
+    }
+
+    /** `one` | `all` | `sequence`; the older `ad_flow_show_all` switch still means `all`. */
+    private fun flowMode(vault: AdsVault, placement: String?): String {
+        val mode = resolve(vault, placement, "ad_flow_mode").trim().lowercase()
+        if (mode == "one" || mode == "all" || mode == "sequence") return mode
+        return if (resolve(vault, placement, "ad_flow_show_all").trim().toBoolean()) "all" else "one"
+    }
+
+    /** The placement's own `counter` (not inherited from a global key), 0 when unset. */
+    private fun ownCounter(vault: AdsVault, placement: String?): Int =
+        names(placement).firstNotNullOfOrNull { own(vault, it, "counter")?.trim()?.toIntOrNull() }
+            ?.coerceAtLeast(0) ?: 0
+
+    /**
+     * `counter` shows skipped between ads: false (and counted) until `counter` shows have been
+     * skipped, then true and the count restarts. 0 → always true.
+     */
+    private fun counterDue(vault: AdsVault, placement: String?): Boolean {
+        val target = ownCounter(vault, placement)
+        if (target <= 0) return true
+        val key = "__launcher_placement_count_${normalize(placement)}"
+        val seen = vault.getInt(key, 0)
+        return if (seen < target) {
+            vault.putInt(key, seen + 1)
+            log("$placement: counter ${seen + 1}/$target — skipped")
+            false
+        } else {
+            vault.putInt(key, 0)
+            true
+        }
     }
 
     /**
@@ -210,7 +274,7 @@ object LauncherPlacementAds {
     fun hasOwnFlow(context: Context, placement: String): Boolean {
         val vault = AdsVault.getInstance(context)
         fun set(key: String) = names(placement).any { own(vault, it, key) != null }
-        return set("ad_flow") || (set("link_first_then") && linkFirst(vault, placement) != null)
+        return set("ad_flow") || ownCounter(vault, placement) > 0 || (set("link_first_then") && linkFirst(vault, placement) != null)
     }
 
     /** The plain chain: the placement's interstitial, then each `inter_fallback` format in order. */
@@ -244,6 +308,7 @@ object LauncherPlacementAds {
         val vault = AdsVault.getInstance(context)
         if (linkFirst(vault, placement) != null) return true
         if (adFlow(vault, placement) != null) return true
+        if (ownCounter(vault, placement) > 0) return true
         val unit = resolve(vault, placement, "googleInter")
         return (unit.isNotBlank() && unit != vault.getString("googleInter").orEmpty()) ||
             fallbacks(vault, placement).any { followUp(vault, placement, it) != null }
@@ -264,6 +329,7 @@ object LauncherPlacementAds {
     fun showInterstitial(activity: Activity, placement: String?, proceed: () -> Unit) {
         val vault = AdsVault.getInstance(activity)
         if (!vault.getBoolean("IsAdsON") || !placementEnabled(activity, placement)) return proceed()
+        if (!counterDue(vault, placement)) return proceed()
 
         if (runLinkFirst(activity, vault, placement, proceed)) return
 

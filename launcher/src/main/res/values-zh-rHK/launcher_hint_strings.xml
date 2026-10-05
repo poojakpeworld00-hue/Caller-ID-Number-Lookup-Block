@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">開啟「顯示在其他應用程式上層」</string>
+    <string name="launcher_hint_overlay_description">開啟後我們會馬上帶你回來。</string>
+    <string name="launcher_hint_default_home_title">將 %1$s 設為主畫面</string>
+    <string name="launcher_hint_default_home_description">在清單中選擇它，設定你的主畫面。</string>
+    <string name="launcher_hint_default_sms_title">設為你的簡訊應用程式</string>
+    <string name="launcher_hint_default_sms_description">輕觸「設為預設」即可完成。</string>
+    <string name="launcher_hint_mock_row">預設主畫面應用程式</string>
+    <string name="launcher_hint_mock_toggle_row">權限</string>
+    <string name="launcher_hint_overlay_row">允許顯示在其他應用程式上層</string>
+</resources>

@@ -101,6 +101,8 @@ class IdentifyInsightActivity : HostActivity<ActivityLookupDetailBinding>() {
 
     private fun message() {
         if (rawNumber.isBlank()) return
+        // Our own trip out (a call, an SMS, a share sheet): no App Open ad on the way back.
+        com.calleridapp.admesh.domain.AdsGate.skipNextAppOpen()
         runCatching { startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$rawNumber"))) }
     }
 
@@ -117,6 +119,8 @@ class IdentifyInsightActivity : HostActivity<ActivityLookupDetailBinding>() {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, details)
             }
+            // Our own trip out (a call, an SMS, a share sheet): no App Open ad on the way back.
+            com.calleridapp.admesh.domain.AdsGate.skipNextAppOpen()
             startActivity(Intent.createChooser(intent, null))
         }
     }

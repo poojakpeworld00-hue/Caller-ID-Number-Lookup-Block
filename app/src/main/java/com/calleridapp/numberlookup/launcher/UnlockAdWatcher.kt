@@ -13,6 +13,7 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import com.calleridapp.admesh.domain.LauncherPlacementAds
 import com.calleridapp.admesh.domain.AdsVault
+import com.calleridapp.admesh.presentation.AppOpenAdRegistry
 import com.calleridapp.admesh.presentation.oninterAds.InterstitialNormal
 import com.calleridapp.numberlookup.onboard.LauncherFlow
 import com.calleridapp.numberlookup.ui.ShellActivity
@@ -35,7 +36,8 @@ import java.util.Locale
  *   "start_after_hours": 24,    // hours after install before the first one
  *   "gap_minutes": 30,          // minimum time between two
  *   "max_per_day": 5,           // daily cap (local calendar day)
- *   "format": "inter",          // "inter" (with inter_fallback) or "full_native"
+ *   "format": "inter",          // "inter" (ad_flow / link-first / inter_fallback), "full_native",
+ *                               // or one format: "app_open" | "reward" | "link" | "custom"
  *   "countries": { "IN": { "enabled": false } }   // per-country overrides of any field
  * }
  * ```
@@ -101,19 +103,38 @@ object UnlockAdWatcher {
 
     private fun isHome(activity: Activity) = activity is LauncherPanel || activity is ShellActivity
 
+    /** Uptime until which an unlock ad owns the foreground, so the App Open ad stands down. */
+    private var busyUntil = 0L
+
+    /**
+     * Whether an unlock ad is about to show (or waiting for a home screen). The foreground App Open
+     * ad checks this: an unlock onto the app home used to fire both, one over the other.
+     */
+    fun claimsForeground(): Boolean {
+        val now = SystemClock.uptimeMillis()
+        return now < busyUntil || (pendingAt != 0L && now - pendingAt <= PENDING_TTL_MS)
+    }
+
     private fun show(activity: Activity) {
         pendingAt = 0L
+        busyUntil = SystemClock.uptimeMillis() + SHOW_DELAY_MS + 2_000L
         activity.window.decorView.postDelayed({
             if (activity.isFinishing || activity.isDestroyed || !activity.hasWindowFocus()) return@postDelayed
-            if (InterstitialNormal.isInterShow) return@postDelayed
+            if (InterstitialNormal.isInterShow || AppOpenAdRegistry.isShowingAd || com.calleridapp.admesh.domain.AdsGate.isFullScreenShowing) return@postDelayed
             // Re-checked at show time: the throttle and cap must count what actually showed.
             val cfg = settings(activity) ?: return@postDelayed
             record(activity)
-            Log.d(TAG, "showing (${cfg.optString("format", "inter")})")
-            if (cfg.optString("format", "inter").trim().lowercase() in setOf("full_native", "fullnative", "full")) {
-                LauncherPlacementAds.showFullNative(activity, PLACEMENT) {}
-            } else {
-                LauncherPlacementAds.showInterstitial(activity, PLACEMENT) {}
+            val format = cfg.optString("format", "inter").trim().lowercase()
+            com.calleridapp.numberlookup.util.Analytics.log("unlock_ad_show", "format" to format)
+            Log.d(TAG, "showing ($format)")
+            when (format) {
+                "full_native", "fullnative", "full" -> LauncherPlacementAds.showFullNative(activity, PLACEMENT) {}
+                // One named format: `app_open`, `reward`, `link` (the unlock DirectLink), `custom`.
+                "app_open", "appopen", "reward", "rewarded", "link", "directlink", "direct_link", "custom" ->
+                    LauncherPlacementAds.showStep(activity, PLACEMENT, format) {}
+                // "inter": `placements.unlock.ad_flow` / link-first when set, else the interstitial
+                // with `inter_fallback`.
+                else -> LauncherPlacementAds.showInterstitial(activity, PLACEMENT) {}
             }
         }, SHOW_DELAY_MS)
     }

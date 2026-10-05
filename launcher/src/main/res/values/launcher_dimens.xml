@@ -60,4 +60,11 @@
     <!-- First page: our drawn Google bar (used when Google's own widget cannot be placed). -->
     <dimen name="launcher_google_bar_height">48dp</dimen>
     <dimen name="launcher_google_bar_side">8dp</dimen>
+    <!-- ItemActionsTray, the long-press card -->
+    <dimen name="lnch_tray_radius">26dp</dimen>
+    <dimen name="lnch_tray_action_width">76dp</dimen>
+    <dimen name="lnch_tray_min_width">232dp</dimen>
+    <dimen name="lnch_tray_max_width">300dp</dimen>
+    <dimen name="lnch_tray_gap">8dp</dimen>
+    <dimen name="lnch_tray_screen_margin">12dp</dimen>
 </resources>

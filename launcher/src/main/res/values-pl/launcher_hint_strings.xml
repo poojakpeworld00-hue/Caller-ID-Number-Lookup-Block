@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Włącz \"Wyświetlanie nad innymi aplikacjami\"</string>
+    <string name="launcher_hint_overlay_description">Wrócisz tu od razu, gdy to włączysz.</string>
+    <string name="launcher_hint_default_home_title">Wybierz %1$s jako ekran główny</string>
+    <string name="launcher_hint_default_home_description">Wybierz go z listy, aby ustawić ekran główny.</string>
+    <string name="launcher_hint_default_sms_title">Ustaw jako aplikację SMS</string>
+    <string name="launcher_hint_default_sms_description">Dotknij \"Ustaw jako domyślną\", aby zakończyć.</string>
+    <string name="launcher_hint_mock_row">Domyślna aplikacja ekranu głównego</string>
+    <string name="launcher_hint_mock_toggle_row">Uprawnienie</string>
+    <string name="launcher_hint_overlay_row">Zezwól na wyświetlanie nad innymi aplikacjami</string>
+</resources>

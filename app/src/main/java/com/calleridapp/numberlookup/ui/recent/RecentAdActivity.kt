@@ -35,6 +35,12 @@ class RecentAdActivity : HostActivity<ScreenRecentAdBinding>() {
         applyInsets()
         fillAd()
         binding.recentContinueVw.setOnClickListener { leave() }
+        // Back is this page's own close (and its close ad). Left to HostActivity it ran the app-wide
+        // back interstitial first and the close ad straight after - two full-screen ads for one Back.
+        // Registered after HostActivity's callback, so this one runs instead of it.
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() = leave()
+        })
     }
 
     override fun performBack() = leave()
@@ -79,6 +85,15 @@ class RecentAdActivity : HostActivity<ScreenRecentAdBinding>() {
 
         // `recent_ads_on: false` keeps the page but drops its close ad.
         if (!LauncherPlacementAds.placementEnabled(this, PLACEMENT)) return close()
+
+        // `recent_ad.close_ad` as an object — { enabled, counter, mode, sequence } — runs the flow:
+        // one / all / sequence over any of inter, directlink, appopen, fullscreen_native, rewarded.
+        settings.closeFlow?.let { block ->
+            val flow = LauncherAdsConfig.flowFrom(this, block, "recent_ad.close_ad")
+            return LauncherAdsConfig.runFlow(
+                this, flow, "__recent_close_count", "__recent_close_seq_ptr", "recent_ad.close_ad"
+            ) { close() }
+        }
 
         val closeAd = settings.closeAd.trim().lowercase()
         when {

@@ -1,5 +1,7 @@
 package com.calleridapp.numberlookup.ui.language
 
+import com.calleridapp.numberlookup.util.Analytics
+
 import android.content.Context
 import android.content.Intent
 import android.telephony.TelephonyManager
@@ -214,6 +216,7 @@ class LocaleActivity : HostActivity<ActivityLanguageBinding>() {
 
     private fun onContinue() {
         val tag = viewModel.selectedTag.value ?: AppVault.LANGUAGE_DEFAULT
+        Analytics.log("language_done_click", "lang" to tag, "source" to if (standalone) "settings" else "flow")
         AppVault.setLanguage(this, tag)  // source of truth for Splash + HostActivity.applyLocale
         prefs.isLanguageSelected = true
 

@@ -19,6 +19,11 @@ import io.launcher.home.adapters.PanelAppsLineup
 import io.launcher.home.databinding.LnchLeftPanelFragmentBinding
 import io.launcher.home.extensions.launchApp
 import io.launcher.home.models.AppLauncher
+import io.launcher.home.models.AppUsage
+import io.launcher.home.extensions.appUsageDB
+import io.launcher.home.helpers.AppSuggestions
+import org.fossify.commons.helpers.ensureBackgroundThread
+import android.content.pm.ApplicationInfo
 import io.launcher.home.promo.LauncherAdsConfig
 import io.launcher.home.api.LauncherRegistry
 import io.launcher.home.models.appLauncherComparator
@@ -112,6 +117,10 @@ class AppsPanelSurface(
      * then the header, search pill and cards lift in one after another.
      */
     fun onOpened() {
+        // Remote Config may have switched the app list since the panel was last drawn.
+        updateSections()
+        // An app opened since the last open belongs in Recent now.
+        loadUsage()
         val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
         binding.panelGreetingUi.setText(
             when {
@@ -155,6 +164,39 @@ class AppsPanelSurface(
         activity?.runOnUiThread {
             updateSections()
         }
+        loadUsage()
+    }
+
+    /** The launch log, newest last-launched first for Recent. */
+    private var usage: List<AppUsage> = emptyList()
+
+    /** [AppSuggestions.rank] over the launch log, the same ranking the drawer's search suggests from. */
+    private var rankedSuggestions: List<AppLauncher> = emptyList()
+
+    /** Reads the launch log and ranks it off the main thread, then redraws the two lists. */
+    private fun loadUsage() {
+        val installed = launchers
+        if (installed.isEmpty()) return
+        val pm = context.packageManager
+        ensureBackgroundThread {
+            val log = runCatching { context.appUsageDB.getAll() }.getOrDefault(emptyList())
+            val facts = HashMap<String, AppSuggestions.Facts?>()
+            val ranked = runCatching {
+                AppSuggestions.rank(installed, log, { pkg ->
+                    facts.getOrPut(pkg) {
+                        runCatching {
+                            val info = pm.getPackageInfo(pkg, 0)
+                            AppSuggestions.Facts(info.firstInstallTime, info.applicationInfo?.category ?: ApplicationInfo.CATEGORY_UNDEFINED)
+                        }.getOrNull()
+                    }
+                }, System.currentTimeMillis(), SUGGESTED_COUNT)
+            }.getOrDefault(emptyList())
+            activity?.runOnUiThread {
+                usage = log
+                rankedSuggestions = ranked
+                updateSections()
+            }
+        }
     }
 
     fun hasQuery() = getQuery().isNotEmpty()
@@ -169,10 +211,12 @@ class AppsPanelSurface(
     private fun updateSections() {
         val query = getQuery()
         val hasQuery = query.isNotEmpty()
+        // launcher_config.panels.apps_list: off hides the Suggested and Recent grids; search still works.
+        val listOn = LauncherRegistry.setup().panelEnabled(io.launcher.home.config.LauncherSetup.PANEL_APPS_LIST)
 
         binding.panelSearchClearUi.beVisibleIf(hasQuery)
-        binding.panelSuggestedHeaderUi.beVisibleIf(!hasQuery)
-        binding.panelSuggestedGridUi.beVisibleIf(!hasQuery)
+        binding.panelSuggestedHeaderUi.beVisibleIf(!hasQuery && listOn)
+        binding.panelSuggestedGridUi.beVisibleIf(!hasQuery && listOn)
 
         if (hasQuery) {
             val results = launchers.filter {
@@ -194,15 +238,25 @@ class AppsPanelSurface(
             binding.panelSearchInListUi.beVisibleIf(searchTargets.isNotEmpty())
             searchInAdapter.submitList(searchTargets)
         } else {
-            val recent = launchers.drop(SUGGESTED_COUNT).take(RECENT_COUNT)
+            // Both lists come from the launcher's own launch log (loadUsage). They used to be the
+            // first eight apps alphabetically and the next four, whatever the user actually opened.
+            // Resolved against the current list, so an uninstalled app or a fresh icon never shows stale.
+            val byPackage = launchers.associateBy { it.packageName }
+            val suggested = rankedSuggestions.mapNotNull { byPackage[it.packageName] }
+                .ifEmpty { launchers.take(SUGGESTED_COUNT) }
+                .take(SUGGESTED_COUNT)
+            val recent = usage.sortedByDescending { it.lastLaunched }
+                .mapNotNull { byPackage[it.packageName] }
+                .distinctBy { it.packageName }
+                .take(RECENT_COUNT)
             binding.panelResultsHeaderUi.beGone()
             binding.panelResultsListUi.beGone()
             binding.panelSearchInHeaderUi.beGone()
             binding.panelSearchInListUi.beGone()
-            binding.panelRecentHeaderUi.beVisibleIf(recent.isNotEmpty())
-            binding.panelRecentGridUi.beVisibleIf(recent.isNotEmpty())
+            binding.panelRecentHeaderUi.beVisibleIf(listOn && recent.isNotEmpty())
+            binding.panelRecentGridUi.beVisibleIf(listOn && recent.isNotEmpty())
 
-            suggestedAdapter.submitList(launchers.take(SUGGESTED_COUNT))
+            suggestedAdapter.submitList(suggested)
             recentAdapter.submitList(recent)
         }
     }
@@ -210,7 +264,7 @@ class AppsPanelSurface(
     private fun launchLauncher(launcher: AppLauncher) {
         if (launcher.packageName == context.applicationContext.packageName) {
             // Our own app: openHostApp closes this panel itself.
-            activity?.openHostApp()
+            activity?.openHostApp(launcher.activityName)
             return
         }
         activity?.launchApp(launcher.packageName, launcher.activityName)

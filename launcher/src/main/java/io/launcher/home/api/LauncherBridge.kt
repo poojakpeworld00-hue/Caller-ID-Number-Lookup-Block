@@ -123,6 +123,51 @@ interface LauncherBridge {
      */
     fun defaultHomeHintIntent(context: Context): Intent? = null
 
+    /**
+     * Wraps the launcher's base context in the host's in-app language.
+     *
+     * The home screen outlives a language change made inside the host, so the launcher asks this on
+     * attach and again on every resume, and rebuilds itself when the answer's locale differs from
+     * the one it was built with. Return [base] untouched to follow the system language, which is
+     * the default.
+     */
+    fun localizeContext(base: Context): Context = base
+
+    /**
+     * Whether picking the host's own dynamic shortcut [shortcutId] from its long-press menu should
+     * remove the host's icon from the home screen in place, instead of launching the shortcut.
+     *
+     * This is how a host runs a "fake uninstall" without sending the user anywhere: the launcher
+     * sets its self-hidden flag, drops every row of the host from the grid, and redraws - the user
+     * never leaves Home. False by default, which launches the shortcut like any other.
+     */
+    fun removesHostIconInPlace(activity: Activity, shortcutId: String): Boolean = false
+
+    /**
+     * An analytics event from inside the launcher, e.g. `uninstall_flow_self_hidden`. Forward it to
+     * whatever the host logs with; the default drops it.
+     */
+    fun onEvent(name: String, params: Map<String, String> = emptyMap()) {}
+
+    /**
+     * An exception the launcher caught and survived - a home-screen item that failed to draw, say.
+     *
+     * The launcher skips the broken thing and carries on, so nothing crashes and nothing reaches the
+     * host's crash reporter on its own. Forward it (Crashlytics `recordException`, or whatever the
+     * host uses) to find out which widget or row is doing it. Called at most once per broken item.
+     */
+    fun onNonFatal(error: Throwable) {}
+
+    /**
+     * The user pressed Home and landed on the launcher. [alreadyOnHome] is true when the launcher was
+     * the screen in front (a second Home press), false when Home brought it up from somewhere else.
+     * Called after the launcher has closed its drawer and panels; the default does nothing.
+     */
+    fun onHomePressed(activity: Activity, alreadyOnHome: Boolean) {}
+
+    /** Back on the bare workspace, with nothing open to close. A launcher swallows it; the default does nothing. */
+    fun onWorkspaceBack(activity: Activity) {}
+
     /** Reported after every app launch from the home screen or drawer, including the host's own. */
     fun onAppLaunched(packageName: String) {}
 

@@ -1,2 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="launcher_app_launcher_name">Messages</string>
+    <string name="launcher_launcher_settings">லாஞ்சர் அமைப்புகள்</string>
+    <string name="launcher_app_info">ஆப் தகவல்</string>
+    <string name="launcher_touch_hold_widget">விட்ஜெட்டை அழுத்திப் பிடித்து உங்கள் முகப்புத் திரையில் இழுக்கவும்</string>
+    <string name="launcher_uninstall">நிறுவல் நீக்கு</string>
+    <string name="launcher_manage_hidden_icons">மறைந்த ஐகான்களை நிர்வகி</string>
+    <string name="launcher_hidden_icons">மறைந்த ஐகான்கள்</string>
+    <string name="launcher_hidden_icons_placeholder">சில ஆப்களை கணினி கட்டுப்பாடுகள் காரணமாக நிறுவல் நீக்க முடியாது, ஆனால் அவற்றைப் பார்க்காமல் இருக்க அவற்றின் ஐகான்களையாவது மறைக்கலாம்.</string>
+    <string name="launcher_app_drawer_settings">ஆப் டிராயர்</string>
+    <string name="launcher_app_drawer_enabled">ஆப் டிராயருக்கு மேலே ஸ்வைப் செய்யவும்</string>
+    <string name="launcher_drawer_style">டிராயர் பாணி</string>
+    <string name="launcher_drawer_style_vertical">ஸ்க்ரோலிங் பட்டியல்</string>
+    <string name="launcher_drawer_style_paged">பக்கங்கள்</string>
+    <string name="launcher_app_drawer_disabled_hint">அணைந்துள்ளது: எல்லா ஆப்களும் முகப்புத் திரையில் இருக்கும், புதிய ஆப்கள் கடைசிப் பக்கத்தில் சேர்க்கப்படும்</string>
+    <string name="launcher_close_app_drawer_on_app_open">ஆப் திறக்கும்போது ஆப் டிராயரை மூடு</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">டிராயரில் தானாகக் கீபோர்டைக் காட்டு</string>
+    <string name="launcher_show_app_labels">ஆப் லேபிள்களைக் காட்டு</string>
+    <string name="launcher_home_screen_settings">முகப்புத் திரை</string>
+    <string name="launcher_widget_too_big">தற்போதைய முகப்புத் திரை அளவுக்கு விட்ஜெட் மிகப் பெரியது</string>
+    <string name="launcher_double_tap_to_lock">திரையைப் பூட்ட இருமுறை தட்டவும்</string>
+    <string name="launcher_lock_device_admin_hint">இருமுறை தட்டி திரையைப் பூட்டும் அம்சத்தை இயக்க, நிர்வாக அனுமதி வழங்க வேண்டும். இந்த அனுமதி நீக்கப்படும் வரை ஆப்பை நிறுவல் நீக்க முடியாது என்பதை நினைவில் கொள்ளவும்.</string>
+    <string name="launcher_lock_device_admin_warning">நிர்வாக அனுமதியை நீக்குவது இருமுறை தட்டி திரையைப் பூட்டும் அம்சத்தை முடக்கும்.</string>
+    <string name="launcher_pseudo_widget_clock">கடிகாரம்</string>
+    <string name="launcher_pseudo_widget_search_bar">தேடல் பட்டி</string>
+    <string name="launcher_pseudo_widget_search_bar_hint">எதையும் கேளுங்கள்…</string>
+    <string name="launcher_digital_clock_widget">டிஜிட்டல் கடிகாரம்</string>
+    <string name="launcher_analog_clock_widget">அனலாக் கடிகாரம்</string>
+    <string name="launcher_apps">ஆப்கள்</string>
+    <string name="launcher_clear">அழி</string>
+    <string name="launcher_suggested_for_now">இப்போதைக்குப் பரிந்துரைக்கப்பட்டவை</string>
+    <string name="launcher_recent_apps">சமீபத்திய ஆப்கள்</string>
+    <string name="launcher_search_in_apps">ஆப்களில் தேடு</string>
+    <string name="launcher_see_more">மேலும் பார்</string>
+    <string name="launcher_see_less">குறைவாகப் பார்</string>
+    <string name="launcher_default_launcher_banner_title">அமைவு முடிவடையவில்லை</string>
+    <string name="launcher_swipe_left_hint">தேடலுக்கு இடப்புறம் ஸ்வைப் செய்யவும்</string>
+    <string name="launcher_swipe_up_hint">எல்லா ஆப்களுக்கும் மேல் ஸ்வைப் செய்யவும்</string>
+    <string name="launcher_swipe_hint_tap">அல்லது முயற்சிக்க எங்கேயும் தட்டவும்</string>
+    <string name="launcher_greeting_morning">காலை வணக்கம்</string>
+    <string name="launcher_greeting_afternoon">மதிய வணக்கம்</string>
+    <string name="launcher_greeting_evening">மாலை வணக்கம்</string>
+    <string name="launcher_search_apps_hint">ஆப்களைத் தேடு</string>
+    <string name="launcher_suggested_apps">பரிந்துரைக்கப்பட்ட ஆப்கள்</string>
+    <string name="launcher_searched_apps">தேடப்பட்ட ஆப்கள்</string>
+</resources>

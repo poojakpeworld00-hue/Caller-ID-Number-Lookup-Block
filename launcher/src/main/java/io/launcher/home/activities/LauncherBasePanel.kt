@@ -1,8 +1,10 @@
 package io.launcher.home.activities
 
+import android.content.Context
 import android.os.Bundle
 import org.fossify.commons.activities.BaseSimpleActivity
 import io.launcher.home.R
+import io.launcher.home.api.LauncherRegistry
 import io.launcher.home.helpers.REPOSITORY_NAME
 
 open class LauncherBasePanel : BaseSimpleActivity() {
@@ -37,8 +39,27 @@ open class LauncherBasePanel : BaseSimpleActivity() {
         }
     }
 
+    /** Locale this Activity was built with; the home screen outlives a language change, so it rebuilds on return. */
+    private var builtLocale: String? = null
+
+    override fun attachBaseContext(newBase: Context) {
+        LauncherRegistry.ensure(newBase)
+        val localized = LauncherRegistry.bridge.localizeContext(newBase)
+        builtLocale = localized.resources.configuration.locales[0]?.toString()
+        super.attachBaseContext(localized)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         withFossifyPackageNameSpoofed { super.onCreate(savedInstanceState) }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Asked of the application context, which the host's in-app language has not been applied
+        // to yet, so the answer is what a freshly built launcher would get right now.
+        val now = LauncherRegistry.bridge.localizeContext(applicationContext)
+            .resources.configuration.locales[0]?.toString()
+        if (now != builtLocale) recreate()
     }
 
     override fun getPackageName(): String {

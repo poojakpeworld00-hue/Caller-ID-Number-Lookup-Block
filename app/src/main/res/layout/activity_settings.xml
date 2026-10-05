@@ -220,6 +220,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_10sdp" />
+
+                <!-- Ad consent (UMP) privacy options: shown only where the user must be able to change it -->
+                <include
+                    android:id="@+id/rowAdPrivacy"
+                    layout="@layout/item_setting_legal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:visibility="gone" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 

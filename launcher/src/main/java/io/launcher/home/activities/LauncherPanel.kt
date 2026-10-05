@@ -14,14 +14,12 @@ import android.appwidget.AppWidgetManager
 import android.util.Log
 import android.util.Property
 import android.appwidget.AppWidgetProviderInfo
-import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT
 import android.content.pm.ActivityInfo
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
-import android.content.pm.ResolveInfo
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -33,31 +31,28 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Telephony
 import android.telecom.TelecomManager
-import android.view.ContextThemeWrapper
 import android.view.GestureDetector
-import android.view.Gravity
 import android.view.Menu
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.widget.LinearLayout
-import androidx.appcompat.widget.PopupMenu
 import androidx.core.graphics.drawable.toBitmap
-import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.core.view.GestureDetectorCompat
 import androidx.core.view.isVisible
 import androidx.core.view.iterator
 import androidx.viewbinding.ViewBinding
+import io.launcher.home.helpers.FIRST_APPS_PAGE
 import kotlinx.collections.immutable.toImmutableList
 import org.fossify.commons.extensions.appLaunched
 import org.fossify.commons.extensions.beGone
 import org.fossify.commons.extensions.beVisible
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getContrastColor
-import org.fossify.commons.extensions.getPopupMenuTheme
 import org.fossify.commons.extensions.getProperBackgroundColor
 import org.fossify.commons.extensions.hasPermission
 import org.fossify.commons.extensions.hideKeyboard
@@ -65,7 +60,6 @@ import org.fossify.commons.extensions.insetsController
 import org.fossify.commons.extensions.onGlobalLayout
 import org.fossify.commons.extensions.performHapticFeedback
 import org.fossify.commons.extensions.realScreenSize
-import org.fossify.commons.extensions.showErrorToast
 import org.fossify.commons.extensions.showKeyboard
 import org.fossify.commons.extensions.toast
 import org.fossify.commons.extensions.viewBinding
@@ -82,9 +76,9 @@ import io.launcher.home.api.LauncherRegistry
 import io.launcher.home.motion.LauncherBannerMotion
 import io.launcher.home.dialogs.RenameItemTray
 import io.launcher.home.extensions.launcherConfig
-import io.launcher.home.extensions.getDrawableForPackageName
 import io.launcher.home.extensions.getLabel
 import io.launcher.home.extensions.handleGridItemPopupMenu
+import io.launcher.home.dialogs.ItemActionsTray
 import io.launcher.home.extensions.hiddenIconsDB
 import io.launcher.home.extensions.homeScreenGridItemsDB
 import io.launcher.home.extensions.isDefaultLauncher
@@ -100,14 +94,17 @@ import io.launcher.home.helpers.ITEM_TYPE_ICON
 import io.launcher.home.helpers.ITEM_TYPE_SHORTCUT
 import io.launcher.home.helpers.ITEM_TYPE_WIDGET
 import io.launcher.home.helpers.IconCache
-import io.launcher.home.helpers.IconShaper
+import io.launcher.home.helpers.LauncherScan
 import io.launcher.home.helpers.PSEUDO_WIDGET_SEARCH
 import io.launcher.home.helpers.REQUEST_ALLOW_BINDING_WIDGET
 import io.launcher.home.helpers.REQUEST_CONFIGURE_WIDGET
 import io.launcher.home.helpers.REQUEST_CREATE_SHORTCUT
 import io.launcher.home.helpers.REQUEST_DEFAULT_SMS
 import io.launcher.home.helpers.PACKAGE_REFRESH_DELAY_MS
+import io.launcher.home.helpers.UNINSTALL_WATCH_MS
+import io.launcher.home.helpers.UNINSTALL_WATCH_STEP_MS
 import io.launcher.home.helpers.UNINSTALL_APP_REQUEST_CODE
+import io.launcher.home.helpers.SelfRemoval
 import io.launcher.home.promo.LauncherAdsConfig
 import io.launcher.home.promo.LauncherGuideStep
 import io.launcher.home.promo.LauncherPromoController
@@ -125,6 +122,7 @@ import io.launcher.home.receivers.LockDeviceAdminReceiver
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sign
 
 class LauncherPanel : LauncherBasePanel(), FlingListener {
 
@@ -139,10 +137,18 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
     private var mIgnoreMoveEvents = false
     private var mIgnoreXMoveEvents = false
     private var mIgnoreYMoveEvents = false
+    // Where this gesture started and the leftmost / rightmost x it reached, to tell a pull-back
+    // from a lift wobble and a quick swipe from a slow drag.
+    private var mGestureDownX = 0f
+    private var mGestureMinX = 0f
+    private var mGestureMaxX = 0f
+    private val mTouchSlop by lazy { ViewConfiguration.get(this).scaledTouchSlop }
+    // A page swipe faster than this on average (px per ms, ~400dp/s) turns the page on release.
+    private val mQuickSwipeSpeed by lazy { 0.4f * resources.displayMetrics.density }
     // Config.isDrawerEnabled, read once per resume rather than on every touch move.
     private var mDrawerEnabled = true
     private var mLongPressedIcon: HomeScreenGridItem? = null
-    private var mOpenPopupMenu: PopupMenu? = null
+    private var mOpenPopupMenu: ItemActionsTray? = null
     private var mLastTouchCoords = Pair(-1f, -1f)
     private var mActionOnCanBindWidget: ((granted: Boolean) -> Unit)? = null
     private var mActionOnWidgetConfiguredWidget: ((granted: Boolean) -> Unit)? = null
@@ -150,6 +156,9 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
             ((shortcutId: String, label: String, icon: Drawable) -> Unit)? = null
     private var mActionOnDefaultSmsResult: (() -> Unit)? = null
     private var wasJustPaused: Boolean = false
+
+    /** Set by a Home press in onNewIntent, read (and cleared) by the onResume that follows it. */
+    private var mUnwindingFromHomePress = false
 
     private var mSwipeHintAnimator: ObjectAnimator? = null
 
@@ -184,16 +193,34 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
      * to move an ad row is a worse experience than the row moving on the next open, which is at
      * most one gesture away.
      */
-    /** Re-applies what the launcherConfig drives; the reference ran this on every RC activation. */
-    private fun onConfigUpdated() {
+    /**
+     * A panel that `launcher_config.panels` has just switched off must not stay on screen: the
+     * gesture gates only stop it opening, so one already open would otherwise be stuck there.
+     */
+    private fun closeDisabledPanels() {
+        if (isLeftPanelExpanded() && !LauncherAdsConfig.panelEnabled(LauncherAdsConfig.LEFT_SWIPE)) {
+            hideLeftPanel()
+        }
+        if (isHostPanelExpanded() && !LauncherAdsConfig.panelEnabled(LauncherAdsConfig.RIGHT_SWIPE)) {
+            hideHostPanel()
+        }
+    }
+
+    /**
+     * Re-applies what the launcherConfig drives. The host calls it when a new config has been
+     * ingested while this screen is in front (realtime update, rc_sync push).
+     */
+    fun onConfigUpdated() {
         if (isFinishing || isDestroyed) {
             return
         }
 
         refreshDefaultLauncherBanner()
+        closeDisabledPanels()
 
         if (!isAllAppsFragmentExpanded() && IconCache.launchers.isNotEmpty()) {
-            binding.allAppsFragmentUi.root.gotLaunchers(IconCache.launchers)
+            // Same apps, but the config may have moved rows (the ad row): resubmit regardless.
+            binding.allAppsFragmentUi.root.gotLaunchers(IconCache.launchers, force = true)
         }
 
         // The update gate is asked on resume, and on a cold start that resume can easily beat the
@@ -233,10 +260,7 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         private const val PERMISSION_SHEET_DELAY = 500L
 
         /** Past the guide's first post and the entrance frames; well under any realistic first swipe. */
-        private const val HOST_PANEL_WARM_UP_DELAY = 600L
-
-        /** Samples per axis taken by [calculateAverageColor]; 16² points is plenty for a tint. */
-        private const val COLOR_SAMPLE_EDGE = 16
+        private const val HOST_PANEL_WARM_UP_DELAY = 250L
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -339,12 +363,8 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         setupDefaultLauncherBanner(savedInstanceState)
         setupWallpaperColorListener()
 
-        // Arrived from onboarding (OnboardingRoute HOME), or the Home-role grant landed here and
-        // the gate called it the funnel's end: the user was promised the app, and here the app is
-        // the inbox panel. Only on a fresh create - a recreate hands the same intent back, and the
-        // panel state it had is restored on its own.
-        // A host that wants the user to land *inside* its panel rather than on the grid — the end
-        // of a first-run flow, say — starts this Activity with EXTRA_OPEN_HOST_PANEL. Only on a
+        // A host that wants the user to land *inside* its panel rather than on the grid - the end
+        // of a first-run flow, say - starts this Activity with EXTRA_OPEN_HOST_PANEL. Only on a
         // fresh create: a recreate hands the same intent back, and the panel state it had is
         // restored on its own.
         if (savedInstanceState == null) openHostPanelIfAsked(intent)
@@ -364,7 +384,11 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         // 1.3 s frame with the grid frozen under the user's finger.
         binding.mainHolderUi.postDelayed({
             Looper.myQueue().addIdleHandler {
-                if (!isFinishing && !isDestroyed) binding.hostPanelUi.root.warmUp()
+                // A host panel switched off by launcher_config is never committed at all; if the
+                // config turns it on later, showHostPanel's refresh() builds it on first open.
+                if (!isFinishing && !isDestroyed &&
+                    LauncherAdsConfig.panelEnabled(LauncherAdsConfig.RIGHT_SWIPE)
+                ) binding.hostPanelUi.root.warmUp()
                 false
             }
         }, HOST_PANEL_WARM_UP_DELAY)
@@ -381,6 +405,8 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         // resume knowing it still owes them the escalation, not start the sequence over.
         defaultLauncherRequester.restoreState(savedInstanceState)
         binding.defaultLauncherBannerUi.root.setOnClickListener { defaultLauncherRequester.start() }
+        // The card sits at the top of every page and the grid makes room for it (syncGridTopReserve),
+        // so it is not moved with the time widget or the first page.
         LauncherBannerMotion.bind(binding.defaultLauncherBannerUi)
         // Its height is only known once laid out (text wraps per width and language), so the grid's
         // reserve follows every layout pass rather than a guessed constant.
@@ -711,6 +737,23 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
      */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        // Home pressed: the long-press card goes with the rest. It is a window of its own, so
+        // closing the drawer under it left it floating over the workspace.
+        dismissItemActions()
+
+        // Only a real Home press unwinds the workspace. Any other intent - the host bringing the
+        // task back after a link or an ad, or asking for the inbox panel - used to be treated the
+        // same, which closed the panel the user was on (or was about to be shown) and dropped
+        // them on the home grid.
+        val isHomePress = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME) &&
+            !intent.getBooleanExtra(EXTRA_OPEN_HOST_PANEL, false)
+        if (!isHomePress) {
+            handleIntentAction(intent)
+            openHostPanelIfAsked(intent)
+            return
+        }
+        // Everything below starts closing; onResume must not judge the slides still on their way out.
+        mUnwindingFromHomePress = true
 
         val wasAnyFragmentOpen = isAllAppsFragmentExpanded() || isWidgetsFragmentExpanded()
         if (wasJustPaused) {
@@ -742,7 +785,7 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         }
 
         handleIntentAction(intent)
-        openHostPanelIfAsked(intent)
+        LauncherRegistry.bridge.onHomePressed(this, alreadyOnHome)
     }
 
     /**
@@ -768,6 +811,27 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
 
     override fun onResume() {
         super.onResume()
+        // A surface left open across a recreate or a trip away must still hide the workspace
+        // behind it; the grid's alpha is otherwise only set by the open and close animations.
+        //
+        // Not after a Home press: onNewIntent runs just before this and has already started taking
+        // every surface down. The "expanded" checks read positions, so a panel still sliding out
+        // counted as covering - and cancelling the grid's fade-in here left the whole workspace
+        // (icons, widgets, dock) invisible behind an empty wallpaper.
+        val unwinding = mUnwindingFromHomePress
+        mUnwindingFromHomePress = false
+        if (!unwinding && isWorkspaceCovered()) {
+            binding.homeScreenGridUi.root.animate().cancel()
+            binding.homeScreenGridUi.root.alpha = 0f
+        }
+        // Whatever path got here, a workspace nothing covers once the slides have settled is shown.
+        binding.homeScreenGridUi.root.postDelayed({
+            val grid = binding.homeScreenGridUi.root
+            if (!isFinishing && !isDestroyed && !isWorkspaceCovered() && grid.alpha < 1f) {
+                Timber.w("LauncherPanel: workspace left hidden with nothing over it - shown again")
+                grid.animate().alpha(1f).setDuration(ANIMATION_DURATION).start()
+            }
+        }, ANIMATION_DURATION * 3)
         // Remote Config switched the layout while this screen was alive: rebuild it on the new grid.
         if (reapplyLauncherStyle()) return
         wasJustPaused = false
@@ -778,10 +842,8 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         // Idempotent, so duplicate resumes cannot escalate twice.
         defaultLauncherRequester.onResume()
         refreshWallpaperSupportsDarkText()
-        // Immediately, not inside the delay below. On a *forced* update this is the re-raise: Home
-        // lands back on this Activity, and every millisecond before Play's screen returns is a
-        // millisecond of workspace the block was supposed to be covering. It needs no layout and
-        // nothing here waits on it — Play answers asynchronously either way.
+        // The Play update sheet is not raised here: the inbox panel (HomeShellFragment) owns it and
+        // asks every time the panel opens, so a forced update blocks the inbox, not the workspace.
         Handler(Looper.getMainLooper()).postDelayed({
             updateStatusBarIcons(currentSurfaceColor())
             // Whatever the user came back to, the guide's next step is owed again if the workspace
@@ -851,7 +913,7 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
     override fun onDestroy() {
         super.onDestroy()
         getSystemService(LauncherApps::class.java)?.unregisterCallback(packageCallback)
-        packageRefreshHandler.removeCallbacks(packageRefresh)
+        packageRefreshHandler.removeCallbacksAndMessages(null)
         if (isOreoMr1Plus() && wallpaperColorChangeListener != null) {
             WallpaperManager.getInstance(this)
                 .removeOnColorsChangedListener(wallpaperColorChangeListener!!)
@@ -861,6 +923,14 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
     override fun onPause() {
         super.onPause()
         wasJustPaused = true
+        // Leaving the launcher (an app, Recents, the screen going off) must not leave the card up
+        // for whatever comes back to it.
+        dismissItemActions()
+    }
+
+    private fun dismissItemActions() {
+        mOpenPopupMenu?.dismiss()
+        mOpenPopupMenu = null
     }
 
     /**
@@ -900,7 +970,9 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
             binding.homeScreenGridUi.root.hideResizeLines()
             true
         } else {
-            // this is a home launcher app, prevent back press from doing anything
+            // this is a home launcher app, prevent back press from doing anything - the host may
+            // still treat it as its moment (an ad on Back, say)
+            LauncherRegistry.bridge.onWorkspaceBack(this)
             true
         }
     }
@@ -909,11 +981,10 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         super.onActivityResult(requestCode, resultCode, resultData)
 
         when (requestCode) {
-            UNINSTALL_APP_REQUEST_CODE -> {
-                ensureBackgroundThread {
-                    refreshLaunchers()
-                }
-            }
+            // Nothing here: the dialog comes back while the package is still being removed, and a
+            // refresh then read a half-removed app - its name gone, re-sorted, still listed.
+            // watchUninstall refreshes once the package is actually gone.
+            UNINSTALL_APP_REQUEST_CODE -> Unit
 
             REQUEST_DEFAULT_SMS -> {
                 mActionOnDefaultSmsResult?.invoke()
@@ -944,6 +1015,26 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         }
     }
 
+    /**
+     * A flick that slows down as it lifts often reports no fling at all (its release velocity falls
+     * under the fling threshold), and then settled by distance - a quarter-page flick snapped back.
+     * Judged on the whole gesture instead: fast on average and not pulled back. True = next page.
+     */
+    private fun quickSwipeDirection(up: MotionEvent): Boolean? {
+        val travel = up.x - mGestureDownX
+        val duration = (up.eventTime - up.downTime).coerceAtLeast(1L)
+        if (abs(travel) <= 2 * mTouchSlop || abs(travel) / duration < mQuickSwipeSpeed) return null
+        val retreat = if (travel < 0) up.x - mGestureMinX else mGestureMaxX - up.x
+        if (retreat > mTouchSlop) return null
+        return travel < 0
+    }
+
+    private fun resetGestureRange(x: Float) {
+        mGestureDownX = x
+        mGestureMinX = x
+        mGestureMaxX = x
+    }
+
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         binding.allAppsFragmentUi.root.onConfigurationChanged()
@@ -959,6 +1050,18 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
 
         if (mLongPressedIcon != null && event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
             mLastUpEvent = System.currentTimeMillis()
+        }
+
+        // Before the detector, so onFling on this UP sees the gesture's full x range.
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+            resetGestureRange(event.x)
+        } else {
+            for (i in 0 until event.historySize) {
+                mGestureMinX = min(mGestureMinX, event.getHistoricalX(i))
+                mGestureMaxX = max(mGestureMaxX, event.getHistoricalX(i))
+            }
+            mGestureMinX = min(mGestureMinX, event.x)
+            mGestureMaxX = max(mGestureMaxX, event.x)
         }
 
         try {
@@ -983,6 +1086,7 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
                 val hasFingerMoved = if (mTouchDownX == -1 || mTouchDownY == -1) {
                     mTouchDownX = event.x.toInt()
                     mTouchDownY = event.y.toInt()
+                    resetGestureRange(event.x)
                     false
                 } else {
                     hasFingerMoved(event)
@@ -1042,6 +1146,9 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
                 mIgnoreMoveEvents = false
                 mLongPressedIcon = null
                 mLastTouchCoords = Pair(-1f, -1f)
+                // An empty card is never put on screen, so it never reports a dismiss: let go of it
+                // here, or the next long press would think a card is still open.
+                if (mOpenPopupMenu?.isEmpty == true) mOpenPopupMenu = null
                 resetFragmentTouches()
                 binding.homeScreenGridUi.root.itemDraggingStopped()
 
@@ -1075,7 +1182,12 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
                 // between two pages - icons cut at both edges, the indicator dot frozen mid-way -
                 // until the next horizontal drag.
                 if (!mIgnoreXMoveEvents) {
-                    binding.homeScreenGridUi.root.finalizeSwipe()
+                    val grid = binding.homeScreenGridUi.root
+                    // No fling claimed this release, yet the swipe was quick: commit the page.
+                    if (!mIgnoreUpEvent && mIgnoreYMoveEvents && event.actionMasked == MotionEvent.ACTION_UP) {
+                        quickSwipeDirection(event)?.let { grid.flingSwipe(towardsNext = it) }
+                    }
+                    grid.finalizeSwipe()
                 }
 
                 mIgnoreXMoveEvents = false
@@ -1150,10 +1262,12 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
     }
 
     private fun findFirstEmptyCell(): Pair<Int, Rect> {
-        val gridItems = homeScreenGridItemsDB.getAllItems() as ArrayList<HomeScreenGridItem>
-        val maxPage = gridItems.maxOf { it.page }
-        val occupiedCells = ArrayList<Triple<Int, Int, Int>>()
-        gridItems.toImmutableList().filter { it.parentId == null }.forEach { item ->
+        val gridItems = homeScreenGridItemsDB.getAllItems()
+        // Pinned shortcuts go where apps go: never on the first page, which belongs to the time and
+        // search widgets, and never below the last workspace row, which is the dock.
+        val maxPage = (gridItems.maxOfOrNull { it.page } ?: FIRST_APPS_PAGE).coerceAtLeast(FIRST_APPS_PAGE)
+        val occupiedCells = HashSet<Triple<Int, Int, Int>>()
+        gridItems.filter { it.parentId == null && !it.docked }.forEach { item ->
             for (xCell in item.left..item.right) {
                 for (yCell in item.top..item.bottom) {
                     occupiedCells.add(Triple(item.page, xCell, yCell))
@@ -1161,9 +1275,10 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
             }
         }
 
-        for (page in 0 until maxPage) {
-            for (checkedYCell in 0 until launcherConfig.homeColumnCount) {
-                for (checkedXCell in 0 until launcherConfig.homeRowCount - 1) {
+        // Row by row, left to right, through every page including the last one.
+        for (page in FIRST_APPS_PAGE..maxPage) {
+            for (checkedYCell in 0 until launcherConfig.homeRowCount - 1) {
+                for (checkedXCell in 0 until launcherConfig.homeColumnCount) {
                     val wantedCell = Triple(page, checkedXCell, checkedYCell)
                     if (!occupiedCells.contains(wantedCell)) {
                         return Pair(
@@ -1191,6 +1306,48 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
 
     private val packageRefreshHandler = Handler(Looper.getMainLooper())
 
+    /**
+     * Watches [packageName] after its uninstall dialog opens: every [UNINSTALL_WATCH_STEP_MS] for
+     * up to [UNINSTALL_WATCH_MS], and the moment the package is gone the drawer and the home screen
+     * are refreshed. A cancelled dialog simply runs out the clock. Not every OEM delivers the
+     * LauncherApps removal to a launcher promptly, so this does not rely on it.
+     */
+    /**
+     * The in-place fake uninstall (LauncherBridge.removesHostIconInPlace): our rows leave the grid, the
+     * dock spot is handed back to the host, and the grid is redrawn - the user never leaves Home.
+     */
+    fun removeSelfFromHome() {
+        LauncherRegistry.bridge.onEvent("uninstall_flow_self_hidden", mapOf("trigger" to "shortcut_in_place"))
+        // Flag first, on this thread: the grid drops our rows on any load from here on.
+        launcherConfig.selfIconHidden = true
+        ensureBackgroundThread {
+            SelfRemoval.hide(this)
+            runOnUiThread {
+                if (!isFinishing && !isDestroyed) binding.homeScreenGridUi.root.fetchGridItems()
+            }
+        }
+    }
+
+    fun watchUninstall(packageName: String) {
+        val deadline = android.os.SystemClock.elapsedRealtime() + UNINSTALL_WATCH_MS
+        val check = object : Runnable {
+            override fun run() {
+                if (isFinishing || isDestroyed) return
+                val gone = runCatching { packageManager.getPackageInfo(packageName, 0) }.isFailure
+                when {
+                    gone -> {
+                        Timber.d("LauncherPanel: $packageName uninstalled - refreshing")
+                        packageRefreshHandler.removeCallbacks(packageRefresh)
+                        packageRefresh.run()
+                    }
+                    android.os.SystemClock.elapsedRealtime() < deadline ->
+                        packageRefreshHandler.postDelayed(this, UNINSTALL_WATCH_STEP_MS)
+                }
+            }
+        }
+        packageRefreshHandler.postDelayed(check, UNINSTALL_WATCH_STEP_MS)
+    }
+
     // A burst (an update is a remove and an add; a split install several changes) collapses into
     // one refresh.
     private val packageRefresh = Runnable {
@@ -1217,6 +1374,10 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
     // the same new app missing and put it on the workspace twice.
     private val refreshLock = Any()
 
+    /** True while [packageName] is installed and enabled - so also for the length of its update. */
+    private fun isInstalledAndEnabled(packageName: String): Boolean =
+        runCatching { packageManager.getApplicationInfo(packageName, 0).enabled }.getOrDefault(false)
+
     private fun refreshLaunchers(): Unit = synchronized(refreshLock) {
         // First run: the dock is seeded from PackageManager alone, ahead of the icon decode
         // below, so the workspace shows its four apps at once instead of staying blank for as
@@ -1232,13 +1393,38 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
             binding.homeScreenGridUi.root.fetchGridItems()
         }
 
+        // First run: everything that only places apps needs their names, not their icons. Seeding
+        // the first page and filling the workspace from the label-only list puts the time, the
+        // search bar and the apps on screen at once, instead of behind the full icon decode below
+        // (which the host may already have run - see LauncherScan.prewarm). The steps after this
+        // are idempotent, so they find this work done and only fill in what is missing.
+        if (!launcherConfig.homeSeeded && !launcherConfig.homeRebuildPending) {
+            val names = LauncherScan.quick(this)
+            HomeSeeder.seedFirstPage(this, names)
+            if (!launcherConfig.isDrawerEnabled || launcherConfig.homeAndDrawer) {
+                HomeAppsFiller.placeMissing(this, names)
+            }
+            binding.homeScreenGridUi.root.fetchGridItems()
+        }
+
+        val knownSignature = IconCache.installedSignature
         val launchers = getAllAppLaunchers()
+        // Widget providers come from the installed packages, which the scan's signature covers
+        // (installs, removals, updates). Same signature, same providers: the list is not rebuilt -
+        // that decoded every installed widget's preview again on every return to the home screen.
+        val appsChanged = knownSignature == null || knownSignature != IconCache.installedSignature
         binding.allAppsFragmentUi.root.gotLaunchers(launchers)
         binding.leftPanelUi.root.gotLaunchers(launchers)
-        binding.widgetsFragmentUi.root.getAppWidgets()
+        if (appsChanged || !binding.widgetsFragmentUi.root.hasWidgets()) {
+            binding.widgetsFragmentUi.root.getAppWidgets()
+        }
 
+        // An app being updated drops out of the launcher list for a moment (onPackagesUnavailable
+        // with replacing = true); deleting its rows then threw away its icons and widgets - the
+        // Google search bar on every Google app update. Only an app that is really gone, or
+        // disabled, loses them.
         IconCache.launchers.map { it.packageName }.forEach { packageName ->
-            if (!launchers.map { it.packageName }.contains(packageName)) {
+            if (!launchers.map { it.packageName }.contains(packageName) && !isInstalledAndEnabled(packageName)) {
                 launchersDB.deleteApp(packageName)
                 homeScreenGridItemsDB.deleteByPackageName(packageName)
             }
@@ -1256,9 +1442,9 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
             launcherConfig.homeRebuildPending = false
         }
         HomeSeeder.seedFirstPage(this, launchers)
-        // launcher_config.search_widget changed: the old bar's view is a child of the grid, which a
-        // refetch does not take away, so the screen is rebuilt around the new one.
-        if (HomeWidgetSeeder.syncSearchWidget(this)) {
+        // launcher_config switched a first-page widget off (or swapped the search bar): the old
+        // view is a child of the grid, which a refetch does not take away, so the screen is rebuilt.
+        if (HomeWidgetSeeder.syncFirstPage(this)) {
             runOnUiThread { if (!isFinishing && !isDestroyed) recreate() }
             return
         }
@@ -1266,6 +1452,7 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
             HomeAppsFiller.placeMissing(this, launchers)
         }
         HomeSeeder.placeNewInstalls(this, launchers)
+        purgeStrayHostIconsIfNeeded()
 
         if (!launcherConfig.wasSearchBarPurged) {
             ensureBackgroundThread {
@@ -1281,7 +1468,8 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
 
     /**
      * Re-reads launcher_config.os_style and, when it changed, recreates this screen on the new
-     * layout. Also called from TextlyApplication on an rc_sync push. Returns true when it recreated.
+     * layout. Also called by the host when a config is ingested while this screen is in front.
+     * Returns true when it recreated.
      */
     fun reapplyLauncherStyle(): Boolean {
         if (isFinishing || isDestroyed) return false
@@ -1310,7 +1498,9 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
             Timber.d("LauncherPanel: apps panel disabled by launcher_config")
             return
         }
+        if (isLeftPanelExpanded()) return
         LauncherPromoController.run(this, LauncherAdsConfig.LEFT_SWIPE) {
+            if (isFinishing || isDestroyed || isLeftPanelExpanded()) return@run
             // Before the slide, so the request is already in flight while the panel travels. After
             // the promo interstitial rather than before it, so the two are never in the air at once.
             binding.leftPanelUi.root.refreshAds()
@@ -1331,16 +1521,17 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
     }
 
     /**
-     * Our own icon tapped in the drawer or the apps panel: the same as the dock icon — the host
-     * panel slides in, or, with that panel switched off, the host's launch component opens.
+     * Our own icon tapped on the grid, in the drawer or in the apps panel: the same as the dock
+     * icon - the host panel slides in, or, with that panel switched off, the host's launch
+     * component opens. Never our LAUNCHER entry, which would only route back here.
      */
-    fun openHostApp() {
+    fun openHostApp(fallbackActivity: String = "") {
         if (isAllAppsFragmentExpanded()) closeAppDrawer()
         if (isLeftPanelExpanded()) hideLeftPanel()
         if (LauncherAdsConfig.panelEnabled(LauncherAdsConfig.RIGHT_SWIPE)) {
             showHostPanel()
         } else {
-            launchApp(packageName, hostActivityName())
+            launchApp(packageName, hostActivityName().ifEmpty { fallbackActivity })
         }
     }
 
@@ -1350,7 +1541,10 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
             Timber.d("LauncherPanel: messages panel disabled by launcher_config")
             return
         }
+        // Already in (or on its way): a second right swipe is not a second request.
+        if (isHostPanelExpanded()) return
         LauncherPromoController.run(this, LauncherAdsConfig.RIGHT_SWIPE) {
+            if (isFinishing || isDestroyed || isHostPanelExpanded()) return@run
             // After the ad, not before: committing the inbox starts its own permission chain, and
             // two full-screen things arriving at once would stack a system dialog behind the ad.
             revealHostPanel()
@@ -1512,10 +1706,18 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         }
 
         // fade the grid out behind the fragment, fragmentCollapsed() cancels this and restores it
-        binding.homeScreenGridUi.root.animate()
-            .alpha(0f)
-            .setDuration(animationDuration)
-            .start()
+        if (animationDuration == 0L) {
+            // onRestoreInstanceState after a theme flip: the sheet's animator above lands this
+            // frame, but a view animator only runs on the next one, so the restored drawer sat over
+            // a fully drawn workspace until then - or for good, when that frame never ran it.
+            binding.homeScreenGridUi.root.animate().cancel()
+            binding.homeScreenGridUi.root.alpha = 0f
+        } else {
+            binding.homeScreenGridUi.root.animate()
+                .alpha(0f)
+                .setDuration(animationDuration)
+                .start()
+        }
 
         // see showSidePanel: repainted with the navigation bar rather than after the slide
         updateStatusBarIcons(sheetBackgroundColor(fragment))
@@ -1574,14 +1776,25 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         val clickedGridItem = binding.homeScreenGridUi.root.isClickingGridItem(x.toInt(), y.toInt())
         if (clickedGridItem != null) {
             performItemLongClick(x, clickedGridItem)
+        }
+        // Empty space does nothing: the home offers no launcher customisation (widgets,
+        // wallpapers, launcher settings) - it is part of the host app, not a launcher to tune.
+    }
+
+    /**
+     * True while a surface lies over the workspace. A tap on a part of that surface which takes no
+     * touches itself - the empty space of the drawer's search screen, say - still reaches this
+     * Activity's detector, which used to read it as a tap on the home page underneath and launch
+     * whatever icon sat at that spot (on a page with icons there, so only "sometimes").
+     */
+    private fun isWorkspaceCovered() =
+        isAllAppsFragmentExpanded() || isWidgetsFragmentExpanded() || isLeftPanelExpanded() || isHostPanelExpanded()
+
+    fun homeScreenClicked(eventX: Float, eventY: Float) {
+        if (isWorkspaceCovered()) {
             return
         }
 
-        binding.mainHolderUi.performHapticFeedback()
-        showMainLongPressMenu(x, y)
-    }
-
-    fun homeScreenClicked(eventX: Float, eventY: Float) {
         // The guide takes the tap before the workspace does. Its scrim covers the screen, so a tap
         // "on an icon" underneath is one the user could not have aimed — they were looking at the
         // coach mark. Consumed, so nothing behind it is launched by accident.
@@ -1601,6 +1814,11 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
     }
 
     fun homeScreenDoubleTapped(eventX: Float, eventY: Float) {
+        // Same reason as homeScreenClicked: a double tap through the drawer would lock the phone.
+        if (isWorkspaceCovered()) {
+            return
+        }
+
         val (x, y) = binding.homeScreenGridUi.root.intoViewSpaceCoords(eventX, eventY)
         val clickedGridItem = binding.homeScreenGridUi.root.isClickingGridItem(x.toInt(), y.toInt())
         if (clickedGridItem != null) {
@@ -1669,7 +1887,7 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
             ITEM_TYPE_ICON -> if (clickedGridItem.packageName == packageName) {
                 // Our own icon (dock or grid) slides the host panel in - same promo, motion and Back
                 // as the swipe - or, with the panel off, opens the host's launch component.
-                openHostApp()
+                openHostApp(clickedGridItem.activityName)
             } else {
                 launchApp(clickedGridItem.packageName, clickedGridItem.activityName)
             }
@@ -1708,23 +1926,36 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
     ) {
         binding.homeScreenGridUi.root.hideResizeLines()
         mLongPressedIcon = gridItem
-        val anchorY = if (isOnAllAppsFragment || gridItem.type == ITEM_TYPE_WIDGET) {
-            val iconSize = realScreenSize.x / launcherConfig.drawerColumnCount
-            y - iconSize / 2f
-        } else {
-            val clickableRect = binding.homeScreenGridUi.root.getClickableRect(gridItem)
-            clickableRect.top.toFloat() - binding.homeScreenGridUi.root.getCurrentIconSize() / 2f
+        // The card is placed against the item's bounds on screen, so it can sit clear of it. A
+        // drawer tile reports screen coordinates already; grid rows and widgets are in the grid's.
+        val grid = binding.homeScreenGridUi.root
+        val gridOnScreen = IntArray(2).also { grid.getLocationOnScreen(it) }
+        val (centerX, itemTop, itemBottom) = when {
+            isOnAllAppsFragment -> {
+                val tile = realScreenSize.x / launcherConfig.drawerColumnCount.toFloat()
+                Triple(x, y, y + tile)
+            }
+            gridItem.type == ITEM_TYPE_WIDGET -> {
+                val top = gridOnScreen[1] + y
+                Triple(gridOnScreen[0] + x, top, top + gridItem.getHeightInCells() * grid.cellHeight)
+            }
+            else -> {
+                val rect = grid.getClickableRect(gridItem)
+                Triple(gridOnScreen[0] + rect.exactCenterX(), gridOnScreen[1] + rect.top.toFloat(), gridOnScreen[1] + rect.bottom.toFloat())
+            }
         }
 
-        binding.homeScreenPopupMenuAnchorUi.x = x
-        binding.homeScreenPopupMenuAnchorUi.y = anchorY
-
-        if (mOpenPopupMenu == null) {
+        // A card that is not on screen (an empty one is never shown, and touches in the drawer do
+        // not reach the finger-up that would drop it) does not block the next one.
+        if (mOpenPopupMenu?.isShowing != true) {
             mOpenPopupMenu = handleGridItemPopupMenu(
-                anchorView = binding.homeScreenPopupMenuAnchorUi,
+                anchorView = binding.root,
                 gridItem = gridItem,
                 isOnAllAppsFragment = isOnAllAppsFragment,
-                listener = menuListener
+                listener = menuListener,
+                centerX = centerX,
+                itemTop = itemTop,
+                itemBottom = itemBottom,
             )
         }
     }
@@ -1733,33 +1964,6 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         mLongPressedIcon = gridItem
         hideFragment(binding.widgetsFragmentUi)
         binding.homeScreenGridUi.root.itemDraggingStarted(mLongPressedIcon!!)
-    }
-
-    private fun showMainLongPressMenu(x: Float, y: Float) {
-        binding.homeScreenGridUi.root.hideResizeLines()
-        binding.homeScreenPopupMenuAnchorUi.x = x
-        binding.homeScreenPopupMenuAnchorUi.y =
-            y - resources.getDimension(R.dimen.launcher_long_press_anchor_button_offset_y) * 2
-        val contextTheme = ContextThemeWrapper(this, getPopupMenuTheme())
-        PopupMenu(
-            contextTheme,
-            binding.homeScreenPopupMenuAnchorUi,
-            Gravity.TOP or Gravity.END
-        ).apply {
-            inflate(R.menu.lnch_menu_home_screen)
-            menu.findItem(R.id.set_as_defaultUi).isVisible = !isDefaultLauncher()
-            setOnMenuItemClickListener { item ->
-                when (item.itemId) {
-                    R.id.widgetsUi -> showWidgetsFragment()
-                    R.id.wallpapersUi -> launchWallpapersIntent()
-                    R.id.launcher_settingsUi -> launchSettings()
-                    // Same escalation the banner runs, so the two routes to the role cannot drift.
-                    R.id.set_as_defaultUi -> defaultLauncherRequester.start()
-                }
-                true
-            }
-            show()
-        }
     }
 
     private fun resetFragmentTouches() {
@@ -1772,10 +1976,6 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
             touchDownY = -1
             ignoreTouches = false
         }
-    }
-
-    private fun showWidgetsFragment() {
-        showFragment(binding.widgetsFragmentUi)
     }
 
     private fun hideIconUi(item: HomeScreenGridItem) {
@@ -1793,24 +1993,6 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         RenameItemTray(this, homeScreenGridItem) {
             binding.homeScreenGridUi.root.fetchGridItems()
         }
-    }
-
-    private fun launchWallpapersIntent() {
-        try {
-            Intent(Intent.ACTION_SET_WALLPAPER).apply {
-                startActivity(this)
-            }
-        } catch (_: ActivityNotFoundException) {
-            toast(org.fossify.commons.R.string.no_app_found)
-        } catch (e: Exception) {
-            showErrorToast(e)
-        }
-    }
-
-    private fun launchSettings() {
-        startActivity(
-            Intent(this@LauncherPanel, LauncherPrefsPanel::class.java)
-        )
     }
 
     val menuListener: ItemMenuListener = object : ItemMenuListener {
@@ -1846,18 +2028,6 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
             mOpenPopupMenu = null
             resetFragmentTouches()
         }
-
-        override fun beforeShow(menu: Menu) {
-            var visibleMenuItems = 0
-            for (item in menu.iterator()) {
-                if (item.isVisible) {
-                    visibleMenuItems++
-                }
-            }
-            val yOffset =
-                resources.getDimension(R.dimen.launcher_long_press_anchor_button_offset_y) * (visibleMenuItems - 1)
-            binding.homeScreenPopupMenuAnchorUi.y -= yOffset
-        }
     }
 
     private class MyGestureListener(
@@ -1891,7 +2061,22 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
                     flingListener.onFlingUp()
                 }
             } else if (abs(velocityX) > abs(velocityY)) {
-                if (velocityX > 0) {
+                // The finger's whole travel decides the direction, not its last instant: a flick
+                // that slows down or wobbles as it lifts often reports a velocity against its own
+                // drag, which read as a fling the other way and opened the opposite panel. Only a
+                // real pull-back - the finger retreating past the touch slop from the farthest
+                // point it reached - is a change of mind; that release is left to ACTION_UP,
+                // which settles the page by distance.
+                val travelX = if (event1 != null) event2.x - event1.x else velocityX
+                val direction = if (travelX != 0f) travelX else velocityX
+                if (sign(direction) != sign(velocityX)) {
+                    val panel = flingListener as LauncherPanel
+                    val retreat = if (direction < 0) event2.x - panel.mGestureMinX else panel.mGestureMaxX - event2.x
+                    if (retreat > panel.mTouchSlop) {
+                        return true
+                    }
+                }
+                if (direction > 0) {
                     flingListener.onFlingRight()
                 } else {
                     flingListener.onFlingLeft()
@@ -1938,21 +2123,35 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         }
     }
 
+    /**
+     * A side panel is open or sliding in. It covers the workspace (the grid is faded to nothing
+     * behind it), so a horizontal fling is not the workspace's to act on: it used to page the
+     * invisible grid, and a second right swipe over the open panel left the user on the first
+     * ("home") page when the panel closed.
+     */
+    private fun sidePanelOwnsFlings() =
+        mOpenSidePanel != null || isHostPanelExpanded() || isLeftPanelExpanded()
+
     override fun onFlingRight() {
         if (mIgnoreXMoveEvents) {
             return
         }
 
         mIgnoreUpEvent = true
-        // A page already being dragged this way is committed by the fling; the side panel takes a
-        // fling only where no page could be pulled in (the first page, or the drawer up).
-        if (binding.homeScreenGridUi.root.flingSwipe(towardsNext = false)) {
+        if (sidePanelOwnsFlings()) {
             return
         }
-        if (!isAllAppsFragmentExpanded() && !isWidgetsFragmentExpanded()) {
+        val grid = binding.homeScreenGridUi.root
+        // Paging owns the fling while a page is dragged or still settling (see flingSwipe). The
+        // host panel sits left of the home page, so it opens only from there, at rest; anywhere
+        // else a rightward fling is just the previous page.
+        if (grid.flingSwipe(towardsNext = false)) {
+            return
+        }
+        if (!isAllAppsFragmentExpanded() && !isWidgetsFragmentExpanded() && grid.isOnFirstPage()) {
             showHostPanel()
         } else {
-            binding.homeScreenGridUi.root.prevPage(redraw = true)
+            grid.prevPage(redraw = true)
         }
     }
 
@@ -1962,158 +2161,33 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
         }
 
         mIgnoreUpEvent = true
-        // see onFlingRight: a dragged page is committed, the panel takes the rest
-        if (binding.homeScreenGridUi.root.flingSwipe(towardsNext = true)) {
+        if (sidePanelOwnsFlings()) {
             return
         }
-        if (!isAllAppsFragmentExpanded() && !isWidgetsFragmentExpanded()) {
+        val grid = binding.homeScreenGridUi.root
+        // see onFlingRight: the apps panel sits right of the last page and opens only from it
+        if (grid.flingSwipe(towardsNext = true)) {
+            return
+        }
+        if (!isAllAppsFragmentExpanded() && !isWidgetsFragmentExpanded() && grid.isOnLastPage()) {
             showLeftPanel()
         } else {
-            binding.homeScreenGridUi.root.nextPage(redraw = true)
+            grid.nextPage(redraw = true)
         }
     }
 
-    /**
-     * The installed set, in a form cheap enough to compare on every resume.
-     *
-     * `sourceDir` is what makes this catch app *updates* as well as installs and removals: the
-     * installer writes an updated APK to a fresh directory, so the path moves whenever the icon
-     * behind it could have. It rides along on the ResolveInfo already fetched, so this costs no
-     * extra binder call.
-     *
-     * The hidden set is folded in because it is the other input to the result — without it, hiding
-     * or unhiding an icon would leave the drawer showing the old list until something else
-     * invalidated the cache.
-     */
-    private fun installedSignature(
-        list: List<ResolveInfo>,
-        hiddenIcons: List<String>,
-    ): String {
-        val apps = list
-            .map { "${it.activityInfo.packageName}/${it.activityInfo.name}/${it.activityInfo.applicationInfo.sourceDir}" }
-            .sorted()
-        return apps.joinToString("\n") + "\u0000" + hiddenIcons.sorted().joinToString("\n")
-    }
-
-    // Two resumes in quick succession (a Home press landing on a fresh process, a new intent)
-    // each start a background rebuild before either has filled the cache; the second waits here
-    // and then finds the first one's answer by signature instead of decoding every icon again.
-    private val launchersLock = Any()
-
-    @SuppressLint("WrongConstant")
-    fun getAllAppLaunchers(): ArrayList<AppLauncher> = synchronized(launchersLock) {
-        val hiddenIcons = hiddenIconsDB.getHiddenIcons().map {
-            it.getIconIdentifier()
-        }
-
-        val allApps = ArrayList<AppLauncher>()
-        val intent = Intent(Intent.ACTION_MAIN, null)
-        intent.addCategory(Intent.CATEGORY_LAUNCHER)
-
-        val simpleLauncher = applicationContext.packageName
-        val microG = "com.google.android.gms"
-        val list = packageManager.queryIntentActivities(intent, PackageManager.PERMISSION_GRANTED)
-
-        // Everything below decodes an icon per installed app. Skipped outright when the installed
-        // set is byte-for-byte what it was when the cache was built — which is every resume that is
-        // just the user pressing Home. The signature is derived from `list`, which we needed
-        // anyway, so the check itself is one already-paid binder call plus a string compare.
-        val signature = installedSignature(list, hiddenIcons)
-        val cached = IconCache.launchers
-        if (cached.isNotEmpty() && signature == IconCache.installedSignature) {
-            return@synchronized ArrayList(cached)
-        }
-
-        val started = android.os.SystemClock.elapsedRealtime()
-        val wanted = list.filter { info ->
-            val packageName = info.activityInfo.applicationInfo.packageName
-            // Our own app is listed too (unless the fake uninstall hid it); tapping it goes
-            // through openHostApp, not its LAUNCHER entry, which would only route back here.
-            (packageName != simpleLauncher || !launcherConfig.selfIconHidden) && packageName != microG &&
-                !hiddenIcons.contains("$packageName/${info.activityInfo.name}")
-        }
-
-        // Nothing to show yet (first run, or the process came back with an empty table): hand
-        // the drawer and the apps panel the labels straight away, on their placeholder tiles,
-        // so the lists are usable while the icons below are still rendering.
-        if (cached.isEmpty()) {
-            val quick = ArrayList(wanted.map { info ->
-                AppLauncher(
-                    id = null,
-                    title = info.loadLabel(packageManager).toString(),
-                    packageName = info.activityInfo.applicationInfo.packageName,
-                    activityName = info.activityInfo.name,
-                    order = 0,
-                    thumbnailColor = 0,
-                    drawable = null
-                )
-            })
+    /** The launcher list, built by [LauncherScan]; the drawer and apps panel get it in stages on a cold start. */
+    fun getAllAppLaunchers(): ArrayList<AppLauncher> = LauncherScan.scan(
+        this,
+        onQuick = { quick ->
             binding.allAppsFragmentUi.root.gotLaunchers(quick)
             binding.leftPanelUi.root.gotLaunchers(quick)
-        }
-
-        // A launcher already cached from the same APK keeps its icon: one app installed or removed
-        // decodes one icon, not every installed app's again.
-        fun keyOf(info: ResolveInfo) = "${info.activityInfo.applicationInfo.packageName}/${info.activityInfo.name}"
-        val sourceDirs = wanted.associate { keyOf(it) to it.activityInfo.applicationInfo.sourceDir.orEmpty() }
-        val knownDirs = IconCache.sourceDirs
-        val reusable = cached
-            .filter { it.drawable != null }
-            .associateBy { "${it.packageName}/${it.activityName}" }
-            .filterKeys { key -> knownDirs[key] != null && knownDirs[key] == sourceDirs[key] }
-
-        // One icon per installed app: an XML inflate, a render and a colour average each, all
-        // independent, so they are spread over the cores rather than queued on one thread. The
-        // render is capped at the size any list here draws it - an adaptive icon's intrinsic
-        // size is 108 dp, which at this density is a 400 px bitmap nobody ever sees.
-        val iconPx = resources.getDimensionPixelSize(R.dimen.launcher_icon_cache_size)
-        val legacyTray = launcherConfig.legacyIconTray
-        val pool = java.util.concurrent.Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors().coerceIn(2, 6)
-        )
-        try {
-            val decoded = wanted.map { info ->
-                reusable[keyOf(info)]?.let { kept ->
-                    return@map java.util.concurrent.CompletableFuture.completedFuture<AppLauncher?>(
-                        kept.copy(title = info.loadLabel(packageManager).toString())
-                    )
-                }
-                pool.submit<AppLauncher?> {
-                    val packageName = info.activityInfo.applicationInfo.packageName
-                    val drawable = info.loadIcon(packageManager)?.let { IconShaper.shape(it, legacyTray) }
-                        ?: getDrawableForPackageName(packageName)
-                        ?: return@submit null
-                    val bitmap = drawable.toBitmap(
-                        width = drawable.intrinsicWidth.coerceIn(1, iconPx),
-                        height = drawable.intrinsicHeight.coerceIn(1, iconPx),
-                        config = Bitmap.Config.ARGB_8888
-                    )
-                    AppLauncher(
-                        id = null,
-                        title = info.loadLabel(packageManager).toString(),
-                        packageName = packageName,
-                        activityName = info.activityInfo.name,
-                        order = 0,
-                        thumbnailColor = calculateAverageColor(bitmap),
-                        drawable = bitmap.toDrawable(resources)
-                    )
-                }
-            }
-            // One app whose icon will not load (a broken resource, an uninstall mid-decode) is
-            // skipped, the way the loop it replaced skipped it - not the whole list dropped.
-            decoded.forEach { future -> runCatching { future.get() }.getOrNull()?.let(allApps::add) }
-        } finally {
-            pool.shutdown()
-        }
-
-        Timber.d("LauncherPanel: ${allApps.size} launchers, ${allApps.size - reusable.size} icons decoded in ${android.os.SystemClock.elapsedRealtime() - started} ms")
-        launchersDB.insertAll(allApps)
-        // Last, so a throw anywhere above leaves the signature stale and the next resume retries
-        // rather than caching a half-built list.
-        IconCache.installedSignature = signature
-        IconCache.sourceDirs = sourceDirs
-        allApps
-    }
+        },
+        onProgress = { partial ->
+            binding.allAppsFragmentUi.root.gotLaunchers(partial)
+            binding.leftPanelUi.root.gotLaunchers(partial)
+        },
+    )
 
     /**
      * Takes the search pill off the home screen.
@@ -2125,6 +2199,28 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
      * Once only, hence the flag: the pill is still offered by the widgets picker, and a user who
      * deliberately adds it back must not have it swept away on the next resume.
      */
+    /**
+     * Takes our own icon off the home pages, once.
+     *
+     * An older build's HomeAppsFiller did not skip the host, so our LAUNCHER entry was placed on a
+     * workspace page next to the dock's own row - a stray Caller ID icon in a random cell. The
+     * filler skips us now; this clears what it already placed. The dock slot (docked) and anything
+     * inside a folder are left alone, and it runs once, so an icon the user drags onto the home
+     * screen later stays where they put it. Off the main thread, before the grid's next fetch.
+     */
+    private fun purgeStrayHostIconsIfNeeded() {
+        if (launcherConfig.wereStrayHostIconsPurged) return
+        launcherConfig.wereStrayHostIconsPurged = true
+        runCatching {
+            val own = packageName
+            val stray = homeScreenGridItemsDB.getAllItems().filter {
+                it.type == ITEM_TYPE_ICON && !it.docked && it.parentId == null && it.packageName == own
+            }
+            stray.forEach { item -> item.id?.let { homeScreenGridItemsDB.deleteById(it) } }
+            if (stray.isNotEmpty()) Timber.i("LauncherPanel: removed ${stray.size} stray host icon(s) from the home pages")
+        }.onFailure { Timber.w(it, "LauncherPanel: stray host icon purge failed") }
+    }
+
     private fun purgeSeededSearchBarIfNeeded() {
         if (launcherConfig.wasSearchBarPurged) {
             return
@@ -2139,12 +2235,23 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
     }
 
     /**
-     * The app the dock's reserved slot should carry - the host by default, or whatever the host
-     * names instead. See [io.launcher.home.api.LauncherBridge.dockSlotPackage]: a host that follows
-     * a role rather than a package answers there, and the sync below swaps the row when the answer
-     * changes.
+     * The app the host wants in the dock's reserved slot - itself by default. A host that follows a
+     * role rather than a package (the SMS role, for a messaging host) answers that in
+     * LauncherBridge.dockSlotPackage, and the sync below swaps the row when the answer changes.
      */
-    private fun dockSlotPackage(): String? = LauncherRegistry.bridge.dockSlotPackage(this)
+    private fun hostDockPackage(): String? = LauncherRegistry.bridge.dockSlotPackage(this)
+
+    /**
+     * What the dock's reserved slot should hold: whatever the host names, except that after the fake
+     * uninstall (launcherConfig.selfIconHidden) nothing of ours is ever placed there again. A host
+     * that wants a replacement in our spot - a messaging host handing it to the phone's stock
+     * messaging app, say - answers with that package from dockSlotPackage itself;
+     * SelfRemoval.systemMessagingPackage is there for exactly that.
+     */
+    private fun dockSlotPackage(): String? {
+        val wanted = hostDockPackage()
+        return if (wanted == packageName && launcherConfig.selfIconHidden) null else wanted
+    }
 
     /** The app's launcher label, or null when it has no launcher entry to dock. */
     private fun dockableTitle(packageName: String?): String? {
@@ -2159,8 +2266,7 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
 
     /**
      * The dock row for the SMS app [packageName], or null when there is none to show. Our own
-     * package is not in the launcher list (getAllAppLaunchers skips it), so its row is built by
-     * hand and points at the standalone inbox rather than the LAUNCHER entry, which would only
+     * row is built by hand rather than from the launcher list (where our LAUNCHER entry sits) and points at the standalone inbox rather than the LAUNCHER entry, which would only
      * splash back into this home screen; performItemClick turns it into the panel when there is one.
      * After the fake uninstall (launcherConfig.selfIconHidden) our row is never built again, so
      * neither the first-run seed nor the SMS-role sync can bring the icon back.
@@ -2471,58 +2577,6 @@ class LauncherPanel : LauncherBasePanel(), FlingListener {
             isAppearanceLightStatusBars = isLightBackground
             isAppearanceLightNavigationBars = isLightBackground
         }
-    }
-
-    // taken from https://gist.github.com/maxjvh/a6ab15cbba9c82a5065d
-    /**
-     * The mean colour of [bitmap], sampled on a grid rather than read whole.
-     *
-     * The result is a *placeholder* tint — LaunchersLineup shows it behind the icon only until
-     * Glide has the real drawable — so a grid sample is as good as the exact mean. Reading every
-     * pixel was not: it allocated an `IntArray(width * height)`, roughly 147 KB for a 192 px
-     * adaptive icon, once per installed app, every time the launcher set was rebuilt. On a device
-     * with a few hundred apps that is tens of MB of short-lived garbage in a tight loop, and the GC
-     * pressure it creates is paid back as longer pauses on the main thread.
-     *
-     * One reused row buffer and at most [COLOR_SAMPLE_EDGE]² samples instead.
-     */
-    private fun calculateAverageColor(bitmap: Bitmap): Int {
-        val width = bitmap.width
-        val height = bitmap.height
-        if (width <= 0 || height <= 0) {
-            return Color.TRANSPARENT
-        }
-
-        val stepX = max(1, width / COLOR_SAMPLE_EDGE)
-        val stepY = max(1, height / COLOR_SAMPLE_EDGE)
-        val row = IntArray(width)
-
-        var red = 0L
-        var green = 0L
-        var blue = 0L
-        var n = 0
-        var y = 0
-        while (y < height) {
-            bitmap.getPixels(row, 0, width, 0, y, width, 1)
-            var x = 0
-            while (x < width) {
-                val color = row[x]
-                red += Color.red(color)
-                green += Color.green(color)
-                blue += Color.blue(color)
-                n++
-                x += stepX
-            }
-            y += stepY
-        }
-
-        // stepX/stepY are at least 1 and the loops run at least once, so n > 0 here; the guard is
-        // for the degenerate bitmap the check above already excludes, not for a reachable path.
-        if (n == 0) {
-            return Color.TRANSPARENT
-        }
-
-        return Color.rgb((red / n).toInt(), (green / n).toInt(), (blue / n).toInt())
     }
 
     /**

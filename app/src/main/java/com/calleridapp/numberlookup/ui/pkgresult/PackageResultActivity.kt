@@ -64,6 +64,11 @@ class PackageResultActivity : HostActivity<ScreenPackageResultBinding>() {
     override fun initView() {
         // Recents closes it: an install/uninstall screen is not something to come back to.
         lifecycle.addObserver(SystemDialogHelper(this) { finishAndRemoveTask() })
+        // Back is this screen's close (and its install/uninstall close ad) - not the app-wide back
+        // interstitial followed by that close ad, which was two full-screen ads for one press.
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() = close()
+        })
         WindowCompat.setDecorFitsSystemWindows(window, false)
         applyInsets()
         bindHeader()

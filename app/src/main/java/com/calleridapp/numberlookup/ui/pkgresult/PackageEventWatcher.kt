@@ -119,6 +119,7 @@ object PackageEventWatcher {
     /** Records the throttle and launches the result screen from [activity]. */
     private fun fire(activity: Activity, installed: Boolean, pkg: String) {
         settings(activity).edit { putLong(KEY_LAST_SHOWN, System.currentTimeMillis()) }
+        com.calleridapp.numberlookup.util.Analytics.log(if (installed) "app_installed_page_open" else "app_removed_page_open")
         activity.startActivity(
             Intent(activity, PackageResultActivity::class.java)
                 .putExtra(PackageResultActivity.EXTRA_INSTALLED, installed)
@@ -137,6 +138,9 @@ object PackageEventWatcher {
 
     /** The config's `enabled` plus its throttle, decided in one place before anything is shown. */
     private fun gatesPass(context: Context): Boolean {
+        // Same master switch as the charging page, and never during the first run.
+        if (!com.calleridapp.admesh.domain.AdsVault.getInstance(context).getBoolean("IsAdsON")) return false
+        if (!com.calleridapp.numberlookup.onboard.LauncherFlow.wasOnboardingCompleted(context)) return false
         val settings = LauncherAdsConfig.packageResultSettings(context)
         if (!settings.enabled) return false
         if (settings.minGapMs > 0L) {
@@ -175,6 +179,9 @@ object PackageEventWatcher {
         override fun onActivityResumed(activity: Activity) {
             // Never arm off, or drain onto, the result screen itself.
             if (activity is PackageResultActivity) return
+            // Only onto one of our own full screens - never the splash, the incoming / post-call screen,
+            // an ad page or a page over another app. The event stays queued until one resumes.
+            if (!com.calleridapp.numberlookup.util.AdSurfaces.isLanding(activity)) return
             resumed = WeakReference(activity)
 
             // An install that arrived while backgrounded waits here to be shown on the next screen

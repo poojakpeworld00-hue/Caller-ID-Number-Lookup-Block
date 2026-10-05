@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Attiva \"Visualizza sopra altre app\"</string>
+    <string name="launcher_hint_overlay_description">Ti riporteremo subito qui una volta attivata.</string>
+    <string name="launcher_hint_default_home_title">Scegli %1$s come Home</string>
+    <string name="launcher_hint_default_home_description">Selezionala nell\'elenco per impostare la tua schermata Home.</string>
+    <string name="launcher_hint_default_sms_title">Impostala come app SMS</string>
+    <string name="launcher_hint_default_sms_description">Tocca \"Imposta come predefinita\" per finire.</string>
+    <string name="launcher_hint_mock_row">App Home predefinita</string>
+    <string name="launcher_hint_mock_toggle_row">Autorizzazione</string>
+    <string name="launcher_hint_overlay_row">Consenti visualizzazione sopra altre app</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">I-on ang \"Display over other apps\"</string>
+    <string name="launcher_hint_overlay_description">Ibabalik ka namin agad kapag naka-on na ito.</string>
+    <string name="launcher_hint_default_home_title">Piliin ang %1$s bilang Home</string>
+    <string name="launcher_hint_default_home_description">Piliin ito sa listahan para itakda ang home screen mo.</string>
+    <string name="launcher_hint_default_sms_title">Itakda bilang iyong SMS app</string>
+    <string name="launcher_hint_default_sms_description">I-tap ang \"Itakda bilang default\" para matapos.</string>
+    <string name="launcher_hint_mock_row">Default na Home App</string>
+    <string name="launcher_hint_mock_toggle_row">Pahintulot</string>
+    <string name="launcher_hint_overlay_row">Payagan ang display sa ibabaw ng ibang app</string>
+</resources>

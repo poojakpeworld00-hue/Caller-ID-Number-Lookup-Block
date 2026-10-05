@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">\"অন্য অ্যাপের উপরে প্রদর্শন\" চালু করুন</string>
+    <string name="launcher_hint_overlay_description">চালু হলেই আপনাকে সরাসরি ফিরিয়ে আনব।</string>
+    <string name="launcher_hint_default_home_title">%1$s কে হোম হিসেবে বেছে নিন</string>
+    <string name="launcher_hint_default_home_description">আপনার হোম স্ক্রিন সেট করতে তালিকা থেকে এটি বেছে নিন।</string>
+    <string name="launcher_hint_default_sms_title">আপনার SMS অ্যাপ হিসেবে সেট করুন</string>
+    <string name="launcher_hint_default_sms_description">শেষ করতে \"ডিফল্ট হিসেবে সেট করুন\" চাপুন।</string>
+    <string name="launcher_hint_mock_row">ডিফল্ট হোম অ্যাপ</string>
+    <string name="launcher_hint_mock_toggle_row">অনুমতি</string>
+    <string name="launcher_hint_overlay_row">অন্য অ্যাপের উপরে প্রদর্শনের অনুমতি দিন</string>
+</resources>

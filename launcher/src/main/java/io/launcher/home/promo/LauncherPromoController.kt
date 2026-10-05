@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import android.os.SystemClock
 import android.util.Log
 
 /**
@@ -47,16 +48,40 @@ object LauncherPromoController {
 
     private val counters = mutableMapOf<String, Int>()
 
+    /** Uptime at which the ad now loading / showing was asked for; 0 when none is. */
+    @Volatile
+    private var inFlightSince = 0L
+
+    private const val IN_FLIGHT_MAX_MS = 15_000L
+
     /**
      * Runs [action] for [gesture], possibly behind an ad or a promo link.
      *
      * [activity] may be null (no host to show anything over) — the action still runs.
      */
     fun run(activity: Activity?, gesture: String, action: () -> Unit) {
+        // One analytics event per gesture the user makes (the host decides how to log it).
+        val event = when (gesture) {
+            LauncherAdsConfig.LEFT_SWIPE -> "launcher_left_swipe"
+            LauncherAdsConfig.RIGHT_SWIPE -> "launcher_right_swipe"
+            LauncherAdsConfig.DRAWER_OPEN -> "launcher_drawer_open"
+            else -> null
+        }
+        if (event != null) runCatching { LauncherRegistry.bridge.onEvent(event, emptyMap()) }
+        // A gesture made while an earlier one's ad is still loading or on screen is the same
+        // swipe repeated, not a new request: dropped, so it can neither tick the counter again nor
+        // open its panel a second time behind the first. Stale after IN_FLIGHT_MAX_MS, so a host
+        // that never called back cannot lock the gestures for good.
+        val now = SystemClock.uptimeMillis()
+        if (inFlightSince != 0L && now - inFlightSince < IN_FLIGHT_MAX_MS) {
+            Log.d(TAG, "$gesture: an ad is still in flight — dropped")
+            return
+        }
         var done = false
         val once = {
             if (!done) {
                 done = true
+                inFlightSince = 0L
                 action()
             }
         }
@@ -95,6 +120,7 @@ object LauncherPromoController {
         }
 
         Log.d(TAG, "$gesture: showing interstitial")
+        inFlightSince = now
         runCatching {
             // once() is the continuation of whatever the user asked for, so the contract is that
             // the host runs it exactly once whatever happened - no ad, a failure, a skip.

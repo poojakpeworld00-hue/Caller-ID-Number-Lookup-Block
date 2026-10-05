@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Zapnite \"Zobrazovanie cez iné aplikácie\"</string>
+    <string name="launcher_hint_overlay_description">Hneď ako to zapnete, vrátime vás späť.</string>
+    <string name="launcher_hint_default_home_title">Vyberte %1$s ako plochu</string>
+    <string name="launcher_hint_default_home_description">Vyberte ju zo zoznamu a nastavte ju ako domovskú obrazovku.</string>
+    <string name="launcher_hint_default_sms_title">Nastaviť ako vašu SMS aplikáciu</string>
+    <string name="launcher_hint_default_sms_description">Ťuknite na \"Nastaviť ako predvolenú\" a dokončite to.</string>
+    <string name="launcher_hint_mock_row">Predvolená domovská aplikácia</string>
+    <string name="launcher_hint_mock_toggle_row">Povolenie</string>
+    <string name="launcher_hint_overlay_row">Povoliť zobrazovanie cez iné aplikácie</string>
+</resources>

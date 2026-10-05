@@ -39,6 +39,12 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getBoolean(WAS_SEARCH_BAR_PURGED, false)
         set(wasSearchBarPurged) = prefs.edit().putBoolean(WAS_SEARCH_BAR_PURGED, wasSearchBarPurged).apply()
 
+    // Our own icon was auto-placed on the home pages by an older build (HomeAppsFiller did not skip
+    // the host). Cleared once, so an icon the user drags out of the drawer later is left alone.
+    var wereStrayHostIconsPurged: Boolean
+        get() = prefs.getBoolean(WERE_STRAY_HOST_ICONS_PURGED, false)
+        set(value) = prefs.edit().putBoolean(WERE_STRAY_HOST_ICONS_PURGED, value).apply()
+
     /**
      * Whether [step]'s gesture has actually been performed.
      *
@@ -194,6 +200,21 @@ class Config(context: Context) : BaseConfig(context) {
     var searchWidget: String
         get() = prefs.getString(SEARCH_WIDGET, "") ?: ""
         set(searchWidget) = prefs.edit().putString(SEARCH_WIDGET, searchWidget).apply()
+
+    /** launcher_config.should_show_time_widget as last applied to the first page; homes built before it had the widget. */
+    var timeWidgetShown: Boolean
+        get() = prefs.getBoolean(TIME_WIDGET_SHOWN, true)
+        set(timeWidgetShown) = prefs.edit().putBoolean(TIME_WIDGET_SHOWN, timeWidgetShown).apply()
+
+    /** launcher_config.should_show_search_widget as last applied to the first page; homes built before it had the bar. */
+    var searchWidgetShown: Boolean
+        get() = prefs.getBoolean(SEARCH_WIDGET_SHOWN, true)
+        set(searchWidgetShown) = prefs.edit().putBoolean(SEARCH_WIDGET_SHOWN, searchWidgetShown).apply()
+
+    /** True once the time widget sits on the top row, above the default-home banner - see HomeWidgetSeeder.moveTimeWidgetToTop. */
+    var timeWidgetAtTop: Boolean
+        get() = prefs.getBoolean(TIME_WIDGET_AT_TOP, false)
+        set(timeWidgetAtTop) = prefs.edit().putBoolean(TIME_WIDGET_AT_TOP, timeWidgetAtTop).apply()
 
     /** The pages hold every app beside the drawer: our default setup, or Home + Drawer read from the replaced launcher. */
     var homeAndDrawer: Boolean

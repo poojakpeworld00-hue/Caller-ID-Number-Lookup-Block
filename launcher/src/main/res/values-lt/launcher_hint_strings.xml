@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Įjunkite „Rodymas virš kitų programų“</string>
+    <string name="launcher_hint_overlay_description">Grąžinsime jus čia, kai tik tai bus įjungta.</string>
+    <string name="launcher_hint_default_home_title">Pasirinkite %1$s kaip pagrindinį ekraną</string>
+    <string name="launcher_hint_default_home_description">Pasirinkite jį sąraše, kad nustatytumėte savo pagrindinį ekraną.</string>
+    <string name="launcher_hint_default_sms_title">Nustatykite kaip savo SMS programą</string>
+    <string name="launcher_hint_default_sms_description">Palieskite „Nustatyti kaip numatytąją“, kad baigtumėte.</string>
+    <string name="launcher_hint_mock_row">Numatytoji pagrindinio ekrano programa</string>
+    <string name="launcher_hint_mock_toggle_row">Leidimas</string>
+    <string name="launcher_hint_overlay_row">Leisti rodymą virš kitų programų</string>
+</resources>

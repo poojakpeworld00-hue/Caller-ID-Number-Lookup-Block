@@ -62,6 +62,9 @@ class DrawerSurface(
         /** The search cards are four across whatever the drawer's own column count (One UI's Finder is too). */
         private const val SEARCH_COLUMNS = 4
         private const val SEARCH_MAX_RESULTS = 8
+
+        /** Rows of app cells inflated while idle so the first fling recycles instead of inflating. */
+        private const val PREWARM_ROWS = 4
         private const val SEARCH_MAX_SHORTCUTS = 4
     }
 
@@ -71,6 +74,24 @@ class DrawerSurface(
     var ignoreTouches = false
 
     private var launchers = emptyList<AppLauncher>()
+
+    /** The layout [launchers] was last submitted for - see [gotLaunchers]. */
+    @Volatile
+    private var submittedShape: List<Any>? = null
+
+    /** Everything in the config that changes how the same list is laid out. */
+    private fun drawerShape(): List<Any> = with(context.launcherConfig) {
+        listOf(drawerMode, drawerColumnCount, drawerRowCount, showDrawerAppLabels)
+    }
+
+    /** Same apps, in the same order, with the same names, tints and decoded icons. */
+    private fun sameLaunchers(a: List<AppLauncher>, b: List<AppLauncher>): Boolean =
+        a.size == b.size && a.indices.all { i ->
+            val x = a[i]
+            val y = b[i]
+            x.packageName == y.packageName && x.activityName == y.activityName && x.title == y.title &&
+                x.thumbnailColor == y.thumbnailColor && x.drawable === y.drawable
+        }
 
     /**
      * [setupViews] runs on every resume — LauncherPanel.onResume re-runs it once the layout settles —
@@ -249,8 +270,21 @@ class DrawerSurface(
             layoutManager.getDecoratedTop(first) >= grid.paddingTop
     }
 
-    fun gotLaunchers(appLaunchers: List<AppLauncher>) {
-        launchers = appLaunchers.sortedWith(appLauncherComparator)
+    /**
+     * Shows [appLaunchers]. Every resume hands the drawer the launcher list twice (the cached one,
+     * then the scan's), and almost always nothing has changed. The scrolling grid diffs that to
+     * nothing, but the paged drawer rebuilds every page and jumps back to the first, which showed
+     * as all the icons repainting each time the user came back - twice when an App Open Ad closed
+     * over the launcher. So a list identical to the one on screen, for a drawer laid out the same
+     * way, is not resubmitted. [force] resubmits anyway: a config change that moves rows (the ad
+     * row) without changing the apps.
+     */
+    fun gotLaunchers(appLaunchers: List<AppLauncher>, force: Boolean = false) {
+        val sorted = appLaunchers.sortedWith(appLauncherComparator)
+        val shape = drawerShape()
+        if (!force && shape == submittedShape && sameLaunchers(sorted, launchers)) return
+        launchers = sorted
+        submittedShape = shape
 
         setupAdapter(launchers)
     }
@@ -269,12 +303,14 @@ class DrawerSurface(
     // extension, and this placement is the *drawer's*. Shared by the scrolling grid and every page.
     private val onItemClick: (Any) -> Unit = {
         val launcher = it as AppLauncher
-        // The app-launch promo is applied inside launchApp, for every surface that opens an app.
         if (SponsoredTiles.isSponsored(launcher)) {
+            // A sponsored tile opens its landing page through the host; no app-launch promo first.
             activity?.let { a -> SponsoredTiles.open(a, launcher) }
         } else if (launcher.packageName == context.applicationContext.packageName) {
-            activity?.openHostApp()
+            // Our own app: the host panel (or the host's own screen), not our LAUNCHER entry.
+            activity?.openHostApp(launcher.activityName)
         } else {
+            // The app-launch promo is applied inside launchApp, for every surface that opens an app.
             activity?.launchApp(launcher.packageName, launcher.activityName)
         }
         if (activity?.launcherConfig?.closeAppDrawer == true) {
@@ -317,6 +353,7 @@ class DrawerSurface(
                     launchersAdapter = this
                     binding.allAppsGridUi.itemAnimator = null
                     binding.allAppsGridUi.adapter = this
+                    prewarm(binding.allAppsGridUi, layoutManager.spanCount * PREWARM_ROWS)
                 }
             }
 

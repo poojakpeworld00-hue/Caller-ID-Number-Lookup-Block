@@ -52,7 +52,11 @@ class SheetNativeAds {
         isCollapsible: Boolean = false
     ) {
         val adsPref = AdsVault.getInstance(activity)
-        if (!adsPref.getBoolean("IsAdsON")) {
+        // The post-call banner obeys the same switches as every other banner, and consent; it
+        // used to check IsAdsON only.
+        if (!adsPref.getBoolean("IsAdsON") || !adsPref.getBoolean("BannerAds") ||
+            !isNetworkConnected(activity) || !com.calleridapp.admesh.domain.AdsGate.canRequestAds(activity)
+        ) {
             removeAd(adContainer)
             return
         }
@@ -326,8 +330,11 @@ class SheetNativeAds {
             return
         }
 
-        // --- Ads OFF ---
-        if (!adsPreference.getBoolean("IsAdsON")) {
+        // --- Ads OFF (master, the native switches, or no consent) ---
+        if (!adsPreference.getBoolean("IsAdsON") || !adsPreference.getBoolean("NativeAd") ||
+            !adsPreference.getBoolean("HD_VBC_Native") ||
+            !com.calleridapp.admesh.domain.AdsGate.canRequestAds(context)
+        ) {
             Log.w("987654321", "Native Ads Off")
             layout.removeAllViews()
             layout.invisible()

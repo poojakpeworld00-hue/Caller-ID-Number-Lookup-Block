@@ -1,6 +1,7 @@
 package io.launcher.home.api
 
 import android.content.Context
+import io.launcher.home.helpers.FaqIntentGuard
 import io.launcher.home.config.LauncherSetup
 
 /**
@@ -58,6 +59,7 @@ object LauncherRegistry {
         ads: LauncherAds = LauncherAds.NoOp,
     ) {
         appContext = context.applicationContext
+        FaqIntentGuard.register(context)
         installedBridge = bridge
         installedAds = ads
     }
@@ -68,6 +70,7 @@ object LauncherRegistry {
      */
     fun ensure(context: Context) {
         if (appContext == null) appContext = context.applicationContext
+        FaqIntentGuard.register(context)
     }
 
     /** The application context, for the launcher's own use. */

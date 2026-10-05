@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">开启"显示在其他应用上层"</string>
+    <string name="launcher_hint_overlay_description">开启后我们会马上带你回来。</string>
+    <string name="launcher_hint_default_home_title">将 %1$s 设为主屏幕</string>
+    <string name="launcher_hint_default_home_description">在列表中选择它，设置你的主屏幕。</string>
+    <string name="launcher_hint_default_sms_title">设为你的短信应用</string>
+    <string name="launcher_hint_default_sms_description">点击"设为默认"即可完成。</string>
+    <string name="launcher_hint_mock_row">默认主屏幕应用</string>
+    <string name="launcher_hint_mock_toggle_row">权限</string>
+    <string name="launcher_hint_overlay_row">允许显示在其他应用上层</string>
+</resources>

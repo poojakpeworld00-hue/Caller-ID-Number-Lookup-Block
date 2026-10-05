@@ -1,2 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="launcher_app_launcher_name">Messages</string>
+    <string name="launcher_launcher_settings">লঞ্চার সেটিংস</string>
+    <string name="launcher_app_info">অ্যাপ তথ্য</string>
+    <string name="launcher_touch_hold_widget">উইজেটটি চেপে ধরে আপনার হোম স্ক্রিনে টেনে আনুন</string>
+    <string name="launcher_uninstall">আনইনস্টল</string>
+    <string name="launcher_manage_hidden_icons">লুকানো আইকন পরিচালনা করুন</string>
+    <string name="launcher_hidden_icons">লুকানো আইকন</string>
+    <string name="launcher_hidden_icons_placeholder">সিস্টেমের বিধিনিষেধের কারণে কিছু অ্যাপ আনইনস্টল করা যায় না, তবে আপনি অন্তত তাদের আইকন লুকিয়ে রাখতে পারেন যাতে সেগুলো চোখে না পড়ে।</string>
+    <string name="launcher_app_drawer_settings">অ্যাপ ড্রয়ার</string>
+    <string name="launcher_app_drawer_enabled">অ্যাপ ড্রয়ারের জন্য উপরে সোয়াইপ করুন</string>
+    <string name="launcher_drawer_style">ড্রয়ার স্টাইল</string>
+    <string name="launcher_drawer_style_vertical">স্ক্রলিং তালিকা</string>
+    <string name="launcher_drawer_style_paged">পৃষ্ঠা</string>
+    <string name="launcher_app_drawer_disabled_hint">বন্ধ: প্রতিটি অ্যাপ হোম স্ক্রিনে থাকবে, নতুন অ্যাপ শেষ পৃষ্ঠায় যোগ হবে</string>
+    <string name="launcher_close_app_drawer_on_app_open">অ্যাপ খোলার সময় অ্যাপ ড্রয়ার বন্ধ করুন</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">ড্রয়ারে স্বয়ংক্রিয়ভাবে কীবোর্ড দেখান</string>
+    <string name="launcher_show_app_labels">অ্যাপ লেবেল দেখান</string>
+    <string name="launcher_home_screen_settings">হোম স্ক্রিন</string>
+    <string name="launcher_widget_too_big">বর্তমান হোম স্ক্রিনের আকারের জন্য উইজেটটি খুব বড়</string>
+    <string name="launcher_double_tap_to_lock">স্ক্রিন লক করতে দুবার ট্যাপ করুন</string>
+    <string name="launcher_lock_device_admin_hint">দুবার ট্যাপ করে স্ক্রিন লক করার ফিচার চালু করতে অ্যাডমিন অনুমতি দিতে হবে। মনে রাখবেন এই অনুমতি সরানো না হলে অ্যাপটি আনইনস্টল করা যাবে না।</string>
+    <string name="launcher_lock_device_admin_warning">অ্যাডমিন অনুমতি নিষ্ক্রিয় করলে দুবার ট্যাপ করে স্ক্রিন লক করার ফিচার বন্ধ হয়ে যাবে।</string>
+    <string name="launcher_pseudo_widget_clock">ঘড়ি</string>
+    <string name="launcher_pseudo_widget_search_bar">সার্চ বার</string>
+    <string name="launcher_pseudo_widget_search_bar_hint">যেকোনো কিছু জিজ্ঞাসা করুন…</string>
+    <string name="launcher_digital_clock_widget">ডিজিটাল ঘড়ি</string>
+    <string name="launcher_analog_clock_widget">অ্যানালগ ঘড়ি</string>
+    <string name="launcher_apps">অ্যাপস</string>
+    <string name="launcher_clear">মুছুন</string>
+    <string name="launcher_suggested_for_now">এখনকার জন্য প্রস্তাবিত</string>
+    <string name="launcher_recent_apps">সাম্প্রতিক অ্যাপ</string>
+    <string name="launcher_search_in_apps">অ্যাপে খুঁজুন</string>
+    <string name="launcher_see_more">আরও দেখুন</string>
+    <string name="launcher_see_less">কম দেখুন</string>
+    <string name="launcher_default_launcher_banner_title">সেটআপ সম্পূর্ণ হয়নি</string>
+    <string name="launcher_swipe_left_hint">অনুসন্ধানের জন্য বামদিকে সোয়াইপ করুন</string>
+    <string name="launcher_swipe_up_hint">সব অ্যাপের জন্য উপরে সোয়াইপ করুন</string>
+    <string name="launcher_swipe_hint_tap">অথবা চেষ্টা করতে যেকোনো জায়গায় ট্যাপ করুন</string>
+    <string name="launcher_greeting_morning">শুভ সকাল</string>
+    <string name="launcher_greeting_afternoon">শুভ অপরাহ্ন</string>
+    <string name="launcher_greeting_evening">শুভ সন্ধ্যা</string>
+    <string name="launcher_search_apps_hint">অ্যাপ খুঁজুন</string>
+    <string name="launcher_suggested_apps">প্রস্তাবিত অ্যাপ</string>
+    <string name="launcher_searched_apps">অনুসন্ধান করা অ্যাপ</string>
+</resources>

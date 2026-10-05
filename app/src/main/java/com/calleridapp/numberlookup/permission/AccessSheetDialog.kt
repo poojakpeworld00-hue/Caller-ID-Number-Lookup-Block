@@ -199,7 +199,8 @@ class AccessSheetDialog : BottomSheetDialogFragment() {
                 R.drawable.ic_apps, isOverlay = true,
             )
         }
-        return list
+        // `intro_display.permission_sheet.rows` narrows the list (e.g. notification only).
+        return list.filter { rowAllowed(ctx, it.key) }
     }
 
     private fun isGranted(row: Row): Boolean {
@@ -371,19 +372,24 @@ class AccessSheetDialog : BottomSheetDialogFragment() {
             // Mirrors buildRows(): a permission the engine can no longer offer
             // (RC-disabled, gate closed, wrong SDK, show_once consumed) is not
             // pending — otherwise the sheet would auto-show with no usable row.
-            if (AccessKit.isOfferable(activity, "notification") &&
+            fun allowed(key: String) = rowAllowed(activity, key)
+            if (allowed("notification") && AccessKit.isOfferable(activity, "notification") &&
                 !granted(Manifest.permission.POST_NOTIFICATIONS) &&
                 !isPermanentlyDenied(activity, "notification", Manifest.permission.POST_NOTIFICATIONS)
             ) return true
-            if (AccessKit.isOfferable(activity, "phone_state") &&
+            if (allowed("phone_state") && AccessKit.isOfferable(activity, "phone_state") &&
                 !granted(Manifest.permission.READ_PHONE_STATE) &&
                 !isPermanentlyDenied(activity, "phone_state", Manifest.permission.READ_PHONE_STATE)
             ) return true
-            if (!granted(Manifest.permission.READ_CALL_LOG)) return true
-            if (!granted(Manifest.permission.READ_CONTACTS)) return true
-            if (FloatKit.isOfferable(activity) && !FloatKit.isGranted(activity)) return true
+            if (allowed("call_log") && !granted(Manifest.permission.READ_CALL_LOG)) return true
+            if (allowed("contacts") && !granted(Manifest.permission.READ_CONTACTS)) return true
+            if (allowed("overlay") && FloatKit.isOfferable(activity) && !FloatKit.isGranted(activity)) return true
             return false
         }
+
+        /** Whether `intro_display.permission_sheet.rows` lets the sheet list [key]; no `rows` = every row. */
+        private fun rowAllowed(context: android.content.Context, key: String): Boolean =
+            IntroRevealConfig.permissionSheetRows(context)?.contains(key) ?: true
 
         /**
          * True once the user has denied [perm] to the point Android no longer

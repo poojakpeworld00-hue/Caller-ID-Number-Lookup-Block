@@ -12,6 +12,29 @@ import org.json.JSONObject
 private const val TAG = "NativeTheme"
 
 /**
+ * AdsVault key holding the native-ad palette of the user's audience: the `NativeTheme` object of
+ * the `organic` or `marketing` block, `{ "NativeLight": {…}, "NativeDark": {…} }`. Written once
+ * per config ingest by `ConfigSync`, read here.
+ */
+const val NATIVE_THEME_KEY = "NativeTheme"
+
+/** `NativeLight` / `NativeDark` for [theme] (the app's theme choice; system follows the device). */
+fun Context.nativeThemeMode(
+    theme: String = AppVault.selectedTheme(this).ifEmpty { THEME_SYSTEM }
+): String = when (theme) {
+    THEME_DARK -> "NativeDark"
+    THEME_LIGHT -> "NativeLight"
+    THEME_SYSTEM -> {
+        val isSystemDark =
+            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                Configuration.UI_MODE_NIGHT_YES
+        if (isSystemDark) "NativeDark" else "NativeLight"
+    }
+
+    else -> "NativeLight"
+}
+
+/**
  * Copies the light/dark native-ad palette for the active theme into the ad preferences, where
  * the native renderers read it from.
  *
@@ -21,50 +44,34 @@ private const val TAG = "NativeTheme"
  * a screen that renders natives without calling this shows them in whatever mode some earlier
  * screen left behind, or unset entirely on a cold boot (dark-on-dark, effectively invisible).
  *
- * Called by [com.calleridapp.numberlookup.base.HostActivity] for every normal screen, and
- * separately by the launcher home — which does not extend it, yet is the device HOME and so is
- * often the first screen after a reboot.
+ * Called by [com.calleridapp.numberlookup.base.HostActivity] for every normal screen, by
+ * `ConfigSync` right after a config lands, and separately by the launcher home — which does not
+ * extend it, yet is the device HOME and so is often the first screen after a reboot.
+ *
+ * Organic and marketing each carry their own palette in Remote Config; [NATIVE_THEME_KEY] already
+ * holds the one for this user's audience, so there is no audience choice to make here.
  */
-fun Context.applyNativeAdTheme(
-    theme: String = AppVault.selectedTheme(this).ifEmpty { THEME_SYSTEM }
-) {
+fun Context.applyNativeAdTheme(theme: String = AppVault.selectedTheme(this).ifEmpty { THEME_SYSTEM }) {
     val adsPref = AdsVault.getInstance(this)
-    val modeKey = when (theme) {
-        THEME_LIGHT -> "NativeLight"
-        THEME_DARK -> "NativeDark"
-        THEME_SYSTEM -> {
-            val isSystemDark =
-                (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
-                    Configuration.UI_MODE_NIGHT_YES
-            if (isSystemDark) "NativeDark" else "NativeLight"
-        }
-
-        else -> "NativeLight"
-    }
+    val modeKey = nativeThemeMode(theme)
 
     try {
-        // Load saved marketing and default theme JSONs
-        val marketingJson = JSONObject(adsPref.getString("NativeTheme_marketing", "{}"))
-        val defaultJson = JSONObject(adsPref.getString("NativeTheme_default", "{}"))
-
-        // Choose which theme to apply (marketing preferred if enabled)
-        val themeJson = if (adsPref.getBoolean("OnMaketing") && marketingJson.has(modeKey))
-            marketingJson.optJSONObject(modeKey)
-        else
-            defaultJson.optJSONObject(modeKey)
-
+        val palette = JSONObject(adsPref.getString(NATIVE_THEME_KEY, "{}").orEmpty().ifBlank { "{}" })
+        val themeJson = palette.optJSONObject(modeKey)
         if (themeJson == null) {
             // No palette to copy — Remote Config has not landed yet (the launcher is the device
             // HOME, so it can run before any fetch has ever happened) or the key is absent. Say
             // so rather than logging a write that did not occur.
-            Log.d(TAG, "No $modeKey palette in NativeTheme_* — native colors left unchanged")
+            Log.d(TAG, "No $modeKey palette in $NATIVE_THEME_KEY — native colors left unchanged")
             return
         }
 
-        adsPref.putString("NativebtnColor", themeJson.optString("btnColor"))
-        adsPref.putString("NativebtntxtColor", themeJson.optString("btnText"))
-        adsPref.putString("NativeBgColor", themeJson.optString("bgColor"))
-        adsPref.putString("NativetxtColor", themeJson.optString("textColor"))
+        adsPref.update {
+            putString("NativebtnColor", themeJson.optString("btnColor"))
+            putString("NativebtntxtColor", themeJson.optString("btnText"))
+            putString("NativeBgColor", themeJson.optString("bgColor"))
+            putString("NativetxtColor", themeJson.optString("textColor"))
+        }
 
         Log.d(TAG, "Applied $modeKey theme to ads dynamically")
     } catch (e: Exception) {

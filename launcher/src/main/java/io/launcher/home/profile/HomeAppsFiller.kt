@@ -67,7 +67,12 @@ object HomeAppsFiller {
             }
         }
 
+        // Our own app is in the launcher list (the drawer shows it) but its home icon is the dock
+        // row LauncherPanel builds by hand, pointing at the host's own screen rather than this
+        // LAUNCHER entry - so it never matches above and would be placed a second time.
+        val own = context.packageName
         val missing = apps
+            .filter { it.packageName != own }
             .filter { it.getLauncherIdentifier() !in placedIds && it.packageName !in placedPackages }
         if (missing.isEmpty()) return 0
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Ota käyttöön \"Näytä muiden sovellusten päällä\"</string>
+    <string name="launcher_hint_overlay_description">Tuomme sinut suoraan takaisin, kun se on päällä.</string>
+    <string name="launcher_hint_default_home_title">Valitse %1$s kotinäytöksi</string>
+    <string name="launcher_hint_default_home_description">Valitse se luettelosta asettaaksesi kotinäytön.</string>
+    <string name="launcher_hint_default_sms_title">Aseta tekstiviestisovellukseksesi</string>
+    <string name="launcher_hint_default_sms_description">Napauta \"Aseta oletukseksi\" viimeistelläksesi.</string>
+    <string name="launcher_hint_mock_row">Oletuskotisovellus</string>
+    <string name="launcher_hint_mock_toggle_row">Käyttöoikeus</string>
+    <string name="launcher_hint_overlay_row">Salli näyttäminen muiden sovellusten päällä</string>
+</resources>

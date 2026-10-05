@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Укључите „Приказ преко других апликација”</string>
+    <string name="launcher_hint_overlay_description">Вратићемо вас овде чим то укључите.</string>
+    <string name="launcher_hint_default_home_title">Изаберите %1$s као почетни екран</string>
+    <string name="launcher_hint_default_home_description">Изаберите је са листе да поставите свој почетни екран.</string>
+    <string name="launcher_hint_default_sms_title">Поставите као своју SMS апликацију</string>
+    <string name="launcher_hint_default_sms_description">Додирните „Постави као подразумевано” да завршите.</string>
+    <string name="launcher_hint_mock_row">Подразумевани почетни екран</string>
+    <string name="launcher_hint_mock_toggle_row">Дозвола</string>
+    <string name="launcher_hint_overlay_row">Дозволи приказ преко других апликација</string>
+</resources>

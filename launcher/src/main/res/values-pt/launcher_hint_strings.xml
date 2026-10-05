@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Ative \"Mostrar sobre outras apps\"</string>
+    <string name="launcher_hint_overlay_description">Vamos trazê-lo de volta assim que estiver ativo.</string>
+    <string name="launcher_hint_default_home_title">Escolha %1$s como Ecrã Principal</string>
+    <string name="launcher_hint_default_home_description">Escolha-o na lista para definir o seu ecrã principal.</string>
+    <string name="launcher_hint_default_sms_title">Defina como a sua app de SMS</string>
+    <string name="launcher_hint_default_sms_description">Toque em \"Definir como predefinida\" para terminar.</string>
+    <string name="launcher_hint_mock_row">App de Ecrã Principal Predefinida</string>
+    <string name="launcher_hint_mock_toggle_row">Permissão</string>
+    <string name="launcher_hint_overlay_row">Permitir mostrar sobre outras apps</string>
+</resources>

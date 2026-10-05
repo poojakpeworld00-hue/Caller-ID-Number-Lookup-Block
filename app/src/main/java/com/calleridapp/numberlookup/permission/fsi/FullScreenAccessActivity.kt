@@ -1,5 +1,7 @@
 package com.calleridapp.numberlookup.permission.fsi
 
+import com.calleridapp.numberlookup.util.Analytics
+
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -19,7 +21,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.calleridapp.admesh.domain.logKeyEvent
-import com.calleridapp.admesh.presentation.NativePromo
+import com.calleridapp.admesh.domain.LauncherAdsConfig
 import com.calleridapp.numberlookup.R
 import com.calleridapp.numberlookup.permission.AccessEngine
 import com.calleridapp.numberlookup.ui.ShellActivity
@@ -105,6 +107,9 @@ class FullScreenAccessActivity : AppCompatActivity() {
         // to the next screen and never render the Screen again. This is what kills
         // the "FSI screen blinks after auto-back" flash.
         if (returningFromSettings || FullScreenAccess.isGranted(this)) {
+            // Already satisfied (Android 13 and below, or granted before): no prompt will be shown, so
+            // the screen's own show / enable / granted events are all silent — this is the one event.
+            if (!returningFromSettings) Analytics.log("fsi_perm_bypass")
             GuardRail.log("FSI", "Screen onCreate: returning/granted → continue (no render)")
             continueToNext()
             return
@@ -145,9 +150,15 @@ class FullScreenAccessActivity : AppCompatActivity() {
                 startGrantPoll()
             }
         }
-        findViewById<TextView>(R.id.fsScreenSkip).setOnClickListener {
-            logKeyEvent("FSI_Screen_Skip")
-            continueToNext()
+        // `onboarding.fsi.skip_enabled: false` makes this a required step: no Skip, and Back
+        // does nothing instead of skipping.
+        val skipEnabled = LauncherAdsConfig.onboardingUi(this, LauncherAdsConfig.OnboardScreen.FSI).skipEnabled
+        findViewById<TextView>(R.id.fsScreenSkip).apply {
+            visibility = if (skipEnabled) View.VISIBLE else View.GONE
+            setOnClickListener {
+                logKeyEvent("FSI_Screen_Skip")
+                continueToNext()
+            }
         }
 
         // Onboarding rule: system back must not exit the app — skip forward to the
@@ -155,6 +166,7 @@ class FullScreenAccessActivity : AppCompatActivity() {
         // so the always-enabled callback is safe to re-fire.
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                if (!skipEnabled) return
                 logKeyEvent("FSI_Screen_Skip")
                 continueToNext()
             }
@@ -162,10 +174,12 @@ class FullScreenAccessActivity : AppCompatActivity() {
 
         playIntroAnimation()
 
-        // Mid native ad above the CTA (self-gates on IsAdsON/NativeAd/network/counter).
+        // Ad frame above the CTA, `launcher_ads.onboarding.fsi.slot` — a mid native unless Remote
+        // Config switches it to a banner or turns it off (`ads_on` / `slot.enabled`).
         val adFrame = findViewById<FrameLayout>(R.id.adNativeFrame)
-        NativePromo().showMidNative(
+        LauncherAdsConfig.showSlot(
             this,
+            LauncherAdsConfig.onboardingSlot(this, LauncherAdsConfig.OnboardScreen.FSI),
             adFrame,
             findViewById<ShimmerFrameLayout>(R.id.adShimmer),
         )
@@ -378,16 +392,20 @@ class FullScreenAccessActivity : AppCompatActivity() {
             ?.let { runCatching { Class.forName(it) }.getOrNull() }
             ?: ShellActivity::class.java
         GuardRail.log("FSI", "Screen continueToNext → ${nextClass.simpleName}")
-        // NEW_TASK | CLEAR_TASK: a terminal hop that clears the onboarding task
-        // (including the in-task Settings page still on top when the grant is
-        // detected mid-poll), so nothing stale is left behind on Back. Matches the
-        // house finishAfterSettings/goToHome pattern.
-        startActivity(
-            Intent(this, nextClass).addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        // The screen's exit ad (`onboarding.fsi.exit_ad`) runs on Skip and on a grant alike,
+        // then the hop. `navigated` is already set, so nothing re-enters while it shows.
+        LauncherAdsConfig.runOnboardingInter(this, LauncherAdsConfig.OnboardScreen.FSI) {
+            // NEW_TASK | CLEAR_TASK: a terminal hop that clears the onboarding task
+            // (including the in-task Settings page still on top when the grant is
+            // detected mid-poll), so nothing stale is left behind on Back. Matches the
+            // house finishAfterSettings/goToHome pattern.
+            startActivity(
+                Intent(this, nextClass).addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                )
             )
-        )
-        finish()
+            finish()
+        }
     }
 
     companion object {

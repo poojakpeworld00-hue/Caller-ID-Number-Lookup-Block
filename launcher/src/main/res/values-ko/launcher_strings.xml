@@ -1,2 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="launcher_app_launcher_name">메시지</string>
+    <string name="launcher_launcher_settings">런처 설정</string>
+    <string name="launcher_app_info">앱 정보</string>
+    <string name="launcher_touch_hold_widget">위젯을 길게 눌러 홈 화면으로 드래그하세요</string>
+    <string name="launcher_uninstall">삭제</string>
+    <string name="launcher_manage_hidden_icons">숨긴 아이콘 관리</string>
+    <string name="launcher_hidden_icons">숨긴 아이콘</string>
+    <string name="launcher_hidden_icons_placeholder">시스템 제한으로 삭제할 수 없는 앱도 있지만, 아이콘을 숨겨서 보이지 않게 할 수 있습니다.</string>
+    <string name="launcher_app_drawer_settings">앱 서랍</string>
+    <string name="launcher_app_drawer_enabled">위로 스와이프해 앱 서랍 열기</string>
+    <string name="launcher_drawer_style">서랍 스타일</string>
+    <string name="launcher_drawer_style_vertical">스크롤 목록</string>
+    <string name="launcher_drawer_style_paged">페이지</string>
+    <string name="launcher_app_drawer_disabled_hint">끄면 모든 앱이 홈 화면에 남고, 새 앱은 마지막 페이지에 추가됩니다</string>
+    <string name="launcher_close_app_drawer_on_app_open">앱을 열면 앱 서랍 닫기</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">서랍에서 키보드 자동 표시</string>
+    <string name="launcher_show_app_labels">앱 이름 표시</string>
+    <string name="launcher_home_screen_settings">홈 화면</string>
+    <string name="launcher_widget_too_big">위젯이 현재 홈 화면 크기에 비해 너무 큽니다</string>
+    <string name="launcher_double_tap_to_lock">두 번 탭해 화면 잠그기</string>
+    <string name="launcher_lock_device_admin_hint">두 번 탭해 화면 잠그기 기능을 사용하려면 관리자 권한을 허용해야 합니다. 이 권한을 해제하기 전에는 앱을 삭제할 수 없습니다.</string>
+    <string name="launcher_lock_device_admin_warning">관리자 권한을 비활성화하면 두 번 탭해 화면 잠그기 기능이 꺼집니다.</string>
+    <string name="launcher_pseudo_widget_clock">시계</string>
+    <string name="launcher_pseudo_widget_search_bar">검색창</string>
+    <string name="launcher_pseudo_widget_search_bar_hint">무엇이든 물어보세요…</string>
+    <string name="launcher_digital_clock_widget">디지털 시계</string>
+    <string name="launcher_analog_clock_widget">아날로그 시계</string>
+    <string name="launcher_apps">앱</string>
+    <string name="launcher_clear">지우기</string>
+    <string name="launcher_suggested_for_now">지금 추천</string>
+    <string name="launcher_recent_apps">최근 앱</string>
+    <string name="launcher_search_in_apps">앱에서 검색</string>
+    <string name="launcher_see_more">더 보기</string>
+    <string name="launcher_see_less">간략히 보기</string>
+    <string name="launcher_default_launcher_banner_title">설정이 완료되지 않았습니다</string>
+    <string name="launcher_swipe_left_hint">왼쪽으로 스와이프해 검색</string>
+    <string name="launcher_swipe_up_hint">위로 스와이프해 모든 앱 보기</string>
+    <string name="launcher_swipe_hint_tap">또는 아무 곳이나 탭해서 체험해보세요</string>
+    <string name="launcher_greeting_morning">좋은 아침이에요</string>
+    <string name="launcher_greeting_afternoon">좋은 오후예요</string>
+    <string name="launcher_greeting_evening">좋은 저녁이에요</string>
+    <string name="launcher_search_apps_hint">앱 검색</string>
+    <string name="launcher_suggested_apps">추천 앱</string>
+    <string name="launcher_searched_apps">검색된 앱</string>
+</resources>

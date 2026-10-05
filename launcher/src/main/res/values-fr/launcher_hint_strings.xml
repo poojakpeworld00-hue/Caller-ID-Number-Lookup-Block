@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Activez \"Affichage par-dessus les autres applis\"</string>
+    <string name="launcher_hint_overlay_description">Nous vous ramènerons directement ici une fois que c\'est activé.</string>
+    <string name="launcher_hint_default_home_title">Choisissez %1$s comme accueil</string>
+    <string name="launcher_hint_default_home_description">Sélectionnez-le dans la liste pour définir votre écran d\'accueil.</string>
+    <string name="launcher_hint_default_sms_title">Définissez comme appli SMS</string>
+    <string name="launcher_hint_default_sms_description">Appuyez sur \"Définir par défaut\" pour terminer.</string>
+    <string name="launcher_hint_mock_row">Appli d\'accueil par défaut</string>
+    <string name="launcher_hint_mock_toggle_row">Autorisation</string>
+    <string name="launcher_hint_overlay_row">Autoriser l\'affichage par-dessus les autres applis</string>
+</resources>

@@ -12,7 +12,7 @@ import io.launcher.home.models.AppLauncher
  * A tile rides in the drawer's list as a marker [AppLauncher], the same trick as
  * `LaunchersLineup.AD_SLOT`, so the scrolling grid, the pages and the diffing need no new row type.
  * Each marker gets its own package name because [AppLauncher.equals] compares only that; the landing
- * URL travels in `activityName` and the logo is looked up here.
+ * URL travels in `activityName` and the logo is looked up here by package.
  */
 object SponsoredTiles {
 
@@ -23,13 +23,14 @@ object SponsoredTiles {
 
     fun isSponsored(item: AppLauncher) = item.packageName.startsWith(PACKAGE_PREFIX)
 
-    fun logo(item: AppLauncher): String = logos[item.activityName].orEmpty()
+    fun logo(item: AppLauncher): String = logos[item.packageName].orEmpty()
 
     /**
      * [apps] with a tile after every `drawerAppAdEvery` of them. Each feed entry is used once, in
      * order, so the drawer never repeats a tile. The caller skips this while searching: the list is a
      * different, shorter thing every keystroke, and a promo drifting through results reads as one.
      */
+
     fun interleave(apps: List<AppLauncher>): List<AppLauncher> {
         val setup = LauncherRegistry.setup()
         val feed = setup.drawerAppAds
@@ -43,20 +44,22 @@ object SponsoredTiles {
         }
         return out
     }
-
     private fun marker(ad: SponsoredApp, index: Int): AppLauncher {
-        logos[ad.landingUrl] = ad.logo
+        // Keyed by the tile's own package, not its landing URL: feed entries may share one landing
+        // page (one store listing) and still carry different logos, and a URL key made the last
+        // entry's logo win for all of them.
+        val pkg = "$PACKAGE_PREFIX$index"
+        logos[pkg] = ad.logo
         return AppLauncher(
             id = null,
             title = ad.label,
-            packageName = "$PACKAGE_PREFIX$index",
+            packageName = pkg,
             activityName = ad.landingUrl,
             order = 0,
             thumbnailColor = 0,
             drawable = null,
         )
     }
-
     fun open(activity: Activity, item: AppLauncher) =
         LauncherRegistry.ads.openSponsored(activity, item.activityName)
 }

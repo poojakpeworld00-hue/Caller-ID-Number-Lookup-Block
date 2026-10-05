@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_app_launcher_name">Teachdaireachdan</string>
+    <string name="launcher_launcher_settings">Roghainnean an Lòinseir</string>
+    <string name="launcher_app_info">Fiosrachadh an app</string>
+    <string name="launcher_touch_hold_widget">Cùm sìos air a’ widget agus slaod e chun an sgrìn dhachaigh agad</string>
+    <string name="launcher_uninstall">Dì-stàlaich</string>
+    <string name="launcher_manage_hidden_icons">Stiùirich ìomhaigheagan falaichte</string>
+    <string name="launcher_hidden_icons">Ìomhaigheagan falaichte</string>
+    <string name="launcher_hidden_icons_placeholder">Chan urrainnear cuid a dh’appaichean a dhì-stàladh mar thoradh air cuingealachaidhean an t-siostaim, ach ’s urrainn dhut co-dhiù na h-ìomhaigheagan aca fhalach gus nach fhaic thu iad.</string>
+    <string name="launcher_app_drawer_settings">Drathair nan app</string>
+    <string name="launcher_app_drawer_enabled">Swipe suas airson drathair nan app</string>
+    <string name="launcher_drawer_style">Stoidhle na drathrach</string>
+    <string name="launcher_drawer_style_vertical">Liosta sgrolaichte</string>
+    <string name="launcher_drawer_style_paged">Duilleagan</string>
+    <string name="launcher_app_drawer_disabled_hint">Dheth: fanaidh gach app air an sgrìn dhachaigh, thèid appaichean ùra ris an duilleag mu dheireadh</string>
+    <string name="launcher_close_app_drawer_on_app_open">Dùin drathair nan app nuair a dh’fhosglas app</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">Seall am meur-chlàr gu fèin-obrachail san drathair</string>
+    <string name="launcher_show_app_labels">Seall leubailean nan app</string>
+    <string name="launcher_home_screen_settings">An sgrìn dhachaigh</string>
+    <string name="launcher_widget_too_big">Tha am widget ro mhòr airson meud an sgrìn dhachaigh an-dràsta</string>
+    <string name="launcher_double_tap_to_lock">Brùth dà thuras gus an sgrìn a ghlasadh</string>
+    <string name="launcher_lock_device_admin_hint">Gus am feart glasaidh le dà bhrag a chur air, feumaidh tu cead rianaire a thoirt seachad. Thoir an aire nach urrainnear an app a dhì-stàladh gus an tèid an cead seo a thoirt air falbh.</string>
+    <string name="launcher_lock_device_admin_warning">Ma chuireas tu cead rianaire à comas, thèid am feart glasaidh le dà bhrag à comas cuideachd.</string>
+    <string name="launcher_pseudo_widget_clock">Cleoc</string>
+    <string name="launcher_pseudo_widget_search_bar">Bàr-luirg</string>
+    <string name="launcher_pseudo_widget_search_bar_hint">Faighnich Dad…</string>
+    <string name="launcher_digital_clock_widget">Cleoc didseatach</string>
+    <string name="launcher_analog_clock_widget">Cleoc analogach</string>
+    <string name="launcher_apps">Appaichean</string>
+    <string name="launcher_clear">Falamhaich</string>
+    <string name="launcher_suggested_for_now">Air a mholadh an-dràsta</string>
+    <string name="launcher_recent_apps">Appaichean o chionn ghoirid</string>
+    <string name="launcher_search_in_apps">Lorg am measg nan app</string>
+    <string name="launcher_see_more">Seall barrachd</string>
+    <string name="launcher_see_less">Seall nas lugha</string>
+    <string name="launcher_default_launcher_banner_title">Suidheachadh Neo-chrìochnaichte</string>
+    <string name="launcher_swipe_left_hint">Swipe dhan taobh chlì airson lorg</string>
+    <string name="launcher_swipe_up_hint">Swipe suas airson a h-uile app</string>
+    <string name="launcher_swipe_hint_tap">no brùth àite sam bith gus fheuchainn</string>
+    <string name="launcher_greeting_morning">Madainn mhath</string>
+    <string name="launcher_greeting_afternoon">Feasgar math</string>
+    <string name="launcher_greeting_evening">Feasgar math</string>
+    <string name="launcher_search_apps_hint">Lorg appaichean</string>
+    <string name="launcher_suggested_apps">Appaichean air am moladh</string>
+    <string name="launcher_searched_apps">Appaichean air an lorg</string>
+</resources>

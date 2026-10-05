@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">เปิด \"แสดงทับแอปอื่น\"</string>
+    <string name="launcher_hint_overlay_description">เราจะพาคุณกลับมาทันทีที่เปิดใช้งานเสร็จ</string>
+    <string name="launcher_hint_default_home_title">เลือก %1$s เป็นหน้าหลัก</string>
+    <string name="launcher_hint_default_home_description">เลือกจากรายการเพื่อตั้งเป็นหน้าจอหลักของคุณ</string>
+    <string name="launcher_hint_default_sms_title">ตั้งเป็นแอป SMS ของคุณ</string>
+    <string name="launcher_hint_default_sms_description">แตะ \"ตั้งเป็นค่าเริ่มต้น\" เพื่อเสร็จสิ้น</string>
+    <string name="launcher_hint_mock_row">แอปหน้าหลักเริ่มต้น</string>
+    <string name="launcher_hint_mock_toggle_row">สิทธิ์การเข้าถึง</string>
+    <string name="launcher_hint_overlay_row">อนุญาตให้แสดงทับแอปอื่น</string>
+</resources>

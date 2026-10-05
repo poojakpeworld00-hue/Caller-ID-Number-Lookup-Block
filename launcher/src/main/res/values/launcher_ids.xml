@@ -4,4 +4,6 @@
     <item name="tag_press_animating" type="id" />
     <!-- View tag key for CommonAnimations.revealCard / concealCard target state. -->
     <item name="tag_card_shown" type="id" />
+    <!-- View tag key for LauncherIcons.applyTo: the drawable it already shaped, so a second call is a no-op. -->
+    <item name="lnch_tag_icon_shaped" type="id" />
 </resources>

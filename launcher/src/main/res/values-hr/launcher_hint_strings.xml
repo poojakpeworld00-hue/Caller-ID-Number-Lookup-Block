@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Uključi \"Prikaz preko drugih aplikacija\"</string>
+    <string name="launcher_hint_overlay_description">Vratit ćemo te odmah natrag čim se uključi.</string>
+    <string name="launcher_hint_default_home_title">Odaberi %1$s kao početni zaslon</string>
+    <string name="launcher_hint_default_home_description">Odaberi ga na popisu za postavljanje početnog zaslona.</string>
+    <string name="launcher_hint_default_sms_title">Postavi kao svoju SMS aplikaciju</string>
+    <string name="launcher_hint_default_sms_description">Dodirni \"Postavi kao zadano\" za dovršetak.</string>
+    <string name="launcher_hint_mock_row">Zadana početna aplikacija</string>
+    <string name="launcher_hint_mock_toggle_row">Dopuštenje</string>
+    <string name="launcher_hint_overlay_row">Dopusti prikaz preko drugih aplikacija</string>
+</resources>

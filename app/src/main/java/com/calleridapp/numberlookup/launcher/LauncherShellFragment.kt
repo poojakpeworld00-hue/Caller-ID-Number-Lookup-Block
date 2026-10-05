@@ -5,9 +5,6 @@ import android.os.SystemClock
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import com.calleridapp.admesh.domain.AdsVault
 import com.calleridapp.admesh.domain.ScreenPromoConfig
@@ -45,12 +42,11 @@ class LauncherShellFragment : Fragment(), LauncherPanelContent {
         LauncherShellPanelBinding.inflate(inflater, container, false).also { _binding = it }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        // Keeps the shell's bottom bar clear of the navigation bar. Insets are returned unchanged
-        // so the shell inside still receives them for its own per-tab status-bar padding.
-        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
-            v.updatePadding(bottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom)
-            insets
-        }
+        // No bottom padding here. LauncherPanel already insets this panel's container for the
+        // navigation bar and the keyboard (padBottomImeAndSystem on hostPanelContainerUi), so
+        // padding this view as well applied the bar's height twice: on a 3-button navigation bar
+        // the banner floated a whole bar-height above it with a blank band underneath. Gesture
+        // navigation has almost no inset, which is why it only showed on some phones.
 
         // Committed once and kept — the panel slides in and out rather than being recreated, so
         // the user's tab and scroll position survive closing it.

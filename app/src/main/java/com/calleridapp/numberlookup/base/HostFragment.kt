@@ -199,6 +199,8 @@ abstract class HostFragment<VB : ViewBinding> : Fragment() {
 
     /** Places the call directly (CALL_PHONE), requesting the permission if needed. */
     protected fun placeCall(number: String) {
+        // Our own trip out (a call, an SMS, a share sheet): no App Open ad on the way back.
+        com.calleridapp.admesh.domain.AdsGate.skipNextAppOpen()
         if (number.isBlank()) return
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CALL_PHONE)
             == PackageManager.PERMISSION_GRANTED

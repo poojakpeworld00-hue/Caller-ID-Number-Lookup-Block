@@ -61,16 +61,22 @@ object DirectLinkOpener {
         // listing — so it goes straight out to whoever owns it.
         if (isStoreLink(u)) {
             log("store link — straight to ACTION_VIEW: '$u'")
-            return openBrowser(context, u)
+            return openBrowser(context, u).also { if (it) leftApp() }
         }
 
         return when (override ?: mode(context)) {
             // PromoWebActivity.open already carries its own ACTION_VIEW fallback.
             Mode.WEBVIEW -> PromoWebActivity.open(context, u)
-            Mode.CUSTOM_TAB -> openCustomTab(context, u) || openBrowser(context, u)
-            Mode.BROWSER -> openBrowser(context, u)
+            Mode.CUSTOM_TAB -> (openCustomTab(context, u) || openBrowser(context, u)).also { if (it) leftApp() }
+            Mode.BROWSER -> openBrowser(context, u).also { if (it) leftApp() }
         }.also { if (!it) log("nothing opened for '$u'") }
     }
+
+    /**
+     * The link took the user out of the app (Custom Tab, browser, Play Store): the way back is our
+     * own doing, not a return to monetise, so the App Open ad is skipped for it.
+     */
+    private fun leftApp() = com.calleridapp.admesh.domain.AdsGate.skipNextAppOpen()
 
     /** http / https — the only two schemes a WebView or a Custom Tab can actually render. */
     fun isWebScheme(uri: Uri): Boolean {

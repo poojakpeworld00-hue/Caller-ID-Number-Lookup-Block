@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The long-press actions card (ItemActionsTray), One UI style. Night values in values-night. -->
+    <color name="lnch_tray_bg">#F5F6F8</color>
+    <color name="lnch_tray_text">#1C1C1E</color>
+    <color name="lnch_tray_text_secondary">#5F6368</color>
+    <color name="lnch_tray_divider">#1F000000</color>
+    <color name="lnch_tray_press">#14000000</color>
+</resources>

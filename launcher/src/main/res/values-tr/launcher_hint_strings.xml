@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">\"Diğer uygulamaların üzerinde göster\"ü aç</string>
+    <string name="launcher_hint_overlay_description">Açılır açılmaz seni buraya geri getireceğiz.</string>
+    <string name="launcher_hint_default_home_title">%1$s\'i Ana Ekran Olarak Seç</string>
+    <string name="launcher_hint_default_home_description">Ana ekranını ayarlamak için listeden seç.</string>
+    <string name="launcher_hint_default_sms_title">SMS uygulaman olarak ayarla</string>
+    <string name="launcher_hint_default_sms_description">Tamamlamak için \"Varsayılan yap\"a dokun.</string>
+    <string name="launcher_hint_mock_row">Varsayılan Ana Ekran Uygulaması</string>
+    <string name="launcher_hint_mock_toggle_row">İzin</string>
+    <string name="launcher_hint_overlay_row">Diğer uygulamaların üzerinde görüntülemeye izin ver</string>
+</resources>

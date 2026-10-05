@@ -1,2 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="launcher_app_launcher_name">Messages</string>
+    <string name="launcher_launcher_settings">การตั้งค่าลันเชอร์</string>
+    <string name="launcher_app_info">ข้อมูลแอป</string>
+    <string name="launcher_touch_hold_widget">กดค้างที่วิดเจ็ตแล้วลากไปวางบนหน้าจอหลักของคุณ</string>
+    <string name="launcher_uninstall">ถอนการติดตั้ง</string>
+    <string name="launcher_manage_hidden_icons">จัดการไอคอนที่ซ่อนไว้</string>
+    <string name="launcher_hidden_icons">ไอคอนที่ซ่อนไว้</string>
+    <string name="launcher_hidden_icons_placeholder">บางแอปไม่สามารถถอนการติดตั้งได้เนื่องจากข้อจำกัดของระบบ แต่คุณสามารถซ่อนไอคอนเพื่อไม่ให้เห็นได้</string>
+    <string name="launcher_app_drawer_settings">ลิ้นชักแอป</string>
+    <string name="launcher_app_drawer_enabled">ปัดขึ้นเพื่อเปิดลิ้นชักแอป</string>
+    <string name="launcher_drawer_style">รูปแบบลิ้นชัก</string>
+    <string name="launcher_drawer_style_vertical">รายการเลื่อน</string>
+    <string name="launcher_drawer_style_paged">แบบหน้า</string>
+    <string name="launcher_app_drawer_disabled_hint">ปิด: แอปทั้งหมดอยู่บนหน้าจอหลัก แอปใหม่จะถูกเพิ่มในหน้าสุดท้าย</string>
+    <string name="launcher_close_app_drawer_on_app_open">ปิดลิ้นชักแอปเมื่อเปิดแอป</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">แสดงแป้นพิมพ์อัตโนมัติในลิ้นชักแอป</string>
+    <string name="launcher_show_app_labels">แสดงชื่อแอป</string>
+    <string name="launcher_home_screen_settings">หน้าจอหลัก</string>
+    <string name="launcher_widget_too_big">วิดเจ็ตใหญ่เกินไปสำหรับขนาดหน้าจอหลักปัจจุบัน</string>
+    <string name="launcher_double_tap_to_lock">แตะสองครั้งเพื่อล็อกหน้าจอ</string>
+    <string name="launcher_lock_device_admin_hint">หากต้องการเปิดใช้ฟีเจอร์แตะสองครั้งเพื่อล็อกหน้าจอ คุณต้องให้สิทธิ์ผู้ดูแลระบบ โปรดทราบว่าจะไม่สามารถถอนการติดตั้งแอปได้จนกว่าจะยกเลิกสิทธิ์นี้</string>
+    <string name="launcher_lock_device_admin_warning">การปิดใช้งานสิทธิ์ผู้ดูแลระบบจะปิดฟีเจอร์แตะสองครั้งเพื่อล็อกหน้าจอ</string>
+    <string name="launcher_pseudo_widget_clock">นาฬิกา</string>
+    <string name="launcher_pseudo_widget_search_bar">แถบค้นหา</string>
+    <string name="launcher_pseudo_widget_search_bar_hint">ถามอะไรก็ได้…</string>
+    <string name="launcher_digital_clock_widget">นาฬิกาดิจิทัล</string>
+    <string name="launcher_analog_clock_widget">นาฬิกาอนาล็อก</string>
+    <string name="launcher_apps">แอป</string>
+    <string name="launcher_clear">ล้าง</string>
+    <string name="launcher_suggested_for_now">แนะนำสำหรับตอนนี้</string>
+    <string name="launcher_recent_apps">แอปล่าสุด</string>
+    <string name="launcher_search_in_apps">ค้นหาในแอป</string>
+    <string name="launcher_see_more">ดูเพิ่มเติม</string>
+    <string name="launcher_see_less">ดูน้อยลง</string>
+    <string name="launcher_default_launcher_banner_title">การตั้งค่ายังไม่เสร็จสมบูรณ์</string>
+    <string name="launcher_swipe_left_hint">ปัดซ้ายเพื่อค้นหา</string>
+    <string name="launcher_swipe_up_hint">ปัดขึ้นเพื่อดูแอปทั้งหมด</string>
+    <string name="launcher_swipe_hint_tap">หรือแตะที่ใดก็ได้เพื่อลอง</string>
+    <string name="launcher_greeting_morning">สวัสดีตอนเช้า</string>
+    <string name="launcher_greeting_afternoon">สวัสดีตอนบ่าย</string>
+    <string name="launcher_greeting_evening">สวัสดีตอนเย็น</string>
+    <string name="launcher_search_apps_hint">ค้นหาแอป</string>
+    <string name="launcher_suggested_apps">แอปที่แนะนำ</string>
+    <string name="launcher_searched_apps">แอปที่ค้นหา</string>
+</resources>

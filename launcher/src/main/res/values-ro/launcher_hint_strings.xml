@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Activează \"Afișare peste alte aplicații\"</string>
+    <string name="launcher_hint_overlay_description">Te aducem înapoi imediat ce e activată.</string>
+    <string name="launcher_hint_default_home_title">Alege %1$s ca ecran principal</string>
+    <string name="launcher_hint_default_home_description">Alege-o din listă pentru a-ți seta ecranul principal.</string>
+    <string name="launcher_hint_default_sms_title">Setează ca aplicație SMS</string>
+    <string name="launcher_hint_default_sms_description">Atinge \"Setează ca implicit\" pentru a termina.</string>
+    <string name="launcher_hint_mock_row">Aplicație implicită pentru ecran principal</string>
+    <string name="launcher_hint_mock_toggle_row">Permisiune</string>
+    <string name="launcher_hint_overlay_row">Permite afișarea peste alte aplicații</string>
+</resources>

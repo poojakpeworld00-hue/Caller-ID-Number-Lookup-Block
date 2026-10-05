@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_app_launcher_name">Meldinger</string>
+    <string name="launcher_launcher_settings">Launcher-innstillinger</string>
+    <string name="launcher_app_info">Appinfo</string>
+    <string name="launcher_touch_hold_widget">Trykk og hold på widgeten, og dra den til hjemskjermen</string>
+    <string name="launcher_uninstall">Avinstaller</string>
+    <string name="launcher_manage_hidden_icons">Administrer skjulte ikoner</string>
+    <string name="launcher_hidden_icons">Skjulte ikoner</string>
+    <string name="launcher_hidden_icons_placeholder">Enkelte apper kan ikke avinstalleres på grunn av systembegrensninger, men du kan i det minste skjule ikonene deres slik at du slipper å se dem.</string>
+    <string name="launcher_app_drawer_settings">Appskuff</string>
+    <string name="launcher_app_drawer_enabled">Sveip opp for appskuff</string>
+    <string name="launcher_drawer_style">Skuffstil</string>
+    <string name="launcher_drawer_style_vertical">Rullende liste</string>
+    <string name="launcher_drawer_style_paged">Sider</string>
+    <string name="launcher_app_drawer_disabled_hint">Av: alle apper forblir på hjemskjermen, nye apper legges til på siste side</string>
+    <string name="launcher_close_app_drawer_on_app_open">Lukk appskuff når en app åpnes</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">Vis tastatur automatisk i appskuff</string>
+    <string name="launcher_show_app_labels">Vis appnavn</string>
+    <string name="launcher_home_screen_settings">Hjemskjerm</string>
+    <string name="launcher_widget_too_big">Widgeten er for stor for gjeldende hjemskjermstørrelse</string>
+    <string name="launcher_double_tap_to_lock">Dobbelttrykk for å låse skjermen</string>
+    <string name="launcher_lock_device_admin_hint">For å aktivere dobbelttrykk-lås-skjerm-funksjonen må du gi administratortillatelse. Merk at appen ikke kan avinstalleres før denne tillatelsen er fjernet.</string>
+    <string name="launcher_lock_device_admin_warning">Deaktivering av administratortillatelse slår av dobbelttrykk-lås-skjerm-funksjonen.</string>
+    <string name="launcher_pseudo_widget_clock">Klokke</string>
+    <string name="launcher_pseudo_widget_search_bar">Søkefelt</string>
+    <string name="launcher_pseudo_widget_search_bar_hint">Spør om hva som helst…</string>
+    <string name="launcher_digital_clock_widget">Digital klokke</string>
+    <string name="launcher_analog_clock_widget">Analog klokke</string>
+    <string name="launcher_apps">Apper</string>
+    <string name="launcher_clear">Tøm</string>
+    <string name="launcher_suggested_for_now">Foreslått nå</string>
+    <string name="launcher_recent_apps">Nylige apper</string>
+    <string name="launcher_search_in_apps">Søk blant apper</string>
+    <string name="launcher_see_more">Vis mer</string>
+    <string name="launcher_see_less">Vis mindre</string>
+    <string name="launcher_default_launcher_banner_title">Oppsett ikke fullført</string>
+    <string name="launcher_swipe_left_hint">Sveip venstre for søk</string>
+    <string name="launcher_swipe_up_hint">Sveip opp for alle apper</string>
+    <string name="launcher_swipe_hint_tap">eller trykk hvor som helst for å prøve</string>
+    <string name="launcher_greeting_morning">God morgen</string>
+    <string name="launcher_greeting_afternoon">God ettermiddag</string>
+    <string name="launcher_greeting_evening">God kveld</string>
+    <string name="launcher_search_apps_hint">Søk i apper</string>
+    <string name="launcher_suggested_apps">Foreslåtte apper</string>
+    <string name="launcher_searched_apps">Søkte apper</string>
+</resources>

@@ -126,6 +126,18 @@ class PreferencesActivity : HostActivity<ActivitySettingsBinding>() {
         binding.rowTerms.tvTitle.setText(R.string.settings_terms)
         binding.rowTerms.root.setOnClickListener { openTermLink() }
 
+        // Ad consent: where UMP requires a way back into the consent choices (EEA / UK), this row
+        // reopens them. Hidden everywhere else.
+        val consent = com.calleridapp.admesh.domain.GoogleMobileAdsConsentRegistry.getInstance(applicationContext)
+        binding.rowAdPrivacy.root.visibility = if (consent.isPrivacyOptionsRequired) View.VISIBLE else View.GONE
+        binding.rowAdPrivacy.ivIcon.setImageResource(R.drawable.ic_policy)
+        binding.rowAdPrivacy.tvTitle.setText(R.string.settings_ad_privacy)
+        binding.rowAdPrivacy.root.setOnClickListener {
+            consent.showPrivacyOptionsForm(this) { error ->
+                if (error != null) android.util.Log.w("PreferencesActivity", "privacy options: ${error.message}")
+            }
+        }
+
         // First-run coach-mark nudging the user to enable the call-screening toggle.
         maybeShowCallScreeningHint()
     }

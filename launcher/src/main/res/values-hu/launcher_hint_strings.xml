@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Kapcsold be a \"Megjelenítés más alkalmazások felett\" funkciót</string>
+    <string name="launcher_hint_overlay_description">Amint bekapcsolod, azonnal visszahozunk ide.</string>
+    <string name="launcher_hint_default_home_title">Válaszd a(z) %1$s appot kezdőképernyőnek</string>
+    <string name="launcher_hint_default_home_description">Válaszd ki a listából a kezdőképernyő beállításához.</string>
+    <string name="launcher_hint_default_sms_title">Állítsd be SMS-alkalmazásnak</string>
+    <string name="launcher_hint_default_sms_description">Koppints az \"Beállítás alapértelmezettként\" gombra a befejezéshez.</string>
+    <string name="launcher_hint_mock_row">Alapértelmezett kezdőalkalmazás</string>
+    <string name="launcher_hint_mock_toggle_row">Engedély</string>
+    <string name="launcher_hint_overlay_row">Megjelenítés más alkalmazások felett engedélyezése</string>
+</resources>

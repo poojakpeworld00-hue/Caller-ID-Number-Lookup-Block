@@ -31,6 +31,8 @@ import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.calleridapp.admesh.domain.LauncherAdsConfig.DrawerAdFlow
 import com.calleridapp.admesh.domain.LauncherAdsConfig.DrawerAdSpec
 import com.calleridapp.admesh.domain.LauncherAdsConfig.DrawerAdType
+import com.calleridapp.admesh.domain.AdRevenueMeter
+import com.calleridapp.admesh.domain.AdsGate
 import com.calleridapp.admesh.domain.AdsVault
 import com.calleridapp.numberlookup.BuildConfig
 import com.calleridapp.numberlookup.R
@@ -58,6 +60,13 @@ object DrawerAdRunner {
 
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    /** When the chain now running started, 0 when none. See [run]. */
+    @Volatile
+    private var chainSince = 0L
+
+    /** A chain that never reports back (a lost callback) stops blocking the next one after this. */
+    private const val CHAIN_MAX_MS = 60_000L
+
     // Keyed by ad-unit id: the launcher's placements (leftPanel / rightPanel / drawer) each carry
     // their own unit, and one shared slot per format would serve one placement's ad on another.
     private val interAds = HashMap<String, InterstitialAd>()
@@ -67,8 +76,27 @@ object DrawerAdRunner {
 
     private val loading = HashSet<String>()
 
+    /** When each cached ad loaded ("<type>:<unit>"), so a stale one is dropped instead of shown. */
+    private val loadedAt = HashMap<String, Long>()
+
+    private fun maxAgeMs(type: String) = if (type == "appopen") 4 * 60 * 60_000L else 60 * 60_000L
+
+    private fun stamp(key: String) { loadedAt[key] = android.os.SystemClock.elapsedRealtime() }
+
+    /** True when [map] holds a fresh ad for [unitId]; a stale one is removed (and destroyed). */
+    private fun <T> fresh(map: HashMap<String, T>, type: String, unitId: String): Boolean {
+        if (!map.containsKey(unitId)) return false
+        val at = loadedAt["$type:$unitId"] ?: 0L
+        if (android.os.SystemClock.elapsedRealtime() - at <= maxAgeMs(type)) return true
+        log("$type $unitId expired - dropped")
+        (map.remove(unitId) as? NativeAd)?.destroy()
+        return false
+    }
+
     /** Loads every loadable format in the sequence that is not already in hand. */
     fun preload(context: Context, flow: DrawerAdFlow) {
+        // No consent, no requests. On-demand callers then see "not ready" and move on.
+        if (!AdsGate.canRequestAds(context)) return
         flow.sequence.forEach { spec ->
             when (spec.type) {
                 DrawerAdType.INTER -> loadInter(context, spec.adUnitId)
@@ -81,10 +109,10 @@ object DrawerAdRunner {
     }
 
     private fun isReady(spec: DrawerAdSpec): Boolean = when (spec.type) {
-        DrawerAdType.INTER -> interAds.containsKey(spec.adUnitId)
-        DrawerAdType.APPOPEN -> appOpenAds.containsKey(spec.adUnitId)
-        DrawerAdType.REWARDED -> rewardedAds.containsKey(spec.adUnitId)
-        DrawerAdType.FULLSCREEN_NATIVE -> nativeAds.containsKey(spec.adUnitId)
+        DrawerAdType.INTER -> fresh(interAds, "inter", spec.adUnitId)
+        DrawerAdType.APPOPEN -> fresh(appOpenAds, "appopen", spec.adUnitId)
+        DrawerAdType.REWARDED -> fresh(rewardedAds, "rewarded", spec.adUnitId)
+        DrawerAdType.FULLSCREEN_NATIVE -> fresh(nativeAds, "native", spec.adUnitId)
         DrawerAdType.DIRECTLINK -> spec.adUnitId.isNotBlank() || spec.urls.isNotEmpty()
         // Nothing to preload; whether a house ad exists is decided when it renders (miss → next).
         DrawerAdType.CUSTOM -> true
@@ -112,8 +140,26 @@ object DrawerAdRunner {
             DrawerAdType.FULLSCREEN_NATIVE -> "native"
             else -> return then(isReady(spec))
         }
+        // No consent: preload() would return without a request and nothing would ever answer, so the
+        // black loader sat up for the whole timeout. Fail at once instead.
+        if (!AdsGate.canRequestAds(context)) return then(false)
+        // The user tapped and is now waiting on the network: the loading spinner covers that wait
+        // when `inter_loader` is on, and comes down however the wait ends (loaded, failed, timeout).
+        val activity = context as? Activity
+        if (activity != null) {
+            com.calleridapp.admesh.presentation.oninterAds.FullScreenSpinner.show(
+                activity,
+                com.calleridapp.admesh.presentation.oninterAds.InterLoader.enabled(AdsVault.getInstance(activity)),
+            )
+        }
         var answered = false
-        val once: (Boolean) -> Unit = { ok -> if (!answered) { answered = true; then(ok) } }
+        val once: (Boolean) -> Unit = { ok ->
+            if (!answered) {
+                answered = true
+                if (activity != null) com.calleridapp.admesh.presentation.oninterAds.FullScreenSpinner.hide()
+                then(ok)
+            }
+        }
         waiters.getOrPut("$prefix:${spec.adUnitId}") { mutableListOf() }.add(once)
         mainHandler.postDelayed({ once(false) }, ON_DEMAND_TIMEOUT_MS)
         preload(context, DrawerAdFlow(true, 0, listOf(spec)))
@@ -131,7 +177,20 @@ object DrawerAdRunner {
      * exactly once.
      */
     fun run(activity: Activity, flow: DrawerAdFlow, pointerKey: String, proceed: () -> Unit) {
-        val done = once(proceed)
+        // One chain at a time, and never over an ad that is already on screen. Two chains were being
+        // started for one moment (the grant ad and the screen's own exit ad), and the second one's
+        // rewarded step then came up over the first one's interstitial / native.
+        val now = android.os.SystemClock.uptimeMillis()
+        val chainBusy = chainSince != 0L && now - chainSince < CHAIN_MAX_MS
+        if (chainBusy || AdsGate.isFullScreenShowing || com.calleridapp.admesh.presentation.oninterAds.InterstitialNormal.isInterShow) {
+            log("another full-screen ad is running — proceeding without one")
+            return proceed()
+        }
+        chainSince = now
+        val done = once {
+            chainSince = 0L
+            proceed()
+        }
         val size = flow.sequence.size
         // Rotating is only meaningful when one tap shows one ad and we want taps to take turns.
         val start = if (flow.showAll || flow.startFromFirst) 0 else {
@@ -176,7 +235,12 @@ object DrawerAdRunner {
             if (flow.onDemand && k == 0 && spec.adUnitId.isNotBlank()) {
                 log("${spec.type.key} not ready — loading on demand")
                 loadNow(activity, spec) { ok ->
-                    if (ok && !activity.isFinishing && !activity.isDestroyed) {
+                    if (ok && !activity.isFinishing && !activity.isDestroyed && !isInFront(activity)) {
+                        // The user left while it loaded (Home, Recents, another app): showing it now
+                        // would put a full-screen ad over a screen they are not on. Kept for next time.
+                        log("${spec.type.key} loaded after the screen left — not shown")
+                        done()
+                    } else if (ok && !activity.isFinishing && !activity.isDestroyed) {
                         // Ready now: retry this step without on-demand, so a second miss moves on.
                         attempt(activity, flow.copy(onDemand = false), order, k, pointerKey, done)
                     } else {
@@ -193,12 +257,32 @@ object DrawerAdRunner {
         if (!flow.showAll && !flow.startFromFirst) {
             AdsVault.getInstance(activity).putInt(pointerKey, (idx + 1) % size)
         }
-        val next = { attempt(activity, flow, order, k + 1, pointerKey, done) }
+        // This attempt ends exactly once: shown, failed to show, or threw. A show() that throws and
+        // then also reports onAdFailedToShow used to advance the chain twice, skipping a step — and
+        // landing on rewarded while the ad before it was still up.
+        var settled = false
+        // Where the ad runs, for the `screen` param of its events: the chain's pointer key, trimmed.
+        val place = pointerKey.trim('_').removePrefix("launcher_").removeSuffix("_seq_ptr").take(36)
+        val next: () -> Unit = {
+            if (!settled) {
+                settled = true
+                com.calleridapp.numberlookup.util.Analytics.adEvent(spec.type.key, "failed", place)
+                attempt(activity, flow, order, k + 1, pointerKey, done)
+            }
+        }
         // Chaining full-screen ads back to back needs a beat: the dismissal callback fires while the
         // previous ad's activity is still finishing, and showing into that window is refused.
-        val afterShown: () -> Unit =
-            if (flow.showAll) ({ mainHandler.postDelayed({ next() }, CHAIN_GAP_MS) }) else done
+        val afterShown: () -> Unit = {
+            if (!settled) {
+                settled = true
+                com.calleridapp.numberlookup.util.Analytics.adEvent(spec.type.key, "close", place)
+                if (flow.showAll) mainHandler.postDelayed(
+                    { attempt(activity, flow, order, k + 1, pointerKey, done) }, CHAIN_GAP_MS
+                ) else done()
+            }
+        }
         log("attempting ${spec.type.key} (idx=$idx)${if (flow.showAll) " [show_all]" else ""}")
+        com.calleridapp.numberlookup.util.Analytics.adEvent(spec.type.key, "show", place)
 
         runCatching {
             when (spec.type) {
@@ -221,19 +305,29 @@ object DrawerAdRunner {
             }
         }.onFailure {
             Log.e(TAG, "attempt ${spec.type.key} threw", it)
+            // A show() that threw never reports back; the gate it raised has to come down here, or
+            // every App Open and chain after it is held off until the gate expires.
+            AdsGate.fullScreenDismissed()
             next()
         }
     }
 
+    /** Whether [activity] is the resumed screen, i.e. the user is still looking at it. */
+    private fun isInFront(activity: Activity): Boolean =
+        (activity as? androidx.lifecycle.LifecycleOwner)?.lifecycle?.currentState
+            ?.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)
+            ?: activity.hasWindowFocus()
+
     // ---------------- Interstitial ----------------
 
     private fun loadInter(context: Context, unitId: String) {
-        if (unitId.isBlank() || interAds.containsKey(unitId) || !loading.add("inter:$unitId")) return
+        if (unitId.isBlank() || fresh(interAds, "inter", unitId) || !loading.add("inter:$unitId")) return
         InterstitialAd.load(
             context, unitId, AdRequest.Builder().build(),
             object : InterstitialAdLoadCallback() {
                 override fun onAdLoaded(ad: InterstitialAd) {
                     interAds[unitId] = ad
+                    stamp("inter:$unitId")
                     loading.remove("inter:$unitId")
                     settle("inter:$unitId", true)
                 }
@@ -249,29 +343,34 @@ object DrawerAdRunner {
 
     private fun showInter(activity: Activity, unitId: String, onShown: () -> Unit, onFailed: () -> Unit) {
         val ad = interAds.remove(unitId) ?: return onFailed()
+        ad.setOnPaidEventListener { AdRevenueMeter.logPaidEvent(activity, it) }
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
+                AdsGate.fullScreenDismissed()
                 loadInter(activity, unitId)
                 onShown()
             }
 
             override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                AdsGate.fullScreenDismissed()
                 loadInter(activity, unitId)
                 onFailed()
             }
         }
+        AdsGate.fullScreenShown()
         ad.show(activity)
     }
 
     // ---------------- App Open ----------------
 
     private fun loadAppOpen(context: Context, unitId: String) {
-        if (unitId.isBlank() || appOpenAds.containsKey(unitId) || !loading.add("appopen:$unitId")) return
+        if (unitId.isBlank() || fresh(appOpenAds, "appopen", unitId) || !loading.add("appopen:$unitId")) return
         AppOpenAd.load(
             context, unitId, AdRequest.Builder().build(),
             object : AppOpenAd.AppOpenAdLoadCallback() {
                 override fun onAdLoaded(ad: AppOpenAd) {
                     appOpenAds[unitId] = ad
+                    stamp("appopen:$unitId")
                     loading.remove("appopen:$unitId")
                     settle("appopen:$unitId", true)
                 }
@@ -287,29 +386,34 @@ object DrawerAdRunner {
 
     private fun showAppOpen(activity: Activity, unitId: String, onShown: () -> Unit, onFailed: () -> Unit) {
         val ad = appOpenAds.remove(unitId) ?: return onFailed()
+        ad.setOnPaidEventListener { AdRevenueMeter.logPaidEvent(activity, it) }
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
+                AdsGate.fullScreenDismissed()
                 loadAppOpen(activity, unitId)
                 onShown()
             }
 
             override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                AdsGate.fullScreenDismissed()
                 loadAppOpen(activity, unitId)
                 onFailed()
             }
         }
+        AdsGate.fullScreenShown()
         ad.show(activity)
     }
 
     // ---------------- Rewarded ----------------
 
     private fun loadRewarded(context: Context, unitId: String) {
-        if (unitId.isBlank() || rewardedAds.containsKey(unitId) || !loading.add("rewarded:$unitId")) return
+        if (unitId.isBlank() || fresh(rewardedAds, "rewarded", unitId) || !loading.add("rewarded:$unitId")) return
         RewardedAd.load(
             context, unitId, AdRequest.Builder().build(),
             object : RewardedAdLoadCallback() {
                 override fun onAdLoaded(ad: RewardedAd) {
                     rewardedAds[unitId] = ad
+                    stamp("rewarded:$unitId")
                     loading.remove("rewarded:$unitId")
                     settle("rewarded:$unitId", true)
                 }
@@ -325,27 +429,32 @@ object DrawerAdRunner {
 
     private fun showRewarded(activity: Activity, unitId: String, onShown: () -> Unit, onFailed: () -> Unit) {
         val ad = rewardedAds.remove(unitId) ?: return onFailed()
+        ad.setOnPaidEventListener { AdRevenueMeter.logPaidEvent(activity, it) }
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
+                AdsGate.fullScreenDismissed()
                 loadRewarded(activity, unitId)
                 onShown()
             }
 
             override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                AdsGate.fullScreenDismissed()
                 loadRewarded(activity, unitId)
                 onFailed()
             }
         }
+        AdsGate.fullScreenShown()
         ad.show(activity) { /* reward earned — the sequence proceeds regardless */ }
     }
 
     // ---------------- Fullscreen native ----------------
 
     private fun loadNative(context: Context, unitId: String) {
-        if (unitId.isBlank() || nativeAds.containsKey(unitId) || !loading.add("native:$unitId")) return
+        if (unitId.isBlank() || fresh(nativeAds, "native", unitId) || !loading.add("native:$unitId")) return
         AdLoader.Builder(context, unitId)
             .forNativeAd { ad ->
                 nativeAds.put(unitId, ad)?.destroy()
+                stamp("native:$unitId")
                 loading.remove("native:$unitId")
                 settle("native:$unitId", true)
             }
@@ -370,14 +479,17 @@ object DrawerAdRunner {
             val view = LayoutInflater.from(activity)
                 .inflate(R.layout.drawer_ad_fullscreen_native, null) as NativeAdView
             bindNative(view, ad)
+            ad.setOnPaidEventListener { AdRevenueMeter.logPaidEvent(activity, it) }
             view.findViewById<ImageView>(R.id.drawer_native_close).setOnClickListener { dialog.dismiss() }
             dialog.setContentView(view, ViewGroup.LayoutParams(MATCH, MATCH))
             dialog.setOnDismissListener {
+                AdsGate.fullScreenDismissed()
                 runCatching { ad.destroy() }
                 loadNative(activity, unitId)
                 onShown()
             }
             dialog.setCancelable(true)
+            AdsGate.fullScreenShown()
             dialog.show()
             true
         }.getOrElse {

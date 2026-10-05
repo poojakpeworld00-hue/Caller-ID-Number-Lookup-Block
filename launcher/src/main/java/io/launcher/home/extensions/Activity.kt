@@ -9,36 +9,24 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherApps
 import io.launcher.home.profile.LauncherFingerprint
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Process
 import android.provider.Settings
 import android.provider.Telephony
-import android.view.ContextThemeWrapper
-import android.view.Gravity
-import android.view.Menu
 import android.view.View
-import androidx.appcompat.widget.PopupMenu
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
 import io.launcher.home.activities.DefaultHomeHintPanel
-import androidx.core.view.MenuCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.core.view.forEach
-import com.google.android.material.color.MaterialColors
-import org.fossify.commons.extensions.getPopupMenuTheme
-import org.fossify.commons.extensions.getProperTextColor
-import org.fossify.commons.extensions.isDynamicTheme
 import org.fossify.commons.extensions.showErrorToast
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.commons.helpers.isQPlus
-import org.fossify.commons.helpers.isSPlus
-import timber.log.Timber
 import io.launcher.home.R
 import io.launcher.home.api.LauncherRegistry
+import timber.log.Timber
 import io.launcher.home.activities.LauncherPrefsPanel
 import io.launcher.home.helpers.ITEM_TYPE_FOLDER
 import io.launcher.home.helpers.ITEM_TYPE_ICON
@@ -46,7 +34,9 @@ import io.launcher.home.helpers.ITEM_TYPE_WIDGET
 import io.launcher.home.helpers.REQUEST_DEFAULT_SMS
 import io.launcher.home.helpers.REQUEST_SET_DEFAULT
 import io.launcher.home.helpers.UNINSTALL_APP_REQUEST_CODE
+import io.launcher.home.activities.LauncherPanel
 import io.launcher.home.interfaces.ItemMenuListener
+import io.launcher.home.dialogs.ItemActionsTray
 import io.launcher.home.models.HomeScreenGridItem
 
 /**
@@ -179,6 +169,8 @@ fun Activity.uninstallApp(packageName: String) {
         data = Uri.fromParts("package", packageName, null)
         startActivityForResult(this, UNINSTALL_APP_REQUEST_CODE)
     }
+    // The dialog returns before the package is gone; the launcher watches for the removal itself.
+    (this as? io.launcher.home.activities.LauncherPanel)?.watchUninstall(packageName)
 }
 
 fun Activity.handleGridItemPopupMenu(
@@ -186,100 +178,71 @@ fun Activity.handleGridItemPopupMenu(
     gridItem: HomeScreenGridItem,
     isOnAllAppsFragment: Boolean,
     listener: ItemMenuListener,
-): PopupMenu {
-    val contextTheme = ContextThemeWrapper(this, getPopupMenuTheme())
-    return PopupMenu(contextTheme, anchorView, Gravity.TOP or Gravity.END).apply {
-        if (isQPlus()) {
-            setForceShowIcon(true)
+    centerX: Float,
+    itemTop: Float,
+    itemBottom: Float,
+): ItemActionsTray {
+    val isIcon = gridItem.type == ITEM_TYPE_ICON
+    val isOwn = gridItem.packageName == applicationContext.packageName
+    val actions = buildList {
+        // Our own icon offers no App info (nor, below, Uninstall unless the host allows it): the
+        // app is not managed from here.
+        if (isIcon && !isOwn) add(ItemActionsTray.Action(org.fossify.commons.R.drawable.ic_info_vector, R.string.launcher_app_info) { listener.appInfoUi(gridItem) })
+        // Our own icon can't be hidden either: the drawer always lists the host.
+        if (isIcon && isOnAllAppsFragment && !isOwn) add(ItemActionsTray.Action(org.fossify.commons.R.drawable.ic_hide_vector, org.fossify.commons.R.string.hide) { listener.hide(gridItem) })
+        if ((isIcon || gridItem.type == ITEM_TYPE_FOLDER) && !isOnAllAppsFragment) {
+            add(ItemActionsTray.Action(org.fossify.commons.R.drawable.ic_rename_vector, org.fossify.commons.R.string.rename) { listener.rename(gridItem) })
         }
-
-        inflate(R.menu.lnch_menu_app_icon)
-        menu.forEach {
-            val default = getProperTextColor()
-            val color = if (isSPlus() && isDynamicTheme()) {
-                default
-            } else {
-                MaterialColors.getColor(contextTheme, android.R.attr.actionMenuTextColor, default)
-            }
-            it.iconTintList = ColorStateList.valueOf(color)
-        }
-        menu.findItem(R.id.renameUi).isVisible =
-            (gridItem.type == ITEM_TYPE_ICON || gridItem.type == ITEM_TYPE_FOLDER) && !isOnAllAppsFragment
-        menu.findItem(R.id.hide_iconUi).isVisible =
-            gridItem.type == ITEM_TYPE_ICON && isOnAllAppsFragment
-        menu.findItem(R.id.resizeUi).isVisible = gridItem.type == ITEM_TYPE_WIDGET
-        // Our own icon offers no App info (nor, below, Uninstall): the app is not managed from here.
-        menu.findItem(R.id.app_infoUi).isVisible = gridItem.type == ITEM_TYPE_ICON
-                && gridItem.packageName != applicationContext.packageName
+        if (gridItem.type == ITEM_TYPE_WIDGET) add(ItemActionsTray.Action(R.drawable.lnch_ic_resize_vector, org.fossify.commons.R.string.resize) { listener.resize(gridItem) })
+        if (!isOnAllAppsFragment) add(ItemActionsTray.Action(org.fossify.commons.R.drawable.ic_cross_vector, org.fossify.commons.R.string.remove) { listener.remove(gridItem) })
         // Our own icon: the system Uninstall only when the host says it has no uninstall flow of
         // its own to run instead - see LauncherBridge.allowUninstallingHostIcon.
-        menu.findItem(R.id.uninstallUi).isVisible = gridItem.type == ITEM_TYPE_ICON
-                && canAppBeUninstalled(gridItem.packageName)
-                && (gridItem.packageName != applicationContext.packageName || LauncherRegistry.bridge.allowUninstallingHostIcon())
-        menu.findItem(R.id.removeUi).isVisible = !isOnAllAppsFragment
+        if (isIcon && canAppBeUninstalled(gridItem.packageName) && (!isOwn || LauncherRegistry.bridge.allowUninstallingHostIcon())) {
+            add(ItemActionsTray.Action(org.fossify.commons.R.drawable.ic_delete_vector, R.string.launcher_uninstall) { listener.uninstall(gridItem) })
+        }
+    }.map { action -> ItemActionsTray.Action(action.icon, action.label) { listener.onAnyClick(); action.onClick() } }
 
-        val launcherApps =
-            applicationContext.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
-        val shortcuts = if (launcherApps.hasShortcutHostPermission()) {
-            try {
-                val query = LauncherApps.ShortcutQuery().setQueryFlags(
-                    LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC or LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST or LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED
-                ).setPackage(gridItem.packageName)
-                launcherApps.getShortcuts(query, Process.myUserHandle())
-            } catch (e: Exception) {
-                null
-            }
-        } else {
+    val launcherApps =
+        applicationContext.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
+    val shortcutInfos = if (launcherApps.hasShortcutHostPermission()) {
+        try {
+            val query = LauncherApps.ShortcutQuery().setQueryFlags(
+                LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC or LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST or LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED
+            ).setPackage(gridItem.packageName)
+            launcherApps.getShortcuts(query, Process.myUserHandle())
+        } catch (e: Exception) {
             null
         }
+    } else {
+        null
+    }
 
-        val hasShortcuts = !shortcuts.isNullOrEmpty()
-        MenuCompat.setGroupDividerEnabled(menu, hasShortcuts)
-        menu.setGroupVisible(R.id.group_shortcutsUi, hasShortcuts)
-        if (hasShortcuts) {
-            val iconSize = resources.getDimensionPixelSize(R.dimen.launcher_menu_icon_size)
-            shortcuts?.forEach { shortcutInfo ->
-                val iconDrawable = launcherApps.getShortcutIconDrawable(
-                    shortcutInfo, resources.displayMetrics.densityDpi
-                )
-
-                menu.add(R.id.group_shortcutsUi, Menu.NONE, Menu.NONE, shortcutInfo.getLabel())
-                    .setIcon(
-                        (iconDrawable ?: Color.TRANSPARENT.toDrawable())
-                            .toBitmap(width = iconSize, height = iconSize)
-                            .toDrawable(resources)
-                    )
-                    .setOnMenuItemClickListener { _ ->
-                        listener.onAnyClick()
-                        val id = shortcutInfo.id
-                        val packageName = shortcutInfo.`package`
-                        val userHandle = Process.myUserHandle()
-                        launcherApps.startShortcut(packageName, id, Rect(), null, userHandle)
-                        true
-                    }
-            }
-        }
-
-        setOnMenuItemClickListener { item ->
+    val iconSize = resources.getDimensionPixelSize(R.dimen.launcher_menu_icon_size)
+    val shortcuts = shortcutInfos.orEmpty().map { shortcutInfo ->
+        val iconDrawable = launcherApps.getShortcutIconDrawable(shortcutInfo, resources.displayMetrics.densityDpi)
+        ItemActionsTray.Shortcut(
+            icon = (iconDrawable ?: Color.TRANSPARENT.toDrawable()).toBitmap(width = iconSize, height = iconSize).toDrawable(resources),
+            label = shortcutInfo.shortLabel ?: shortcutInfo.longLabel ?: "",
+        ) {
             listener.onAnyClick()
-            when (item.itemId) {
-                R.id.hide_iconUi -> listener.hide(gridItem)
-                R.id.renameUi -> listener.rename(gridItem)
-                R.id.resizeUi -> listener.resize(gridItem)
-                R.id.app_infoUi -> listener.appInfoUi(gridItem)
-                R.id.removeUi -> listener.remove(gridItem)
-                R.id.uninstallUi -> listener.uninstall(gridItem)
+            val id = shortcutInfo.id
+            val packageName = shortcutInfo.`package`
+            // One of the host's own shortcuts that it wants handled as an in-place removal: no
+            // funnel, the icon leaves the launcher right here. The host decides which shortcut and
+            // for whom - see removesHostIconInPlace.
+            val host = this@handleGridItemPopupMenu
+            if (packageName == host.packageName && host is LauncherPanel &&
+                LauncherRegistry.bridge.removesHostIconInPlace(host, id)
+            ) {
+                host.removeSelfFromHome()
+                return@Shortcut
             }
-            true
+            launcherApps.startShortcut(packageName, id, Rect(), null, Process.myUserHandle())
         }
+    }
 
-        setOnDismissListener {
-            listener.onDismiss()
-        }
-
-        listener.beforeShow(menu)
-
-        show()
+    return ItemActionsTray(this, shortcuts, actions, onDismiss = { listener.onDismiss() }).also {
+        it.show(anchorView, centerX, itemTop, itemBottom)
     }
 }
 

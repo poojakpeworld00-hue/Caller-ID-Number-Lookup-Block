@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Process
 import android.util.Log
+import com.calleridapp.numberlookup.BuildConfig
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlin.system.exitProcess
 
 /**
@@ -93,8 +95,12 @@ object CrashGuard {
         Thread.setDefaultUncaughtExceptionHandler { thread, error ->
             // Every step is wrapped: this runs while the process is already failing, and a second
             // throw from inside the handler would lose the original report.
+            // A breadcrumb only. The chained Crashlytics handler below records this crash as the
+            // fatal; recording it here as well (recordException) filed every crash twice, once as
+            // a non-fatal.
             runCatching {
-                GuardRail.error(TAG, "Uncaught exception on thread '${thread.name}'", error)
+                if (BuildConfig.DEBUG) Log.e(TAG, "Uncaught exception on thread '${thread.name}'", error)
+                else FirebaseCrashlytics.getInstance().log("$TAG: uncaught on '${thread.name}'")
             }
 
             val restarting = runCatching {

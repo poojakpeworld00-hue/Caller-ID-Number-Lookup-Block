@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="lnch_tray_bg">#2B2C30</color>
+    <color name="lnch_tray_text">#F2F2F4</color>
+    <color name="lnch_tray_text_secondary">#B4B7BD</color>
+    <color name="lnch_tray_divider">#24FFFFFF</color>
+    <color name="lnch_tray_press">#1AFFFFFF</color>
+</resources>

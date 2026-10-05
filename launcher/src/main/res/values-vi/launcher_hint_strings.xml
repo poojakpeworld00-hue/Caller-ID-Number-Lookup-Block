@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Bật \"Hiển thị trên ứng dụng khác\"</string>
+    <string name="launcher_hint_overlay_description">Chúng tôi sẽ đưa bạn quay lại ngay khi bật xong.</string>
+    <string name="launcher_hint_default_home_title">Chọn %1$s làm Màn hình chính</string>
+    <string name="launcher_hint_default_home_description">Chọn trong danh sách để đặt làm màn hình chính.</string>
+    <string name="launcher_hint_default_sms_title">Đặt làm ứng dụng SMS</string>
+    <string name="launcher_hint_default_sms_description">Nhấn \"Đặt làm mặc định\" để hoàn tất.</string>
+    <string name="launcher_hint_mock_row">Ứng dụng màn hình chính mặc định</string>
+    <string name="launcher_hint_mock_toggle_row">Quyền</string>
+    <string name="launcher_hint_overlay_row">Cho phép hiển thị trên ứng dụng khác</string>
+</resources>

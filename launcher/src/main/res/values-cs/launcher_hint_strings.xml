@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Zapněte \"Zobrazení přes jiné aplikace\"</string>
+    <string name="launcher_hint_overlay_description">Jakmile to zapnete, hned vás vrátíme zpět.</string>
+    <string name="launcher_hint_default_home_title">Vyberte %1$s jako plochu</string>
+    <string name="launcher_hint_default_home_description">Vyberte ji v seznamu a nastavte plochu.</string>
+    <string name="launcher_hint_default_sms_title">Nastavit jako výchozí SMS aplikaci</string>
+    <string name="launcher_hint_default_sms_description">Klepnutím na \"Nastavit jako výchozí\" dokončíte nastavení.</string>
+    <string name="launcher_hint_mock_row">Výchozí plocha</string>
+    <string name="launcher_hint_mock_toggle_row">Oprávnění</string>
+    <string name="launcher_hint_overlay_row">Povolit zobrazení přes jiné aplikace</string>
+</resources>

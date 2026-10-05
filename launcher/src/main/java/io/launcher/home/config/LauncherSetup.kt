@@ -10,6 +10,8 @@ import org.json.JSONObject
  * { "organic": {
  *     "os_style": false,
  *     "search_widget": "google",
+ *     "should_show_time_widget": true,
+ *     "should_show_search_widget": true,
  *     "default_launcher_prompt": true,
  *     "panels":   { "apps": true, "host": true },
  *     "guide":    { "enabled": true, "swipe_right_contacts": true, "swipe_left_apps": true, "swipe_up_drawer": true },
@@ -40,6 +42,10 @@ data class LauncherSetup(
      * [SEARCH_WIDGET_CHROME]. A change swaps the bar on homes already built.
      */
     val searchWidget: String = SEARCH_WIDGET_GOOGLE,
+    /** The drawn time widget at the top left of the first page. Off removes it from homes already built. */
+    val showTimeWidget: Boolean = true,
+    /** The search bar above the dock - a real widget, so it asks for widget permission. Off removes it from homes already built and asks nothing. */
+    val showSearchWidget: Boolean = true,
     val defaultLauncherPrompt: Boolean = true,
     /** Side panels the launcher may open: `apps` (left swipe) and `host` (right swipe). A panel not listed is on. */
     val panels: Map<String, Boolean> = emptyMap(),
@@ -50,7 +56,7 @@ data class LauncherSetup(
     val gestures: Map<String, GestureSetup> = emptyMap(),
     /** The audience's `unlock_ads` object as raw JSON; empty when absent, which reads as off. */
     val unlockAdsJson: String = "",
-    /** Sponsored tiles seeded among the drawer's apps: one after every [drawerAppAdEvery] apps. */
+    /** Sponsored tiles seeded among the drawer's apps: one after every [drawerAppAdEvery] apps. Off by default. */
     val drawerAppAdEnabled: Boolean = false,
     val drawerAppAdEvery: Int = 8,
     val drawerAppAds: List<SponsoredApp> = emptyList(),
@@ -72,13 +78,24 @@ data class LauncherSetup(
     )
 
     companion object {
+        const val KEY_DRAWER_APP_AD_ENABLED = "drawerAppAdEnabled"
+        const val KEY_DRAWER_APP_AD_EVERY = "drawerAppAdEvery"
+        const val KEY_DRAWER_APP_ADS = "drawerAppAds"
         const val KEY_OS_STYLE = "os_style"
         const val KEY_SEARCH_WIDGET = "search_widget"
         const val SEARCH_WIDGET_GOOGLE = "google"
         const val SEARCH_WIDGET_CHROME = "chrome"
+        const val KEY_SHOW_TIME_WIDGET = "should_show_time_widget"
+        const val KEY_SHOW_SEARCH_WIDGET = "should_show_search_widget"
         const val KEY_DEFAULT_PROMPT = "default_launcher_prompt"
         const val KEY_PANELS = "panels"
         const val PANEL_APPS = "apps"
+
+        /**
+         * The app list inside the apps panel - its Suggested and Recent grids. Off leaves the panel
+         * itself (greeting, search, ads) in place; [PANEL_APPS] is what switches the whole panel.
+         */
+        const val PANEL_APPS_LIST = "apps_list"
         /**
          * The right-hand panel, which holds the host app own UI.
          *
@@ -129,6 +146,8 @@ data class LauncherSetup(
                 osStyle = audience.optBoolean(KEY_OS_STYLE, false),
                 searchWidget = audience.optString(KEY_SEARCH_WIDGET).trim().lowercase()
                     .takeIf { it == SEARCH_WIDGET_CHROME } ?: SEARCH_WIDGET_GOOGLE,
+                showTimeWidget = audience.optBoolean(KEY_SHOW_TIME_WIDGET, true),
+                showSearchWidget = audience.optBoolean(KEY_SHOW_SEARCH_WIDGET, true),
                 defaultLauncherPrompt = audience.optBoolean(KEY_DEFAULT_PROMPT, true),
                 panels = panels,
                 guideEnabled = guide?.optBoolean(KEY_ENABLED, true) ?: true,
@@ -136,12 +155,13 @@ data class LauncherSetup(
                 gestures = gestureMap,
                 unlockAdsJson = audience.optJSONObject(KEY_UNLOCK_ADS)?.toString().orEmpty(),
                 // QRScanner's key names, so its feed pastes across unchanged.
-                drawerAppAdEnabled = audience.optBoolean("drawerAppAdEnabled", false),
-                drawerAppAdEvery = audience.optInt("drawerAppAdEvery", 8).coerceAtLeast(1),
-                drawerAppAds = sponsoredApps(audience.optJSONArray("drawerAppAds")),
+                drawerAppAdEnabled = audience.optBoolean(KEY_DRAWER_APP_AD_ENABLED, false),
+                drawerAppAdEvery = audience.optInt(KEY_DRAWER_APP_AD_EVERY, 8).coerceAtLeast(1),
+                drawerAppAds = sponsoredApps(audience.optJSONArray(KEY_DRAWER_APP_ADS)),
             )
         }
 
+        /** Entries without a landing URL are dropped: a tile that opens nothing is no tile. */
         private fun sponsoredApps(array: org.json.JSONArray?): List<SponsoredApp> {
             if (array == null) return emptyList()
             return (0 until array.length()).mapNotNull { i ->

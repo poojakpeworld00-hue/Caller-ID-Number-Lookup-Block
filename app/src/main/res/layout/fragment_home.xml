@@ -30,6 +30,7 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/homeGreeting"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/home_greeting"
@@ -46,6 +47,20 @@
                 android:textColor="@color/on_surface"
                 android:textSize="@dimen/_16ssp" />
         </LinearLayout>
+
+        <!-- Game-quiz link (QuizIcon); gone unless Remote Config `quiz_icon` is on. -->
+        <ImageView
+            android:id="@+id/btnQuiz"
+            android:layout_width="@dimen/_32sdp"
+            android:layout_height="@dimen/_32sdp"
+            android:layout_marginEnd="@dimen/_8sdp"
+            android:background="@drawable/bg_onb_circle_lavender"
+            android:contentDescription="@string/home_quiz"
+            android:padding="@dimen/_8sdp"
+            android:src="@drawable/ic_quiz_game"
+            android:visibility="gone"
+            app:tint="@color/on_primary_container"
+            tools:visibility="visible" />
 
         <ImageView
             android:id="@+id/btnSettings"

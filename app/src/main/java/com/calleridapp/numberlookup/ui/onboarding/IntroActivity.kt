@@ -1,5 +1,7 @@
 package com.calleridapp.numberlookup.ui.onboarding
 
+import com.calleridapp.numberlookup.util.Analytics
+
 import android.animation.ValueAnimator
 import android.content.Intent
 import android.view.View
@@ -81,8 +83,12 @@ class IntroActivity : HostActivity<ActivityOnboardingBinding>() {
         val ui = LauncherAdsConfig.onboardingUi(this, LauncherAdsConfig.OnboardScreen.INTRO)
         binding.btnSkip.beVisibleIf(ui.skipEnabled)
 
-        binding.btnSkip.setOnClickListener { finishOnboarding() }
+        binding.btnSkip.setOnClickListener {
+            Analytics.log("intro_skip_click")
+            finishOnboarding()
+        }
         binding.btnNext.setOnClickListener {
+            Analytics.log("intro_next_click")
             val current = binding.viewPager.currentItem
             if (current < pages.lastIndex) {
                 binding.viewPager.currentItem = current + 1

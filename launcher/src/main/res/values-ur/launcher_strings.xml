@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_app_launcher_name">Messages</string>
+    <string name="launcher_launcher_settings">لانچر کی ترتیبات</string>
+    <string name="launcher_app_info">ایپ کی معلومات</string>
+    <string name="launcher_touch_hold_widget">ویجیٹ کو دبائے رکھیں اور اپنی ہوم اسکرین پر گھسیٹیں</string>
+    <string name="launcher_uninstall">اَن انسٹال کریں</string>
+    <string name="launcher_manage_hidden_icons">چھپے ہوئے آئیکنز کا نظم کریں</string>
+    <string name="launcher_hidden_icons">چھپے ہوئے آئیکنز</string>
+    <string name="launcher_hidden_icons_placeholder">کچھ ایپس کو سسٹم کی پابندیوں کی وجہ سے اَن انسٹال نہیں کیا جا سکتا، لیکن آپ انہیں دیکھنے سے بچنے کے لیے کم از کم ان کے آئیکنز چھپا سکتے ہیں۔</string>
+    <string name="launcher_app_drawer_settings">ایپ درازہ</string>
+    <string name="launcher_app_drawer_enabled">ایپ درازہ کھولنے کے لیے اوپر سوائپ کریں</string>
+    <string name="launcher_drawer_style">درازہ کا انداز</string>
+    <string name="launcher_drawer_style_vertical">اسکرولنگ فہرست</string>
+    <string name="launcher_drawer_style_paged">صفحات</string>
+    <string name="launcher_app_drawer_disabled_hint">بند: ہر ایپ ہوم اسکرین پر ہی رہتی ہے، نئی ایپس آخری صفحے میں شامل کی جاتی ہیں</string>
+    <string name="launcher_close_app_drawer_on_app_open">ایپ کھولنے پر ایپ درازہ بند کر دیں</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">درازہ میں کی بورڈ خودکار طور پر دکھائیں</string>
+    <string name="launcher_show_app_labels">ایپ کے لیبل دکھائیں</string>
+    <string name="launcher_home_screen_settings">ہوم اسکرین</string>
+    <string name="launcher_widget_too_big">ویجیٹ موجودہ ہوم اسکرین کے سائز کے لیے بہت بڑا ہے</string>
+    <string name="launcher_double_tap_to_lock">اسکرین لاک کرنے کے لیے دو بار تھپتھپائیں</string>
+    <string name="launcher_lock_device_admin_hint">دو بار تھپتھپا کر اسکرین لاک کرنے کی خصوصیت فعال کرنے کے لیے، آپ کو ایڈمن اجازت دینا ہوگی۔ نوٹ کریں کہ جب تک یہ اجازت ہٹائی نہیں جاتی ایپ کو اَن انسٹال نہیں کیا جا سکتا۔</string>
+    <string name="launcher_lock_device_admin_warning">ایڈمن اجازت غیر فعال کرنے سے دو بار تھپتھپا کر اسکرین لاک کرنے کی خصوصیت بند ہو جائے گی۔</string>
+    <string name="launcher_pseudo_widget_clock">گھڑی</string>
+    <string name="launcher_pseudo_widget_search_bar">سرچ بار</string>
+    <string name="launcher_pseudo_widget_search_bar_hint">کچھ بھی پوچھیں…</string>
+    <string name="launcher_digital_clock_widget">ڈیجیٹل گھڑی</string>
+    <string name="launcher_analog_clock_widget">اینالاگ گھڑی</string>
+    <string name="launcher_apps">ایپس</string>
+    <string name="launcher_clear">صاف کریں</string>
+    <string name="launcher_suggested_for_now">ابھی کے لیے تجویز کردہ</string>
+    <string name="launcher_recent_apps">حالیہ ایپس</string>
+    <string name="launcher_search_in_apps">ایپس میں تلاش کریں</string>
+    <string name="launcher_see_more">مزید دیکھیں</string>
+    <string name="launcher_see_less">کم دیکھیں</string>
+    <string name="launcher_default_launcher_banner_title">سیٹ اپ مکمل نہیں ہوا</string>
+    <string name="launcher_swipe_left_hint">تلاش کے لیے بائیں سوائپ کریں</string>
+    <string name="launcher_swipe_up_hint">تمام ایپس کے لیے اوپر سوائپ کریں</string>
+    <string name="launcher_swipe_hint_tap">یا آزمانے کے لیے کہیں بھی تھپتھپائیں</string>
+    <string name="launcher_greeting_morning">صبح بخیر</string>
+    <string name="launcher_greeting_afternoon">دوپہر بخیر</string>
+    <string name="launcher_greeting_evening">شام بخیر</string>
+    <string name="launcher_search_apps_hint">ایپس تلاش کریں</string>
+    <string name="launcher_suggested_apps">تجویز کردہ ایپس</string>
+    <string name="launcher_searched_apps">تلاش کی گئی ایپس</string>
+</resources>

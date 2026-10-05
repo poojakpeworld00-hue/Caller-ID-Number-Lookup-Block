@@ -45,6 +45,35 @@ class BannerPromo {
 
     companion object {
         var bannerCounter = 0
+
+        /**
+         * Destroys the AdViews a slot still holds before it is refilled. Every refresh builds a
+         * new BannerPromo, and the old AdView was only removed from the layout - never destroyed,
+         * so it kept running (and refreshing) off screen until the process died.
+         */
+        fun destroyBannersIn(container: FrameLayout) {
+            for (i in 0 until container.childCount) {
+                (container.getChildAt(i) as? AdView)?.let { runCatching { it.destroy() } }
+            }
+        }
+    }
+
+    /** Pauses / resumes / destroys [adView] with [activity], as the SDK expects of a banner. */
+    private fun bindLifecycle(activity: Activity, adView: AdView) {
+        val owner = activity as? androidx.lifecycle.LifecycleOwner ?: return
+        owner.lifecycle.addObserver(object : androidx.lifecycle.LifecycleEventObserver {
+            override fun onStateChanged(source: androidx.lifecycle.LifecycleOwner, event: androidx.lifecycle.Lifecycle.Event) {
+                when (event) {
+                    androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> runCatching { adView.pause() }
+                    androidx.lifecycle.Lifecycle.Event.ON_RESUME -> runCatching { adView.resume() }
+                    androidx.lifecycle.Lifecycle.Event.ON_DESTROY -> {
+                        source.lifecycle.removeObserver(this)
+                        runCatching { adView.destroy() }
+                    }
+                    else -> Unit
+                }
+            }
+        })
     }
 
     // -----------------------------
@@ -63,8 +92,10 @@ class BannerPromo {
     ) {
         val pref = AdsVault.getInstance(activity)
 
-        // Ads OFF
-        if (!isNetworkConnected(activity)|| !pref.getBoolean("IsAdsON") || !pref.getBoolean("BannerAds")) {
+        // Ads OFF, or no ad consent
+        if (!isNetworkConnected(activity)|| !pref.getBoolean("IsAdsON") || !pref.getBoolean("BannerAds") ||
+            !com.calleridapp.admesh.domain.AdsGate.canRequestAds(activity)
+        ) {
             hide(container)
             observer?.onAdFailed()
             return
@@ -166,12 +197,13 @@ class BannerPromo {
         // Show shimmer while loading
         shimmer?.startShimmer()
         shimmer?.visibility = View.VISIBLE
+        destroyBannersIn(container)
         container.removeAllViews()
         shimmer?.let { container.addView(it) }
         container.visibility = View.VISIBLE
 
         // Preload banner
-        if (googleBanner == null) googleBanner = AdView(activity)
+        if (googleBanner == null) googleBanner = AdView(activity).also { bindLifecycle(activity, it) }
         googleBanner?.adUnitId = adUnitId
 
         if (isCollapsable) {

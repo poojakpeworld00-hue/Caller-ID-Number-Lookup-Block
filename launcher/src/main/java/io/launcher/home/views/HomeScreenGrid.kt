@@ -62,6 +62,7 @@ import io.launcher.home.databinding.LnchHomeScreenGridBinding
 import io.launcher.home.extensions.launcherConfig
 import io.launcher.home.extensions.getDrawableForPackageName
 import io.launcher.home.extensions.homeScreenGridItemsDB
+import io.launcher.home.helpers.SelfRemoval
 import io.launcher.home.helpers.ITEM_TYPE_FOLDER
 import io.launcher.home.helpers.MAX_DOCK_SLOTS
 import io.launcher.home.helpers.ITEM_TYPE_ICON
@@ -159,13 +160,49 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     // apply fake margins at the home screen. Real ones would cause the icons be cut at dragging at screen sides
     var sideMargins = Rect()
 
-    private var gridItems = ArrayList<HomeScreenGridItem>()
+    // Swapped in from a background refetch while the main thread draws and edits it: a
+    // copy-on-write list makes every walk see a stable snapshot instead of throwing
+    // ConcurrentModificationException mid-draw.
+    @Volatile
+    private var gridItems: MutableList<HomeScreenGridItem> =
+        java.util.concurrent.CopyOnWriteArrayList<HomeScreenGridItem>()
     private var gridCenters = ArrayList<Point>()
     private var draggedItemCurrentCoords = Pair(-1, -1)
     private var widgetViews = ArrayList<MyAppWidgetHostView>()
 
+    /**
+     * Told the bottom edge (px, from the top of the first row) of the first page's time widget
+     * whenever it changes; 0 when there is none on the top row. The default-home banner hangs below
+     * it. Called on the main thread.
+     */
+    var onTimeWidgetBottomChanged: ((Int) -> Unit)? = null
+    private var reportedTimeWidgetBottom = -1
+
+    /**
+     * Told where the first page sits horizontally (px; 0 = in view, -width = one page to the
+     * left) on every frame it moves, so a view that belongs to that page - the default-home
+     * banner - slides with it like a widget instead of staying on every page. Called on the main
+     * thread, from the draw pass.
+     */
+    var onFirstPageScrolled: ((Float) -> Unit)? = null
+    private var reportedFirstPageX = Float.NaN
+
+    /** The grid row each placed widget view belongs to, so a view whose row is gone can be found - see [dropOrphanWidgetViews]. */
+    private val widgetViewItemIds = java.util.WeakHashMap<MyAppWidgetHostView, Long>()
+
     /** Items whose binding has already been asked for, so a refusal is not asked again each frame. */
     private val bindAttempted = HashSet<Long>()
+
+    /**
+     * Rows whose bind is waiting on the system "Create widget?" dialog (or a configure screen).
+     *
+     * [bindWidget] gives the row its widget id before asking, so while the dialog is up the row
+     * looks bound to [drawInto], which placed a view for it; the dialog's answer then placed a
+     * second one. Only one of two views per row is ever moved by the paging, so the other froze
+     * where it was - the first page's search bar, showing on every page. Only the dialog path did
+     * this: an allowed bind answers synchronously, before any frame is drawn.
+     */
+    private val bindPending = HashSet<Long>()
 
     val appWidgetHost = MyAppWidgetHost(context, WIDGET_HOST_ID)
     private val appWidgetManager = AppWidgetManager.getInstance(context)
@@ -285,6 +322,14 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                 .filter { it.type == ITEM_TYPE_ICON && it.drawable != null }
                 .associateBy { Pair(it.id, it.packageName) }
             val items = context.homeScreenGridItemsDB.getAllItems() as ArrayList<HomeScreenGridItem>
+            // After the fake uninstall nothing of ours is ever drawn again, whatever wrote the row.
+            if (context.launcherConfig.selfIconHidden) {
+                val own = context.packageName
+                items.filter { SelfRemoval.isOurRow(it, own) }.forEach { stray ->
+                    items.remove(stray)
+                    stray.id?.let { id -> runCatching { context.homeScreenGridItemsDB.deleteById(id) } }
+                }
+            }
             items.forEach { item ->
                 if (item.type == ITEM_TYPE_ICON) {
                     loaded[Pair(item.id, item.packageName)]?.let { old ->
@@ -315,8 +360,9 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             val page = pager.getCurrentPage()
             val (now, later) = missing.partition { it.docked || it.parentId != null || it.page == page }
             decodeIcons(now)
-            gridItems = items
+            gridItems = java.util.concurrent.CopyOnWriteArrayList(items)
             redrawGrid()
+            post { dropOrphanWidgetViews() }
             val shown = android.os.SystemClock.elapsedRealtime() - started
             if (later.isNotEmpty()) {
                 decodeIcons(later.sortedBy { kotlin.math.abs(it.page - page) })
@@ -425,6 +471,29 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
      * redraw does not take a child away. Without this the pill would stay on screen until the
      * launcher was restarted, on exactly the one run where it is being removed.
      */
+    /**
+     * Takes off the grid every widget view whose row is no longer in [gridItems].
+     *
+     * A row can be deleted without the grid being told - LauncherPanel.refreshLaunchers drops every
+     * row of an app that left the app list, and a layout rebuild clears the seeded widgets. A
+     * refetch then hands back the rows without it, but a widget view is a *child* of this layout and
+     * stays. The per-frame positioning only walks [gridItems], so that view was never moved again:
+     * it froze where it was - usually page 1's search bar - and showed on every page, under the
+     * icons. Runs on the main thread after each refetch.
+     */
+    private fun dropOrphanWidgetViews() {
+        val live = gridItems.mapNotNullTo(HashSet()) { it.id }
+        val orphans = orphanWidgetViews(widgetViews.associateWith { widgetViewItemIds[it] }, live)
+        if (orphans.isEmpty()) return
+        orphans.forEach { removeView(it) }
+        widgetViews.removeAll(orphans.toSet())
+        val detail = orphans.joinToString { "${it.appWidgetInfo?.provider?.flattenToShortString() ?: "pseudo"}#${widgetViewItemIds[it]}" }
+        timber.log.Timber.w("HomeScreenGrid: dropped %d widget view(s) whose row is gone: %s", orphans.size, detail)
+        runCatching {
+            io.launcher.home.api.LauncherRegistry.bridge.onNonFatal(IllegalStateException("Orphan widget view dropped: $detail"))
+        }
+    }
+
     fun removePlacedSearchBars() {
         post {
             gridItems
@@ -1246,6 +1315,31 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         if (!opened) (context as? LauncherPanel)?.onFlingLeft()
     }
 
+    /**
+     * A widget whose bind was refused, or whose setup screen was cancelled, comes off the grid -
+     * except the seeded search row. That one turns into our drawn Google bar in the same cells, so
+     * a single "Don't allow" no longer leaves the first page without a search bar for good.
+     */
+    private fun fallBackOrRemove(item: HomeScreenGridItem) {
+        if (!io.launcher.home.profile.HomeWidgetSeeder.isBoundSearchRow(item) || item.id == null) {
+            removeItemFromHomeScreen(item)
+            return
+        }
+        val refused = item.widgetId
+        item.className = PSEUDO_WIDGET_GOOGLE_SEARCH
+        item.packageName = ""
+        item.providerInfo = null
+        item.widgetId = -1
+        bindAttempted.remove(item.id)
+        timber.log.Timber.i("HomeScreenGrid: search widget bind refused - drawing our Google bar instead")
+        ensureBackgroundThread {
+            if (refused >= 0) runCatching { appWidgetHost.deleteAppWidgetId(refused) }
+            context.homeScreenGridItemsDB.insert(item)
+            // The next draw pass binds it (pseudo widgets bind without asking).
+            post { invalidate() }
+        }
+    }
+
     private fun bindWidget(item: HomeScreenGridItem) {
         if (item.outOfBounds()) {
             return
@@ -1272,32 +1366,36 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                 context.homeScreenGridItemsDB.updateWidgetId(item.widgetId, item.id!!)
             }
 
+            item.id?.let { bindPending.add(it) }
             activity.handleWidgetBinding(
                 appWidgetManager = appWidgetManager,
                 appWidgetId = item.widgetId,
                 appWidgetInfo = appWidgetProviderInfo
             ) { canBind ->
+                item.id?.let { bindPending.remove(it) }
                 if (canBind) {
                     // A setup screen Android lets a launcher skip (Google's search bar) is skipped:
                     // the widget works as placed, and the screen would only interrupt the first run.
                     if (appWidgetProviderInfo.configure != null &&
                         !io.launcher.home.profile.HomeWidgetSeeder.configurationOptional(appWidgetProviderInfo)
                     ) {
+                        item.id?.let { bindPending.add(it) }
                         activity.handleWidgetConfigureScreen(
                             appWidgetHost = appWidgetHost,
                             appWidgetId = item.widgetId
                         ) { success ->
+                            item.id?.let { bindPending.remove(it) }
                             if (success) {
                                 placeAppWidget(appWidgetProviderInfo, item)
                             } else {
-                                removeItemFromHomeScreen(item)
+                                fallBackOrRemove(item)
                             }
                         }
                     } else {
                         placeAppWidget(appWidgetProviderInfo, item)
                     }
                 } else {
-                    removeItemFromHomeScreen(item)
+                    fallBackOrRemove(item)
                 }
 
                 if (pager.isOutsideOfPageRange()) {
@@ -1311,6 +1409,14 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         appWidgetProviderInfo: AppWidgetProviderInfo?,
         item: HomeScreenGridItem,
     ) {
+        // One view per row, whatever path got here twice: a second view would be the one the
+        // paging never moves (see bindPending), frozen on every page.
+        widgetViews.filter { (item.id != null && widgetViewItemIds[it] == item.id) || it.tag == item.widgetId }
+            .forEach { stale ->
+                removeView(stale)
+                widgetViews.remove(stale)
+                widgetViewItemIds.remove(stale)
+            }
         val pseudoWidgetLayout = item.pseudoWidgetLayout()
         // we have to pass the base context here, else there will be errors with the themes
         val widgetView = if (pseudoWidgetLayout != null) {
@@ -1339,10 +1445,6 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
 
         widgetView.tag = item.widgetId
         widgetView.itemId = item.id
-        // One view per row: a second one would be the one left behind, never moved again.
-        val stale = widgetViews.filter { it.tag == item.widgetId || (item.id != null && it.itemId == item.id) }
-        stale.forEach { removeView(it) }
-        widgetViews.removeAll(stale.toSet())
         widgetView.longPressListener = { x, y ->
             val activity = context as? LauncherPanel
             if (activity?.isAllAppsFragmentExpanded() == false) {
@@ -1358,6 +1460,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         val widgetSizeUi = updateWidgetPositionAndSize(widgetView, item)
         addView(widgetView, widgetSizeUi.width, widgetSizeUi.height)
         widgetViews.add(widgetView)
+        item.id?.let { widgetViewItemIds[widgetView] = it }
 
         // remove the drawable so that it gets refreshed on long press
         item.drawable = null
@@ -1384,29 +1487,36 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
 
         // pseudo widgets are never bound to a provider, telling the AppWidgetManager about
         // their size would throw
-        //
-        // A size hint is a binder call into system_server, which throws back (an NPE on the
-        // widget's options) for an id it no longer tracks properly - e.g. one orphaned by a
-        // previous launcher under the same host id. A failed hint must not take the home screen
-        // down with it; the widget still draws at the size we lay it out at.
-        if (widgetView.appWidgetInfo != null) runCatching {
-            if (isSPlus()) {
-                val sizes = listOf(SizeF(widgetDpWidth.toFloat(), widgetDpHeight.toFloat()))
-                widgetView.updateAppWidgetSize(Bundle(), sizes)
-            } else {
-                widgetView.updateAppWidgetSize(
-                    Bundle(),
-                    widgetDpWidth,
-                    widgetDpHeight,
-                    widgetDpWidth,
-                    widgetDpHeight
-                )
-            }
-        }
+        if (widgetView.appWidgetInfo != null) reportWidgetSize(widgetView, widgetDpWidth, widgetDpHeight)
 
         widgetView.layoutParams?.width = widgetWidth
         widgetView.layoutParams?.height = widgetHeight
         return Size(widgetWidth, widgetHeight)
+    }
+
+    /** Last size (dp) each widget view was told, so the system hears about a size only when it changes. */
+    private val reportedWidgetSizes = java.util.WeakHashMap<AppWidgetHostView, Pair<Int, Int>>()
+
+    /**
+     * Tells the widget's provider its size. This sits on the draw path, so it is sent once per
+     * size, not per frame (it is a binder call into system_server). A widget id the system no
+     * longer knows - its app removed or updated, the binding lost - makes the service throw
+     * ("Bundle.putAll on a null object"); that is caught and not retried, instead of taking the
+     * launcher down on every frame.
+     */
+    private fun reportWidgetSize(widgetView: AppWidgetHostView, dpWidth: Int, dpHeight: Int) {
+        val size = dpWidth to dpHeight
+        if (reportedWidgetSizes[widgetView] == size) return
+        reportedWidgetSizes[widgetView] = size
+        try {
+            if (isSPlus()) {
+                widgetView.updateAppWidgetSize(Bundle(), listOf(SizeF(dpWidth.toFloat(), dpHeight.toFloat())))
+            } else {
+                widgetView.updateAppWidgetSize(Bundle(), dpWidth, dpHeight, dpWidth, dpHeight)
+            }
+        } catch (e: RuntimeException) {
+            timber.log.Timber.w(e, "HomeScreenGrid: widget %d rejected its size - binding lost?", widgetView.appWidgetId)
+        }
     }
 
     private fun calculateWidgetPos(topLeft: Point): Point {
@@ -1434,6 +1544,29 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
 
     private fun getFakeHeight() = height - sideMargins.top - sideMargins.bottom
 
+    /** Grid items whose drawing already threw once; logged once, then skipped quietly. */
+    private val brokenItems = HashSet<Long>()
+
+    /**
+     * One home-screen item must never take the whole frame down: an exception while drawing or
+     * placing it (a third-party widget, a bad row in the database) skips just that item for this
+     * frame. The canvas is put back to the save level it had, so whatever the item left half-done
+     * (a translate, a clip) cannot shift the items drawn after it. Without this the exception
+     * escaped the draw pass on every frame - CrashGuard caught the first few, then saw a loop.
+     */
+    private inline fun guardItem(canvas: Canvas, item: HomeScreenGridItem, draw: () -> Unit) {
+        val saveCount = canvas.saveCount
+        try {
+            draw()
+        } catch (e: RuntimeException) {
+            runCatching { canvas.restoreToCount(saveCount) }
+            if (brokenItems.add(item.id ?: -1L)) {
+                timber.log.Timber.w(e, "HomeScreenGrid: skipping item %s (%s) that failed to draw", item.id, item.packageName)
+                runCatching { io.launcher.home.api.LauncherRegistry.bridge.onNonFatal(e) }
+            }
+        }
+    }
+
     fun drawInto(canvas: Canvas) {
         if (cells.isEmpty()) {
             fillCellSizes()
@@ -1442,7 +1575,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         val currentXFactor = pager.getXFactorForCurrentPage()
         val lastXFactor = pager.getXFactorForLastPage()
 
-        fun handleMainGridItemDrawing(item: HomeScreenGridItem, xFactor: Float) {
+        fun handleMainGridItemDrawing(item: HomeScreenGridItem, xFactor: Float) = guardItem(canvas, item) {
             val offsetX = sideMargins.left + (this@HomeScreenGrid.width * xFactor).toInt()
             val offsetY = sideMargins.top
             cells[item.getTopLeft(rowCount)]!!.withOffset(offsetX, offsetY) {
@@ -1512,26 +1645,30 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         // the database missed - the items arrive on a background thread, usually after that draw -
         // so it was never given a view and the home kept a hole where it belonged until something
         // else forced a full redraw, which took 15-25 seconds.
-        // A host view whose row is gone (a layout switch reseeds the first page's widgets under new
-        // ids) is never repositioned again, so it stayed where it was drawn - over the app icons
-        // of every page. Taken off after this pass, not during it.
-        val liveIds = gridItems.mapNotNullTo(HashSet()) { it.id }
-        val orphans = widgetViews.filter { it.itemId != null && it.itemId !in liveIds }
-        if (orphans.isNotEmpty()) {
-            widgetViews.removeAll(orphans.toSet())
-            post { orphans.forEach { removeView(it) } }
+        val firstPageX = -pager.getCurrentViewPositionInFullPageSpace() * width
+        if (firstPageX != reportedFirstPageX) {
+            reportedFirstPageX = firstPageX
+            onFirstPageScrolled?.invoke(firstPageX)
         }
 
+        var timeWidgetBottom = 0
         gridItems
             .filter { it.type == ITEM_TYPE_WIDGET && !it.outOfBounds() }
-            .forEach { item ->
-                // By row as well as by id: a seeded widget's id is written from a background thread,
-                // and a refetch that beat the write hands its row back still at -1. Matched by id
-                // alone, that view was orphaned and left stuck over the icons of every page.
-                val placed = widgetViews.firstOrNull { it.tag == item.widgetId }
-                    ?: widgetViews.firstOrNull { it.itemId != null && it.itemId == item.id }
-                        ?.also { view -> (view.tag as? Int)?.let { item.widgetId = it } }
+            .forEach { item -> guardItem(canvas, item) {
+                if (item.className == PSEUDO_WIDGET_TIME && item.page == 0 && !item.docked && item.top == 0) {
+                    timeWidgetBottom = (item.bottom + 1) * cellHeight
+                }
+                val placed = placedWidgetView(widgetViews, { it.tag }, { widgetViewItemIds[it] }, item.widgetId, item.id)
                 if (placed != null) {
+                    // A refetch that read the database before a fresh bind wrote its id hands back
+                    // the row still at -1 (first install: the time and search bar are bound while
+                    // several refetches are in flight). Matched by the tag alone, its view was
+                    // never moved again and showed on every page; the view holds the real id.
+                    val tag = placed.tag as? Int
+                    if (tag != null && tag != item.widgetId) {
+                        timber.log.Timber.w("HomeScreenGrid: row %s had widget id %d, its view %d - kept the view's", item.id, item.widgetId, tag)
+                        item.widgetId = tag
+                    }
                     updateWidgetPositionAndSize(placed, item)
                     return@forEach
                 }
@@ -1541,6 +1678,8 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                     if (bindAttempted.add(item.id ?: return@forEach)) bindWidget(item)
                     return@forEach
                 }
+                // Has an id but is still waiting on the bind dialog: its answer places the view.
+                if (item.id in bindPending) return@forEach
                 val providerInfo = item.providerInfo
                     ?: appWidgetManager!!.installedProviders
                         .firstOrNull { it.provider.className == item.className }
@@ -1552,7 +1691,11 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                 } else {
                     removeWidget(item)
                 }
-            }
+            } }
+        if (timeWidgetBottom != reportedTimeWidgetBottom) {
+            reportedTimeWidgetBottom = timeWidgetBottom
+            post { onTimeWidgetBottomChanged?.invoke(timeWidgetBottom) }
+        }
 
         // The page indicator shows while a page is dragged or settling and fades out after, the
         // way HyperOS does it. Everything here is derived from the pager's position each frame -
@@ -2163,6 +2306,12 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     /** See AnimatedGridPager.flingSwipe. */
     fun flingSwipe(towardsNext: Boolean): Boolean = draggedItem == null && pager.flingSwipe(towardsNext)
 
+    /** The first page - the home page, the only one the left-edge (host) panel opens from. */
+    fun isOnFirstPage() = pager.getCurrentPage() == 0 && !pager.isPaging()
+
+    /** The last page, the only one the right-edge (apps) panel opens from. */
+    fun isOnLastPage() = pager.getCurrentPage() >= getMaxPage() && !pager.isPaging()
+
     fun openFolder(folder: HomeScreenGridItem) {
         if (currentlyOpenFolder == null) {
             currentlyOpenFolder = folder.toFolder(animateOpening = true)
@@ -2317,7 +2466,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         }
     }
 
-    private fun ArrayList<HomeScreenGridItem>.filterVisibleOnCurrentPageOnly() =
+    private fun List<HomeScreenGridItem>.filterVisibleOnCurrentPageOnly() =
         filter { it.visibleOnCurrentPage() }
 
     private fun HomeScreenGridItem.visibleOnCurrentPage() =
@@ -2560,6 +2709,26 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     }
 
     companion object {
+        /**
+         * The view placed for the grid row [itemId]: matched by the row first, since the row's
+         * [widgetId] can be stale after a refetch that raced its bind; by the widget id otherwise.
+         */
+        internal fun <V> placedWidgetView(
+            views: List<V>,
+            tagOf: (V) -> Any?,
+            itemIdOf: (V) -> Long?,
+            widgetId: Int,
+            itemId: Long?,
+        ): V? = views.firstOrNull { itemId != null && itemIdOf(it) == itemId }
+            ?: views.firstOrNull { tagOf(it) == widgetId }
+
+        /**
+         * The views in [viewItemIds] whose grid row id is not in [liveItemIds]. A view with no row
+         * recorded is kept: it is never guessed at.
+         */
+        internal fun <V> orphanWidgetViews(viewItemIds: Map<V, Long?>, liveItemIds: Set<Long>): List<V> =
+            viewItemIds.filter { (_, id) -> id != null && id !in liveItemIds }.keys.toList()
+
         /** How far the active page dot stretches towards the next dot half-way through a swipe, as a share of the dot pitch. */
         /**
          * A home label is one line on every device and grid: a name that wraps pushes past the
@@ -2606,6 +2775,15 @@ private class AnimatedGridPager(
 
     companion object {
         private const val PAGE_CHANGE_HOLD_THRESHOLD = 500L
+
+        /** A whole page's settle; a partly dragged page gets its share of this. */
+        private const val PAGE_SETTLE_MS = 220L
+
+        /** A page walked from a swipe queued while the previous one settled. */
+        private const val PAGE_SETTLE_QUEUED_MS = 160L
+
+        /** Floor, so a page released almost in place still visibly lands. */
+        private const val PAGE_SETTLE_MIN_MS = 80L
         private const val PAGE_INDICATORS_FADE_DELAY = 600L
         private const val PAGE_INDICATORS_FADE_IN = 120L
 
@@ -2626,8 +2804,13 @@ private class AnimatedGridPager(
     /** When the indicator last became visible, for its fade-in; see [getIndicatorsFadeIn]. */
     private var indicatorsShownAt = 0L
     private var pageChangeSwipedPercentage = 0f
+    /** Flings that arrived while a page was settling, net: >0 pages ahead, <0 pages back; see [flingSwipe]. */
+    private var pendingStep = 0
 
     fun getCurrentPage() = currentPage
+
+    /** True while a page is being dragged or is still settling - a horizontal gesture is paging. */
+    fun isPaging() = isSwiped() || isAnimatingPageChange() || !pageChangeEnabled
 
     fun isItemOnCurrentPage(item: HomeScreenGridItem) = item.page == currentPage
 
@@ -2732,16 +2915,25 @@ private class AnimatedGridPager(
 
     /**
      * A fling while a page is being dragged commits it in the fling's direction whatever distance
-     * the drag covered, the way every launcher pages. False when no drag is in progress or the
-     * fling runs against it; the caller then falls back to its own fling handling.
+     * the drag covered, the way every launcher pages. A fling while a page is still settling from
+     * the previous swipe is queued and played the moment that one lands, so quick consecutive
+     * swipes walk the pages one after another instead of being dropped. A fling that runs against
+     * the drag is consumed too and the release settles the page by distance. In all of these the
+     * gesture belongs to paging; only false (nothing moving, nothing dragged) lets the caller
+     * hand the fling to a side panel.
      */
     fun flingSwipe(towardsNext: Boolean): Boolean {
-        if (!isSwiped() || !pageChangeEnabled) {
+        if (isAnimatingPageChange() || !pageChangeEnabled) {
+            // Every swipe counts: three quick flings walk three pages; one back cancels one ahead.
+            pendingStep += if (towardsNext) 1 else -1
+            return true
+        }
+        if (!isSwiped()) {
             return false
         }
         // Negative = the finger went left = the next page is being pulled in (see setSwipeMovement).
         if ((pageChangeSwipedPercentage < 0f) != towardsNext) {
-            return false
+            return true
         }
         lastPage = currentPage
         currentPage += if (towardsNext) 1 else -1
@@ -2906,9 +3098,16 @@ private class AnimatedGridPager(
         }
         ValueAnimator.ofFloat(startingAt, 0f)
             .apply {
+                // Timed by what is left to travel: left at the framework's 300 ms, a page the finger
+                // had already dragged most of the way still took the full time for its last
+                // stretch, and the next swipe waited behind it - paging read as slow. A page walked
+                // from swipes queued while this one settled goes quicker still.
+                val full = if (pendingStep != 0) PAGE_SETTLE_QUEUED_MS else PAGE_SETTLE_MS
+                duration = (full * startingAt).toLong().coerceAtLeast(PAGE_SETTLE_MIN_MS)
                 // Settles rather than bounces: a page that springs past its edge and comes back
-                // is the part of this that looked wrong.
-                interpolator = PathInterpolator(0.2f, 0f, 0f, 1f)
+                // is the part of this that looked wrong. A shorter tail than (0.2, 0, 0, 1), which
+                // spent its last third crawling the final few pixels.
+                interpolator = PathInterpolator(0.2f, 0f, 0.2f, 1f)
                 addUpdateListener {
                     if (it.animatedValue != 0f) {
                         pageChangeAnimLeftPercentage = it.animatedValue as Float
@@ -2922,6 +3121,16 @@ private class AnimatedGridPager(
                         pageChangeEnabled = true
                         lastPage = currentPage
                         clearPageChangeFlags()
+                        // Swipes made while this page was settling, played one page at a time from
+                        // rest; any that would run past the first or last page are dropped.
+                        val step = pendingStep.sign
+                        if (step > 0 && currentPage < getMaxPage() || step < 0 && currentPage > 0) {
+                            pendingStep -= step
+                            currentPage += step
+                            handlePageChange(true)
+                            return
+                        }
+                        pendingStep = 0
                         scheduleIndicatorsFade()
                         redrawGrid()
                     }

@@ -30,9 +30,10 @@ data class AppLauncher(
         var sorting = 0
     }
 
-    override fun equals(other: Any?) = packageName.equals((other as AppLauncher).packageName, true)
+    override fun equals(other: Any?) = other is AppLauncher && packageName.equals(other.packageName, true)
 
-    override fun hashCode() = super.hashCode()
+    // Must agree with equals: two launchers of one package are equal, so they hash alike.
+    override fun hashCode() = packageName.lowercase().hashCode()
 
     fun getBubbleText() = title
 

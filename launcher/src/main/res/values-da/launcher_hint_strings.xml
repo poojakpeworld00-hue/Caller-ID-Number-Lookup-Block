@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Slå \"Vis over andre apps\" til</string>
+    <string name="launcher_hint_overlay_description">Vi sender dig straks tilbage, når det er slået til.</string>
+    <string name="launcher_hint_default_home_title">Vælg %1$s som startskærm</string>
+    <string name="launcher_hint_default_home_description">Vælg den på listen for at indstille din startskærm.</string>
+    <string name="launcher_hint_default_sms_title">Angiv som din sms-app</string>
+    <string name="launcher_hint_default_sms_description">Tryk på \"Angiv som standard\" for at afslutte.</string>
+    <string name="launcher_hint_mock_row">Standard startskærm-app</string>
+    <string name="launcher_hint_mock_toggle_row">Tilladelse</string>
+    <string name="launcher_hint_overlay_row">Tillad visning over andre apps</string>
+</resources>

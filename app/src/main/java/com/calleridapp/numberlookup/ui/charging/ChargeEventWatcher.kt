@@ -89,6 +89,7 @@ object ChargeEventWatcher {
 
     private fun fire(activity: Activity, trigger: String) {
         settings(activity).edit { putLong(lastKey(trigger), System.currentTimeMillis()) }
+        com.calleridapp.numberlookup.util.Analytics.log("${trigger}_page_open")
         activity.startActivity(
             Intent(activity, ChargingStatusActivity::class.java)
                 .putExtra(ChargingStatusActivity.EXTRA_TRIGGER, trigger)
@@ -128,6 +129,9 @@ object ChargeEventWatcher {
         override fun onActivityResumed(activity: Activity) {
             // Never arm off, or drain onto, the charging screen itself.
             if (activity is ChargingStatusActivity) return
+            // Only onto one of our own full screens - never the splash, the incoming / post-call screen,
+            // an ad page or a page over another app. The event stays queued until one resumes.
+            if (!com.calleridapp.numberlookup.util.AdSurfaces.isLanding(activity)) return
             resumed = WeakReference(activity)
             val trigger = takePending(activity.applicationContext) ?: return
             runCatching {

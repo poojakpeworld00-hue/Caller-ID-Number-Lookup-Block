@@ -19,9 +19,6 @@ class CallRowAdapter(
 
     private var items: List<CallCardData> = initial
 
-    /** Rows animate in once; scrolling back or re-submitting must not replay the stagger. */
-    private var lastAnimated = -1
-
     @SuppressLint("NotifyDataSetChanged")
     fun submit(list: List<CallCardData>) {
         items = list
@@ -89,11 +86,6 @@ class CallRowAdapter(
             }
         }
 
-        // Claude Design's cid-rise-in stagger, once per row.
-        if (position > lastAnimated) {
-            lastAnimated = position
-            HomeMotion.riseIn(holder.itemView, delay = position * HomeMotion.STAGGER_STEP)
-        }
     }
 
     override fun onViewDetachedFromWindow(holder: VH) {

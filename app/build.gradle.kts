@@ -49,8 +49,8 @@ android {
         // shortcut + pinned-item APIs.
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "1.0.7"
+        versionCode = 9
+        versionName = "1.0.8"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
 
@@ -64,7 +64,8 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
-            // Resource shrinking left off — enable only after verifying a release build.
+            // Resource shrinking is on: verify a release build after adding resources that are
+            // only reached by name (getIdentifier) — those need a keep rule.
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

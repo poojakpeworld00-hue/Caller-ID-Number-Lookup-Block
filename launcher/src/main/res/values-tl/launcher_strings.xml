@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_app_launcher_name">Mga Mensahe</string>
+    <string name="launcher_launcher_settings">Mga Setting ng Launcher</string>
+    <string name="launcher_app_info">Impormasyon ng app</string>
+    <string name="launcher_touch_hold_widget">Pindutin nang matagal ang widget at i-drag sa home screen mo</string>
+    <string name="launcher_uninstall">I-uninstall</string>
+    <string name="launcher_manage_hidden_icons">Pamahalaan ang nakatagong icon</string>
+    <string name="launcher_hidden_icons">Mga Nakatagong Icon</string>
+    <string name="launcher_hidden_icons_placeholder">May mga app na hindi puwedeng i-uninstall dahil sa restriksyon ng system, pero puwede mo itagong icon para hindi na makita.</string>
+    <string name="launcher_app_drawer_settings">App drawer</string>
+    <string name="launcher_app_drawer_enabled">Mag-swipe pataas para sa app drawer</string>
+    <string name="launcher_drawer_style">Estilo ng drawer</string>
+    <string name="launcher_drawer_style_vertical">Scrolling list</string>
+    <string name="launcher_drawer_style_paged">Mga Pahina</string>
+    <string name="launcher_app_drawer_disabled_hint">Naka-off: nananatili sa home screen ang bawat app, idinadagdag ang bagong app sa huling pahina</string>
+    <string name="launcher_close_app_drawer_on_app_open">Isara ang app drawer kapag nagbukas ng app</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">Awtomatikong ipakita ang keyboard sa drawer</string>
+    <string name="launcher_show_app_labels">Ipakita ang label ng app</string>
+    <string name="launcher_home_screen_settings">Home screen</string>
+    <string name="launcher_widget_too_big">Sobrang laki ng widget para sa kasalukuyang laki ng home screen</string>
+    <string name="launcher_double_tap_to_lock">I-double tap para i-lock ang screen</string>
+    <string name="launcher_lock_device_admin_hint">Para i-enable ang double tap upang i-lock ang screen, kailangan mong bigyan ng admin permission. Tandaan na hindi ma-uuninstall ang app hangga\'t hindi inaalis ang pahintulot na ito.</string>
+    <string name="launcher_lock_device_admin_warning">Kapag pinatay ang admin permission, mawawalan ng bisa ang feature na double tap para i-lock ang screen.</string>
+    <string name="launcher_pseudo_widget_clock">Orasan</string>
+    <string name="launcher_pseudo_widget_search_bar">Search bar</string>
+    <string name="launcher_pseudo_widget_search_bar_hint">Magtanong ng Kahit Ano…</string>
+    <string name="launcher_digital_clock_widget">Digital na orasan</string>
+    <string name="launcher_analog_clock_widget">Analog na orasan</string>
+    <string name="launcher_apps">Mga App</string>
+    <string name="launcher_clear">I-clear</string>
+    <string name="launcher_suggested_for_now">Mungkahi ngayon</string>
+    <string name="launcher_recent_apps">Kamakailang app</string>
+    <string name="launcher_search_in_apps">Maghanap sa mga app</string>
+    <string name="launcher_see_more">Tingnan pa</string>
+    <string name="launcher_see_less">Bawasan ang tingin</string>
+    <string name="launcher_default_launcher_banner_title">Hindi Pa Kumpleto ang Setup</string>
+    <string name="launcher_swipe_left_hint">Mag-swipe pakaliwa para sa paghahanap</string>
+    <string name="launcher_swipe_up_hint">Mag-swipe pataas para sa lahat ng app</string>
+    <string name="launcher_swipe_hint_tap">o i-tap kahit saan para subukan</string>
+    <string name="launcher_greeting_morning">Magandang umaga</string>
+    <string name="launcher_greeting_afternoon">Magandang hapon</string>
+    <string name="launcher_greeting_evening">Magandang gabi</string>
+    <string name="launcher_search_apps_hint">Maghanap ng app</string>
+    <string name="launcher_suggested_apps">Iminumungkahing app</string>
+    <string name="launcher_searched_apps">Hinanap na app</string>
+</resources>

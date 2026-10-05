@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Vklopite \"Prikaz nad drugimi aplikacijami\"</string>
+    <string name="launcher_hint_overlay_description">Takoj, ko je vklopljeno, vas pripeljemo nazaj.</string>
+    <string name="launcher_hint_default_home_title">Izberite %1$s za domov</string>
+    <string name="launcher_hint_default_home_description">Izberite jo na seznamu za nastavitev domačega zaslona.</string>
+    <string name="launcher_hint_default_sms_title">Nastavite kot svojo SMS aplikacijo</string>
+    <string name="launcher_hint_default_sms_description">Dotaknite se \"Nastavi kot privzeto\" za dokončanje.</string>
+    <string name="launcher_hint_mock_row">Privzeta domača aplikacija</string>
+    <string name="launcher_hint_mock_toggle_row">Dovoljenje</string>
+    <string name="launcher_hint_overlay_row">Dovoli prikaz nad drugimi aplikacijami</string>
+</resources>

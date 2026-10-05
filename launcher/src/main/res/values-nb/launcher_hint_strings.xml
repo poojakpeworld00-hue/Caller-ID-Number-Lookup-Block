@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">Slå på «Vis over andre apper»</string>
+    <string name="launcher_hint_overlay_description">Vi tar deg rett tilbake når det er på.</string>
+    <string name="launcher_hint_default_home_title">Velg %1$s som hjem</string>
+    <string name="launcher_hint_default_home_description">Velg den i listen for å angi hjemskjermen din.</string>
+    <string name="launcher_hint_default_sms_title">Angi som din SMS-app</string>
+    <string name="launcher_hint_default_sms_description">Trykk «Angi som standard» for å fullføre.</string>
+    <string name="launcher_hint_mock_row">Standard hjem-app</string>
+    <string name="launcher_hint_mock_toggle_row">Tillatelse</string>
+    <string name="launcher_hint_overlay_row">Tillat visning over andre apper</string>
+</resources>

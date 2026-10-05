@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">\"மற்ற ஆப்களுக்கு மேல் காட்டு\" என்பதை இயக்கவும்</string>
+    <string name="launcher_hint_overlay_description">இது இயங்கியவுடன் உங்களை நேரடியாகத் திரும்ப அழைத்து வருவோம்.</string>
+    <string name="launcher_hint_default_home_title">%1$s ஐ முகப்பாகத் தேர்வு செய்யவும்</string>
+    <string name="launcher_hint_default_home_description">உங்கள் முகப்புத் திரையை அமைக்க பட்டியலில் அதைத் தேர்ந்தெடுக்கவும்.</string>
+    <string name="launcher_hint_default_sms_title">உங்கள் SMS ஆப்பாக அமைக்கவும்</string>
+    <string name="launcher_hint_default_sms_description">முடிக்க \"இயல்புநிலையாக அமை\" என்பதைத் தட்டவும்.</string>
+    <string name="launcher_hint_mock_row">இயல்புநிலை முகப்பு ஆப்</string>
+    <string name="launcher_hint_mock_toggle_row">அனுமதி</string>
+    <string name="launcher_hint_overlay_row">மற்ற ஆப்களுக்கு மேல் காட்ட அனுமதிக்கவும்</string>
+</resources>

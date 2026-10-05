@@ -1,2 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="launcher_app_launcher_name">پیام‌ها</string>
+    <string name="launcher_launcher_settings">تنظیمات لانچر</string>
+    <string name="launcher_app_info">اطلاعات اپ</string>
+    <string name="launcher_touch_hold_widget">ویجت را لمس نگه دارید و به صفحه اصلی خود بکشید</string>
+    <string name="launcher_uninstall">حذف نصب</string>
+    <string name="launcher_manage_hidden_icons">مدیریت آیکون‌های پنهان</string>
+    <string name="launcher_hidden_icons">آیکون‌های پنهان</string>
+    <string name="launcher_hidden_icons_placeholder">برخی اپ‌ها به‌دلیل محدودیت سیستم قابل حذف نیستند، اما می‌توانید آیکونشان را پنهان کنید تا دیده نشوند.</string>
+    <string name="launcher_app_drawer_settings">کشوی اپ‌ها</string>
+    <string name="launcher_app_drawer_enabled">برای کشوی اپ‌ها بالا بکشید</string>
+    <string name="launcher_drawer_style">سبک کشو</string>
+    <string name="launcher_drawer_style_vertical">فهرست با پیمایش</string>
+    <string name="launcher_drawer_style_paged">صفحه‌ها</string>
+    <string name="launcher_app_drawer_disabled_hint">غیرفعال: همه اپ‌ها روی صفحه اصلی می‌مانند، اپ‌های جدید به آخرین صفحه اضافه می‌شوند</string>
+    <string name="launcher_close_app_drawer_on_app_open">بستن کشوی اپ‌ها هنگام باز کردن یک اپ</string>
+    <string name="launcher_auto_show_keyboard_in_app_drawer">نمایش خودکار صفحه‌کلید در کشو</string>
+    <string name="launcher_show_app_labels">نمایش نام اپ‌ها</string>
+    <string name="launcher_home_screen_settings">صفحه اصلی</string>
+    <string name="launcher_widget_too_big">ویجت برای اندازه فعلی صفحه اصلی خیلی بزرگ است</string>
+    <string name="launcher_double_tap_to_lock">دو ضربه برای قفل صفحه</string>
+    <string name="launcher_lock_device_admin_hint">برای فعال‌سازی قفل صفحه با دو ضربه، باید دسترسی مدیر را اعطا کنید. توجه کنید که تا حذف این دسترسی، اپ قابل حذف نصب نیست.</string>
+    <string name="launcher_lock_device_admin_warning">غیرفعال کردن دسترسی مدیر، قابلیت قفل صفحه با دو ضربه را غیرفعال می‌کند.</string>
+    <string name="launcher_pseudo_widget_clock">ساعت</string>
+    <string name="launcher_pseudo_widget_search_bar">نوار جستجو</string>
+    <string name="launcher_pseudo_widget_search_bar_hint">هر چیزی بپرسید…</string>
+    <string name="launcher_digital_clock_widget">ساعت دیجیتال</string>
+    <string name="launcher_analog_clock_widget">ساعت آنالوگ</string>
+    <string name="launcher_apps">اپ‌ها</string>
+    <string name="launcher_clear">پاک کردن</string>
+    <string name="launcher_suggested_for_now">پیشنهادی برای الان</string>
+    <string name="launcher_recent_apps">اپ‌های اخیر</string>
+    <string name="launcher_search_in_apps">جستجو در اپ‌ها</string>
+    <string name="launcher_see_more">بیشتر ببینید</string>
+    <string name="launcher_see_less">کمتر ببینید</string>
+    <string name="launcher_default_launcher_banner_title">راه‌اندازی کامل نشده</string>
+    <string name="launcher_swipe_left_hint">برای جستجو به چپ بکشید</string>
+    <string name="launcher_swipe_up_hint">برای همه اپ‌ها بالا بکشید</string>
+    <string name="launcher_swipe_hint_tap">یا برای امتحان، هرجا ضربه بزنید</string>
+    <string name="launcher_greeting_morning">صبح بخیر</string>
+    <string name="launcher_greeting_afternoon">ظهر بخیر</string>
+    <string name="launcher_greeting_evening">عصر بخیر</string>
+    <string name="launcher_search_apps_hint">جستجوی اپ‌ها</string>
+    <string name="launcher_suggested_apps">اپ‌های پیشنهادی</string>
+    <string name="launcher_searched_apps">اپ‌های جستجوشده</string>
+</resources>

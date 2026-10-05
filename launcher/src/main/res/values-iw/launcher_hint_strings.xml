@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">הפעל \"הצגה מעל אפליקציות אחרות\"</string>
+    <string name="launcher_hint_overlay_description">נחזיר אותך לכאן ברגע שזה יופעל.</string>
+    <string name="launcher_hint_default_home_title">בחר את %1$s כמסך הבית</string>
+    <string name="launcher_hint_default_home_description">בחר אותו ברשימה כדי להגדיר את מסך הבית שלך.</string>
+    <string name="launcher_hint_default_sms_title">הגדר כאפליקציית ה-SMS שלך</string>
+    <string name="launcher_hint_default_sms_description">הקש \"הגדר כברירת מחדל\" כדי לסיים.</string>
+    <string name="launcher_hint_mock_row">אפליקציית מסך בית ברירת מחדל</string>
+    <string name="launcher_hint_mock_toggle_row">הרשאה</string>
+    <string name="launcher_hint_overlay_row">אפשר הצגה מעל אפליקציות אחרות</string>
+</resources>

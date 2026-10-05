@@ -28,6 +28,9 @@ import org.json.JSONObject
  * `prompt_frequency` — `always` | `once` | `every_days` | `app_launches` | `never`.
  * `prompt_interval`  — the X value (days for `every_days`, launches for `app_launches`);
  *                      ignored for `always` / `once` / `never`.
+ * `rows`             — `permission_sheet` only: the permissions the sheet may list, out of
+ *                      `notification` | `phone_state` | `call_log` | `contacts` | `overlay`.
+ *                      Absent = all of them; `["notification"]` = a notification-only sheet.
  *
  * Defaults (when the parameter / audience / screen object is missing) preserve the
  * historical behaviour: Language `once`, Terms off, Onboarding off, permission
@@ -83,18 +86,34 @@ object IntroRevealConfig {
     fun permissionSheet(context: Context): IntroReveal =
         load(context, PERMISSION_SHEET, defaultEnabled = true, defaultFrequency = PromptCadence.ALWAYS)
 
+    /**
+     * `permission_sheet.rows`: the row keys the sheet may list, or null (absent / not an array)
+     * for every row, which is what the sheet showed before this key existed.
+     */
+    fun permissionSheetRows(context: Context): Set<String>? {
+        val rows = screen(context, PERMISSION_SHEET)?.optJSONArray("rows") ?: return null
+        return (0 until rows.length())
+            .map { rows.optString(it).trim().lowercase() }
+            .filter { it.isNotEmpty() }
+            .toSet()
+    }
+
+    private fun screen(context: Context, key: String): JSONObject? {
+        val ads = AdsVault.getInstance(context)
+        val raw = ads.getString(RC_KEY)
+        return if (raw.isNullOrBlank()) null else runCatching {
+            val root = JSONObject(raw)
+            audienceContainer(root, isMarketing = ads.getBoolean("OnMaketing")).optJSONObject(key)
+        }.getOrNull()
+    }
+
     private fun load(
         context: Context,
         key: String,
         defaultEnabled: Boolean,
         defaultFrequency: PromptCadence
     ): IntroReveal {
-        val ads = AdsVault.getInstance(context)
-        val raw = ads.getString(RC_KEY)
-        val obj = if (raw.isNullOrBlank()) null else runCatching {
-            val root = JSONObject(raw)
-            audienceContainer(root, isMarketing = ads.getBoolean("OnMaketing")).optJSONObject(key)
-        }.getOrNull()
+        val obj = screen(context, key)
 
         if (obj == null) return IntroReveal(defaultEnabled, defaultFrequency, 0)
 

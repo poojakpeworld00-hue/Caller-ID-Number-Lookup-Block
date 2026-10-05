@@ -1,9 +1,11 @@
 package io.launcher.home.helpers
 
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.AdaptiveIconDrawable
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
@@ -57,6 +59,47 @@ object IconShaper {
         // original, whatever its shape, beats a blank tile.
         if (shaped !== drawable && !shaped.rendersArt()) drawable else shaped
     }.getOrDefault(drawable)
+
+    /** A store logo bleeds past the mask by this much so its own rounded corners never show inside it. */
+    private const val LOGO_INSET = 16f / 108f
+
+    /** Alpha from which a store logo's edge pixel counts as part of the square (they antialias to ~243). */
+    private const val LOGO_EDGE_ALPHA = 128
+
+    /**
+     * A sponsored tile's logo. Store icons are full-bleed squares, but their outer pixels are
+     * antialiased a little below opaque (and some have rounded corners of their own), which [shape]
+     * reads as art with its own outline and shrinks onto a tray - a framed tile next to the real
+     * apps. A logo whose mid-edges are painted is therefore flattened onto its own edge colour and
+     * filled into the mask like an app's opaque legacy icon; anything else gets the usual [shape].
+     */
+    fun shapeLogo(resources: Resources, logo: Bitmap, tray: Tray): Drawable = runCatching {
+        val last = logo.width - 1
+        val midX = logo.width / 2
+        val midY = logo.height / 2
+        val lastY = logo.height - 1
+        val square = listOf(midX to 0, 0 to midY, last to midY, midX to lastY)
+            .all { (x, y) -> Color.alpha(logo.getPixel(x, y)) >= LOGO_EDGE_ALPHA }
+        if (!square) return shape(BitmapDrawable(resources, logo), tray)
+        val edge = logo.ringColor()
+        val flat = Bitmap.createBitmap(logo.width, logo.height, Bitmap.Config.ARGB_8888).also {
+            Canvas(it).apply { drawColor(edge); drawBitmap(logo, 0f, 0f, null) }
+        }
+        AdaptiveIconDrawable(ColorDrawable(edge), InsetDrawable(BitmapDrawable(resources, flat), LOGO_INSET))
+    }.getOrElse { BitmapDrawable(resources, logo) }
+
+    /** Average of the logo's ring a few pixels in, past any antialiased or rounded-off edge. */
+    private fun Bitmap.ringColor(): Int {
+        val inset = (width / 32).coerceAtLeast(1)
+        val lo = inset
+        val hi = width - 1 - inset
+        val ring = ArrayList<Int>(SAMPLES * 4)
+        for (i in 0 until SAMPLES) {
+            val p = lo + i * (hi - lo) / (SAMPLES - 1)
+            ring += getPixel(p, lo); ring += getPixel(p, hi); ring += getPixel(lo, p); ring += getPixel(hi, p)
+        }
+        return average(ring) ?: Color.WHITE
+    }
 
     /** True when drawing [this] on the sample canvas leaves more than one colour behind. */
     private fun Drawable.rendersArt(): Boolean {

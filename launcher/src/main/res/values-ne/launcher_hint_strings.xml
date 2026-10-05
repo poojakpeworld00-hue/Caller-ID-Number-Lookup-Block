@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_hint_overlay_title">\"अन्य एपमाथि देखाउनुहोस्\" सक्षम गर्नुहोस्</string>
+    <string name="launcher_hint_overlay_description">यो सक्षम भएपछि हामी तपाईंलाई सिधै फिर्ता ल्याउनेछौं।</string>
+    <string name="launcher_hint_default_home_title">%1$s लाई होम बनाउनुहोस्</string>
+    <string name="launcher_hint_default_home_description">आफ्नो होम स्क्रिन सेट गर्न सूचीमा यसलाई छान्नुहोस्।</string>
+    <string name="launcher_hint_default_sms_title">आफ्नो SMS एप बनाउनुहोस्</string>
+    <string name="launcher_hint_default_sms_description">पूरा गर्न \"डिफल्ट बनाउनुहोस्\" ट्याप गर्नुहोस्।</string>
+    <string name="launcher_hint_mock_row">डिफल्ट होम एप</string>
+    <string name="launcher_hint_mock_toggle_row">अनुमति</string>
+    <string name="launcher_hint_overlay_row">अन्य एपमाथि देखाउने अनुमति दिनुहोस्</string>
+</resources>
